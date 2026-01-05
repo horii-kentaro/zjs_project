@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボードUI設計ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        .section h2.design { border-bottom-color: #2da44e; }
+        .section h2.react { border-bottom-color: #61dafb; }
+        .section h2.config { border-bottom-color: #bf8700; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        .code-block .tag {
+            color: #7ee787;
+        }
+        .code-block .attr {
+            color: #79c0ff;
+        }
+        .code-block .component {
+            color: #ffa657;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* ダッシュボードプレビュー */
+        .dashboard-preview {
+            background: #1e1e2e;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #313244;
+            margin-bottom: 16px;
+        }
+        .dashboard-title {
+            color: #cdd6f4;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .dashboard-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .dashboard-btn {
+            background: #313244;
+            color: #cdd6f4;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .dashboard-btn:hover {
+            background: #45475a;
+        }
+        .dashboard-btn.primary {
+            background: #89b4fa;
+            color: #1e1e2e;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: 16px;
+        }
+        
+        .widget {
+            background: #313244;
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+        }
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .widget-title {
+            color: #cdd6f4;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .widget-menu {
+            color: #6c7086;
+            cursor: pointer;
+        }
+        .widget-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #cdd6f4;
+        }
+        .widget-value.critical { color: #f38ba8; }
+        .widget-value.high { color: #fab387; }
+        .widget-value.medium { color: #89b4fa; }
+        .widget-value.low { color: #a6e3a1; }
+        .widget-label {
+            font-size: 11px;
+            color: #6c7086;
+            margin-top: 4px;
+        }
+        .widget-change {
+            font-size: 11px;
+            margin-top: 8px;
+        }
+        .widget-change.up { color: #f38ba8; }
+        .widget-change.down { color: #a6e3a1; }
+        
+        .widget.wide { grid-column: span 2; }
+        .widget.tall { grid-row: span 2; }
+        .widget.full { grid-column: span 4; }
+        
+        /* チャートプレースホルダー */
+        .chart-placeholder {
+            height: 120px;
+            background: linear-gradient(to right, #45475a 0%, #585b70 50%, #45475a 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c7086;
+            font-size: 12px;
+        }
+        .chart-placeholder.tall {
+            height: 200px;
+        }
+        
+        /* ミニテーブル */
+        .mini-table {
+            width: 100%;
+            font-size: 12px;
+        }
+        .mini-table th {
+            background: transparent;
+            color: #6c7086;
+            font-weight: 600;
+            padding: 8px 4px;
+            border: none;
+            border-bottom: 1px solid #45475a;
+        }
+        .mini-table td {
+            color: #cdd6f4;
+            padding: 8px 4px;
+            border: none;
+            border-bottom: 1px solid #45475a;
+        }
+        .mini-table tr:last-child td {
+            border-bottom: none;
+        }
+        .severity-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .severity-badge.critical { background: #f38ba8; color: #1e1e2e; }
+        .severity-badge.high { background: #fab387; color: #1e1e2e; }
+        .severity-badge.medium { background: #89b4fa; color: #1e1e2e; }
+        
+        /* ウィジェットカタログ */
+        .widget-catalog {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .catalog-item {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .catalog-header {
+            background: #f6f8fa;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .catalog-body {
+            padding: 12px;
+            font-size: 13px;
+        }
+        .catalog-body ul {
+            margin-left: 16px;
+            margin-top: 8px;
+        }
+        .catalog-body li {
+            margin: 4px 0;
+        }
+        
+        /* 比較表 */
+        .compare-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .compare-card-header.react { background: #61dafb; color: #20232a; }
+        .compare-card-header.vue { background: #42b883; }
+        .compare-card-header.flask { background: #000; }
+        .compare-card-header.streamlit { background: #ff4b4b; }
+        .compare-card-body {
+            padding: 16px;
+        }
+        .compare-card-body ul {
+            margin-left: 16px;
+            font-size: 14px;
+        }
+        .compare-card-body li {
+            margin: 6px 0;
+        }
+        
+        /* アーキテクチャ図 */
+        .architecture-diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        /* ドラッグハンドル風 */
+        .drag-handle {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: repeating-linear-gradient(
+                90deg,
+                #6c7086 0px,
+                #6c7086 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            background-size: 4px 4px;
+            border-radius: 2px;
+            cursor: move;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .widget.wide, .widget.full {
+                grid-column: span 2;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+            .dashboard-preview { background: #f0f0f0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ ダッシュボードUI設計ガイド</h1>
+        <p class="subtitle">ウィジェット方式による柔軟で拡張性の高いUI設計</p>
+
+        <!-- 概要 -->
+        <div class="section">
+            <h2>📋 ダッシュボード設計の基本方針</h2>
+            
+            <p style="margin-bottom: 20px;">
+                ダッシュボードは<strong>ウィジェット（コンポーネント）方式</strong>で設計することで、
+                後からの追加・削除・並び替えが容易になります。
+            </p>
+            
+            <h3>設計アプローチの比較</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">方式</th>
+                    <th style="width: 15%;">柔軟性</th>
+                    <th style="width: 15%;">難易度</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>ウィジェット方式</strong></td>
+                    <td><span style="color: #2da44e;">⭐⭐⭐ 高</span></td>
+                    <td>中</td>
+                    <td>各部品を独立したコンポーネントとして管理。追加・削除が容易</td>
+                </tr>
+                <tr>
+                    <td><strong>設定ファイル方式</strong></td>
+                    <td><span style="color: #2da44e;">⭐⭐⭐ 高</span></td>
+                    <td>低〜中</td>
+                    <td>JSONやDBで表示内容を制御。コード変更なしで調整可能</td>
+                </tr>
+                <tr>
+                    <td><strong>テンプレート方式</strong></td>
+                    <td><span style="color: #bf8700;">⭐⭐ 中</span></td>
+                    <td>低</td>
+                    <td>HTMLテンプレートを直接編集。シンプルだが変更に手間</td>
+                </tr>
+                <tr>
+                    <td><strong>モノリシック</strong></td>
+                    <td><span style="color: #cf222e;">⭐ 低</span></td>
+                    <td>低</td>
+                    <td>1ファイルに全て記述。保守性が低い（非推奨）</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨：ウィジェット方式 + 設定ファイル方式の組み合わせ</h4>
+                <ul>
+                    <li>各ウィジェットは独立したReact/Vueコンポーネントとして実装</li>
+                    <li>表示するウィジェットの種類・順序は設定（JSON/DB）で管理</li>
+                    <li>コード変更なしで表示内容をカスタマイズ可能</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ダッシュボードイメージ -->
+        <div class="section">
+            <h2>🎨 ダッシュボードの画面イメージ</h2>
+            
+            <div class="dashboard-preview">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">🛡️ 脆弱性管理ダッシュボード</div>
+                    <div class="dashboard-controls">
+                        <button class="dashboard-btn">期間: 直近7日</button>
+                        <button class="dashboard-btn">フィルター</button>
+                        <button class="dashboard-btn primary">+ ウィジェット追加</button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <!-- サマリーウィジェット -->
+                    <div class="widget">
+                        <div class="widget-header">
+                            <span class="widget-title">🔴 Critical</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <div class="widget-value critical">3</div>
+                        <div class="widget-label">未対応の脆弱性</div>
+                        <div class="widget-change up">↑ 2 前週比</div>
+                    </div>
+                    
+                    <div class="widget">
+                        <div class="widget-header">
+                            <span class="widget-title">🟠 High</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <div class="widget-value high">12</div>
+                        <div class="widget-label">未対応の脆弱性</div>
+                        <div class="widget-change down">↓ 3 前週比</div>
+                    </div>
+                    
+                    <div class="widget">
+                        <div class="widget-header">
+                            <span class="widget-title">🔵 Medium</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <div class="widget-value medium">28</div>
+                        <div class="widget-label">未対応の脆弱性</div>
+                    </div>
+                    
+                    <div class="widget">
+                        <div class="widget-header">
+                            <span class="widget-title">🟢 Low</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <div class="widget-value low">45</div>
+                        <div class="widget-label">未対応の脆弱性</div>
+                    </div>
+                    
+                    <!-- トレンドチャート -->
+                    <div class="widget wide">
+                        <div class="widget-header">
+                            <span class="widget-title">📈 検出数トレンド（過去30日）</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <div class="chart-placeholder">
+                            <svg width="90%" height="80" viewBox="0 0 300 80">
+                                <polyline points="0,60 30,55 60,40 90,45 120,30 150,35 180,25 210,30 240,20 270,15 300,10" 
+                                    fill="none" stroke="#89b4fa" stroke-width="2"/>
+                                <polyline points="0,70 30,68 60,65 90,62 120,58 150,55 180,50 210,48 240,45 270,42 300,40" 
+                                    fill="none" stroke="#a6e3a1" stroke-width="2" stroke-dasharray="4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- 重要度分布 -->
+                    <div class="widget wide">
+                        <div class="widget-header">
+                            <span class="widget-title">📊 重要度分布</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <div class="chart-placeholder">
+                            <svg width="120" height="80" viewBox="0 0 120 80">
+                                <circle cx="60" cy="40" r="35" fill="none" stroke="#45475a" stroke-width="12"/>
+                                <circle cx="60" cy="40" r="35" fill="none" stroke="#f38ba8" stroke-width="12"
+                                    stroke-dasharray="22 198" stroke-dashoffset="0"/>
+                                <circle cx="60" cy="40" r="35" fill="none" stroke="#fab387" stroke-width="12"
+                                    stroke-dasharray="44 176" stroke-dashoffset="-22"/>
+                                <circle cx="60" cy="40" r="35" fill="none" stroke="#89b4fa" stroke-width="12"
+                                    stroke-dasharray="66 154" stroke-dashoffset="-66"/>
+                                <circle cx="60" cy="40" r="35" fill="none" stroke="#a6e3a1" stroke-width="12"
+                                    stroke-dasharray="88 132" stroke-dashoffset="-132"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- 脆弱性一覧 -->
+                    <div class="widget full">
+                        <div class="widget-header">
+                            <span class="widget-title">📋 Critical/High 脆弱性一覧</span>
+                            <span class="widget-menu">⋮</span>
+                        </div>
+                        <table class="mini-table">
+                            <tr>
+                                <th>CVE ID</th>
+                                <th>タイトル</th>
+                                <th>CVSS</th>
+                                <th>重要度</th>
+                                <th>資産</th>
+                                <th>検出日</th>
+                            </tr>
+                            <tr>
+                                <td>CVE-2024-1234</td>
+                                <td>Apache HTTP Server の重大な脆弱性</td>
+                                <td>9.8</td>
+                                <td><span class="severity-badge critical">Critical</span></td>
+                                <td>web-server-01</td>
+                                <td>2024/12/10</td>
+                            </tr>
+                            <tr>
+                                <td>CVE-2024-5678</td>
+                                <td>OpenSSL バッファオーバーフロー</td>
+                                <td>8.1</td>
+                                <td><span class="severity-badge high">High</span></td>
+                                <td>api-server-01</td>
+                                <td>2024/12/09</td>
+                            </tr>
+                            <tr>
+                                <td>CVE-2024-9012</td>
+                                <td>PostgreSQL 認証バイパス</td>
+                                <td>7.5</td>
+                                <td><span class="severity-badge high">High</span></td>
+                                <td>db-server-01</td>
+                                <td>2024/12/08</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                各ウィジェットの右上「⋮」メニューから、編集・削除・移動が可能。「+ ウィジェット追加」で新しいウィジェットを追加できます。
+            </div>
+        </div>
+
+        <!-- ウィジェットカタログ -->
+        <div class="section">
+            <h2>🧩 ウィジェットカタログ</h2>
+            
+            <p style="margin-bottom: 16px;">
+                以下のウィジェットを組み合わせてダッシュボードを構成します。
+            </p>
+            
+            <div class="widget-catalog">
+                <div class="catalog-item">
+                    <div class="catalog-header">📊 サマリーカード</div>
+                    <div class="catalog-body">
+                        <p>数値を大きく表示</p>
+                        <ul>
+                            <li>Critical/High/Medium/Low件数</li>
+                            <li>前週比の増減表示</li>
+                            <li>対応完了率</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">📈 トレンドチャート</div>
+                    <div class="catalog-body">
+                        <p>時系列データを可視化</p>
+                        <ul>
+                            <li>検出数の推移</li>
+                            <li>対応完了数の推移</li>
+                            <li>期間選択可能</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">🥧 重要度分布</div>
+                    <div class="catalog-body">
+                        <p>円グラフ/ドーナツチャート</p>
+                        <ul>
+                            <li>重要度別の割合</li>
+                            <li>ステータス別の割合</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">📋 脆弱性一覧</div>
+                    <div class="catalog-body">
+                        <p>テーブル形式で表示</p>
+                        <ul>
+                            <li>フィルター・ソート機能</li>
+                            <li>ページネーション</li>
+                            <li>詳細リンク</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">🖥️ 資産ランキング</div>
+                    <div class="catalog-body">
+                        <p>脆弱性の多い資産TOP10</p>
+                        <ul>
+                            <li>資産名と件数</li>
+                            <li>環境ラベル</li>
+                            <li>詳細リンク</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">⚠️ KEVアラート</div>
+                    <div class="catalog-body">
+                        <p>悪用確認済み脆弱性</p>
+                        <ul>
+                            <li>KEV登録の脆弱性一覧</li>
+                            <li>対応期限表示</li>
+                            <li>緊急度ハイライト</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">🔔 最近のアクティビティ</div>
+                    <div class="catalog-body">
+                        <p>タイムライン形式</p>
+                        <ul>
+                            <li>新規検出</li>
+                            <li>ステータス変更</li>
+                            <li>対応完了</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="catalog-item">
+                    <div class="catalog-header">📅 対応期限カレンダー</div>
+                    <div class="catalog-body">
+                        <p>期限管理</p>
+                        <ul>
+                            <li>今週の期限</li>
+                            <li>期限超過件数</li>
+                            <li>カレンダー表示</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- フレームワーク選択 -->
+        <div class="section">
+            <h2>🛠️ フレームワークの選択</h2>
+            
+            <div class="compare-cards">
+                <div class="compare-card">
+                    <div class="compare-card-header react">React（推奨）</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ コンポーネント設計に最適</li>
+                            <li>✅ エコシステムが豊富</li>
+                            <li>✅ TypeScript対応◎</li>
+                            <li>✅ 採用実績が多い</li>
+                            <li>⚠️ 学習コストあり</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #0969da; font-weight: 600;">
+                            本格的なダッシュボード向け
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="compare-card-header vue">Vue.js</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ 学習しやすい</li>
+                            <li>✅ 日本語情報が多い</li>
+                            <li>✅ テンプレート構文が直感的</li>
+                            <li>⚠️ Reactより求人少ない</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #42b883; font-weight: 600;">
+                            チームがVue経験者なら◎
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="compare-card-header flask">Flask + Jinja2</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ Python統一できる</li>
+                            <li>✅ シンプル</li>
+                            <li>✅ 学習コスト低い</li>
+                            <li>⚠️ 動的UIが作りにくい</li>
+                            <li>⚠️ リアルタイム更新が難しい</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #57606a; font-weight: 600;">
+                            シンプルな表示のみなら
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="compare-card-header streamlit">Streamlit</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ 超簡単（Pythonだけ）</li>
+                            <li>✅ プロトタイプに最適</li>
+                            <li>✅ グラフ表示が簡単</li>
+                            <li>⚠️ カスタマイズ制限</li>
+                            <li>⚠️ 本番運用に不向き</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #ff4b4b; font-weight: 600;">
+                            プロトタイプ・検証用
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ 本プロジェクトの推奨</h4>
+                <p><strong>React + TypeScript</strong>を推奨します。理由：</p>
+                <ul>
+                    <li>ウィジェット方式との相性が良い</li>
+                    <li>状態管理（Redux/Zustand）で複雑なデータも扱える</li>
+                    <li>UIライブラリ（MUI, Ant Design）が豊富</li>
+                    <li>将来的な拡張がしやすい</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ウィジェットの実装（React） -->
+        <div class="section">
+            <h2 class="react">⚛️ Reactでのウィジェット実装</h2>
+            
+            <h3>プロジェクト構成</h3>
+            <div class="code-block">
+src/
+├── components/
+│   ├── Dashboard/
+│   │   ├── Dashboard.tsx          <span class="comment"># ダッシュボード本体</span>
+│   │   ├── WidgetContainer.tsx    <span class="comment"># ウィジェット配置管理</span>
+│   │   └── WidgetWrapper.tsx      <span class="comment"># 共通ラッパー（メニュー等）</span>
+│   │
+│   └── widgets/                   <span class="comment"># 各ウィジェット</span>
+│       ├── SummaryCard.tsx
+│       ├── TrendChart.tsx
+│       ├── SeverityPieChart.tsx
+│       ├── VulnerabilityList.tsx
+│       ├── AssetRanking.tsx
+│       └── index.ts               <span class="comment"># エクスポート</span>
+│
+├── hooks/
+│   ├── useWidgetConfig.ts         <span class="comment"># ウィジェット設定管理</span>
+│   └── useDashboardData.ts        <span class="comment"># データ取得</span>
+│
+├── types/
+│   └── widget.ts                  <span class="comment"># 型定義</span>
+│
+└── config/
+    └── defaultWidgets.ts          <span class="comment"># デフォルト設定</span>
+            </div>
+            
+            <h3>ウィジェットの型定義</h3>
+            <div class="code-block">
+<span class="comment">// types/widget.ts</span>
+
+<span class="keyword">export</span> <span class="keyword">type</span> WidgetType = 
+  | <span class="string">'summary'</span>
+  | <span class="string">'trend_chart'</span>
+  | <span class="string">'severity_pie'</span>
+  | <span class="string">'vuln_list'</span>
+  | <span class="string">'asset_ranking'</span>
+  | <span class="string">'kev_alert'</span>
+  | <span class="string">'activity_feed'</span>;
+
+<span class="keyword">export</span> <span class="keyword">interface</span> <span class="class">WidgetConfig</span> {
+  id: <span class="keyword">string</span>;
+  type: WidgetType;
+  title: <span class="keyword">string</span>;
+  enabled: <span class="keyword">boolean</span>;
+  position: <span class="keyword">number</span>;
+  size: <span class="string">'small'</span> | <span class="string">'medium'</span> | <span class="string">'wide'</span> | <span class="string">'full'</span>;
+  settings?: Record&lt;<span class="keyword">string</span>, <span class="keyword">any</span>&gt;;  <span class="comment">// ウィジェット固有設定</span>
+}
+
+<span class="keyword">export</span> <span class="keyword">interface</span> <span class="class">DashboardConfig</span> {
+  widgets: WidgetConfig[];
+  refreshInterval: <span class="keyword">number</span>;  <span class="comment">// 秒</span>
+}
+            </div>
+            
+            <h3>ウィジェットコンポーネント（サマリーカード）</h3>
+            <div class="code-block">
+<span class="comment">// components/widgets/SummaryCard.tsx</span>
+<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { useDashboardData } <span class="keyword">from</span> <span class="string">'../../hooks/useDashboardData'</span>;
+
+<span class="keyword">interface</span> <span class="class">SummaryCardProps</span> {
+  severity: <span class="string">'critical'</span> | <span class="string">'high'</span> | <span class="string">'medium'</span> | <span class="string">'low'</span>;
+  title: <span class="keyword">string</span>;
+}
+
+<span class="keyword">export</span> <span class="keyword">const</span> <span class="function">SummaryCard</span>: React.FC&lt;SummaryCardProps&gt; = ({ severity, title }) => {
+  <span class="keyword">const</span> { data, isLoading } = useDashboardData();
+  
+  <span class="keyword">if</span> (isLoading) {
+    <span class="keyword">return</span> &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"loading"</span>&gt;読み込み中...&lt;/<span class="tag">div</span>&gt;;
+  }
+  
+  <span class="keyword">const</span> count = data?.severityCounts?.[severity] ?? <span class="number">0</span>;
+  <span class="keyword">const</span> prevCount = data?.prevSeverityCounts?.[severity] ?? <span class="number">0</span>;
+  <span class="keyword">const</span> diff = count - prevCount;
+  
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">{`summary-card severity-${severity}`}</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-title"</span>&gt;{title}&lt;/<span class="tag">div</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-value"</span>&gt;{count}&lt;/<span class="tag">div</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-label"</span>&gt;未対応の脆弱性&lt;/<span class="tag">div</span>&gt;
+      {diff !== <span class="number">0</span> && (
+        &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">{`card-change ${diff > 0 ? 'up' : 'down'}`}</span>&gt;
+          {diff > <span class="number">0</span> ? <span class="string">'↑'</span> : <span class="string">'↓'</span>} {Math.abs(diff)} 前週比
+        &lt;/<span class="tag">div</span>&gt;
+      )}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+};
+            </div>
+            
+            <h3>ウィジェットラッパー（共通機能）</h3>
+            <div class="code-block">
+<span class="comment">// components/Dashboard/WidgetWrapper.tsx</span>
+<span class="keyword">import</span> React, { useState } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { WidgetConfig } <span class="keyword">from</span> <span class="string">'../../types/widget'</span>;
+
+<span class="keyword">interface</span> <span class="class">WidgetWrapperProps</span> {
+  config: WidgetConfig;
+  children: React.ReactNode;
+  onRemove: (id: <span class="keyword">string</span>) => <span class="keyword">void</span>;
+  onEdit: (id: <span class="keyword">string</span>) => <span class="keyword">void</span>;
+}
+
+<span class="keyword">export</span> <span class="keyword">const</span> <span class="function">WidgetWrapper</span>: React.FC&lt;WidgetWrapperProps&gt; = ({
+  config,
+  children,
+  onRemove,
+  onEdit
+}) => {
+  <span class="keyword">const</span> [menuOpen, setMenuOpen] = useState(<span class="keyword">false</span>);
+  
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">{`widget widget-${config.size}`}</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"widget-header"</span>&gt;
+        &lt;<span class="tag">span</span> <span class="attr">className</span>=<span class="string">"widget-title"</span>&gt;{config.title}&lt;/<span class="tag">span</span>&gt;
+        &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"widget-menu"</span>&gt;
+          &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => setMenuOpen(!menuOpen)}&gt;⋮&lt;/<span class="tag">button</span>&gt;
+          {menuOpen && (
+            &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"dropdown-menu"</span>&gt;
+              &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => onEdit(config.id)}&gt;⚙️ 設定&lt;/<span class="tag">button</span>&gt;
+              &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => onRemove(config.id)}&gt;🗑️ 削除&lt;/<span class="tag">button</span>&gt;
+            &lt;/<span class="tag">div</span>&gt;
+          )}
+        &lt;/<span class="tag">div</span>&gt;
+      &lt;/<span class="tag">div</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"widget-content"</span>&gt;
+        {children}
+      &lt;/<span class="tag">div</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+};
+            </div>
+            
+            <h3>ウィジェットレジストリ（動的レンダリング）</h3>
+            <div class="code-block">
+<span class="comment">// components/widgets/index.ts</span>
+<span class="keyword">import</span> { SummaryCard } <span class="keyword">from</span> <span class="string">'./SummaryCard'</span>;
+<span class="keyword">import</span> { TrendChart } <span class="keyword">from</span> <span class="string">'./TrendChart'</span>;
+<span class="keyword">import</span> { SeverityPieChart } <span class="keyword">from</span> <span class="string">'./SeverityPieChart'</span>;
+<span class="keyword">import</span> { VulnerabilityList } <span class="keyword">from</span> <span class="string">'./VulnerabilityList'</span>;
+<span class="keyword">import</span> { AssetRanking } <span class="keyword">from</span> <span class="string">'./AssetRanking'</span>;
+<span class="keyword">import</span> { KevAlert } <span class="keyword">from</span> <span class="string">'./KevAlert'</span>;
+<span class="keyword">import</span> { WidgetType } <span class="keyword">from</span> <span class="string">'../../types/widget'</span>;
+
+<span class="comment">// ウィジェットの登録（追加時はここに追加するだけ）</span>
+<span class="keyword">export</span> <span class="keyword">const</span> widgetRegistry: Record&lt;WidgetType, React.ComponentType&lt;<span class="keyword">any</span>&gt;&gt; = {
+  <span class="string">'summary'</span>: SummaryCard,
+  <span class="string">'trend_chart'</span>: TrendChart,
+  <span class="string">'severity_pie'</span>: SeverityPieChart,
+  <span class="string">'vuln_list'</span>: VulnerabilityList,
+  <span class="string">'asset_ranking'</span>: AssetRanking,
+  <span class="string">'kev_alert'</span>: KevAlert,
+};
+
+<span class="comment">// 動的にウィジェットを取得</span>
+<span class="keyword">export</span> <span class="keyword">const</span> <span class="function">getWidgetComponent</span> = (type: WidgetType) => {
+  <span class="keyword">return</span> widgetRegistry[type] || <span class="keyword">null</span>;
+};
+            </div>
+            
+            <h3>ダッシュボード本体</h3>
+            <div class="code-block">
+<span class="comment">// components/Dashboard/Dashboard.tsx</span>
+<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { useWidgetConfig } <span class="keyword">from</span> <span class="string">'../../hooks/useWidgetConfig'</span>;
+<span class="keyword">import</span> { getWidgetComponent } <span class="keyword">from</span> <span class="string">'../widgets'</span>;
+<span class="keyword">import</span> { WidgetWrapper } <span class="keyword">from</span> <span class="string">'./WidgetWrapper'</span>;
+
+<span class="keyword">export</span> <span class="keyword">const</span> <span class="function">Dashboard</span>: React.FC = () => {
+  <span class="keyword">const</span> { 
+    widgets, 
+    addWidget, 
+    removeWidget, 
+    updateWidget,
+    moveWidget 
+  } = useWidgetConfig();
+  
+  <span class="comment">// 有効なウィジェットのみ、position順にソート</span>
+  <span class="keyword">const</span> activeWidgets = widgets
+    .filter(w => w.enabled)
+    .sort((a, b) => a.position - b.position);
+  
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"dashboard"</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"dashboard-header"</span>&gt;
+        &lt;<span class="tag">h1</span>&gt;🛡️ 脆弱性管理ダッシュボード&lt;/<span class="tag">h1</span>&gt;
+        &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => addWidget()}&gt;
+          + ウィジェット追加
+        &lt;/<span class="tag">button</span>&gt;
+      &lt;/<span class="tag">div</span>&gt;
+      
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"dashboard-grid"</span>&gt;
+        {activeWidgets.map(config => {
+          <span class="keyword">const</span> WidgetComponent = getWidgetComponent(config.type);
+          
+          <span class="keyword">if</span> (!WidgetComponent) <span class="keyword">return null</span>;
+          
+          <span class="keyword">return</span> (
+            &lt;<span class="component">WidgetWrapper</span>
+              <span class="attr">key</span>={config.id}
+              <span class="attr">config</span>={config}
+              <span class="attr">onRemove</span>={removeWidget}
+              <span class="attr">onEdit</span>={updateWidget}
+            &gt;
+              &lt;<span class="component">WidgetComponent</span> {...config.settings} /&gt;
+            &lt;/<span class="component">WidgetWrapper</span>&gt;
+          );
+        })}
+      &lt;/<span class="tag">div</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+};
+            </div>
+        </div>
+
+        <!-- 設定ファイル方式 -->
+        <div class="section">
+            <h2 class="config">⚙️ 設定ファイルによる柔軟な制御</h2>
+            
+            <p style="margin-bottom: 16px;">
+                ウィジェットの表示・非表示・順序を<strong>設定ファイル（JSON）</strong>または<strong>データベース</strong>で管理することで、
+                コード変更なしでダッシュボードをカスタマイズできます。
+            </p>
+            
+            <h3>デフォルト設定（JSON）</h3>
+            <div class="code-block">
+<span class="comment">// config/defaultWidgets.ts</span>
+<span class="keyword">import</span> { DashboardConfig } <span class="keyword">from</span> <span class="string">'../types/widget'</span>;
+
+<span class="keyword">export</span> <span class="keyword">const</span> defaultDashboardConfig: DashboardConfig = {
+  refreshInterval: <span class="number">300</span>,  <span class="comment">// 5分</span>
+  widgets: [
+    {
+      id: <span class="string">'summary-critical'</span>,
+      type: <span class="string">'summary'</span>,
+      title: <span class="string">'🔴 Critical'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">1</span>,
+      size: <span class="string">'small'</span>,
+      settings: { severity: <span class="string">'critical'</span> }
+    },
+    {
+      id: <span class="string">'summary-high'</span>,
+      type: <span class="string">'summary'</span>,
+      title: <span class="string">'🟠 High'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">2</span>,
+      size: <span class="string">'small'</span>,
+      settings: { severity: <span class="string">'high'</span> }
+    },
+    {
+      id: <span class="string">'summary-medium'</span>,
+      type: <span class="string">'summary'</span>,
+      title: <span class="string">'🔵 Medium'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">3</span>,
+      size: <span class="string">'small'</span>,
+      settings: { severity: <span class="string">'medium'</span> }
+    },
+    {
+      id: <span class="string">'summary-low'</span>,
+      type: <span class="string">'summary'</span>,
+      title: <span class="string">'🟢 Low'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">4</span>,
+      size: <span class="string">'small'</span>,
+      settings: { severity: <span class="string">'low'</span> }
+    },
+    {
+      id: <span class="string">'trend-chart'</span>,
+      type: <span class="string">'trend_chart'</span>,
+      title: <span class="string">'📈 検出数トレンド'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">5</span>,
+      size: <span class="string">'wide'</span>,
+      settings: { days: <span class="number">30</span> }
+    },
+    {
+      id: <span class="string">'severity-pie'</span>,
+      type: <span class="string">'severity_pie'</span>,
+      title: <span class="string">'📊 重要度分布'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">6</span>,
+      size: <span class="string">'wide'</span>
+    },
+    {
+      id: <span class="string">'vuln-list'</span>,
+      type: <span class="string">'vuln_list'</span>,
+      title: <span class="string">'📋 脆弱性一覧'</span>,
+      enabled: <span class="keyword">true</span>,
+      position: <span class="number">7</span>,
+      size: <span class="string">'full'</span>,
+      settings: { 
+        filter: { severity: [<span class="string">'Critical'</span>, <span class="string">'High'</span>] },
+        limit: <span class="number">10</span>
+      }
+    },
+    {
+      id: <span class="string">'kev-alert'</span>,
+      type: <span class="string">'kev_alert'</span>,
+      title: <span class="string">'⚠️ KEVアラート'</span>,
+      enabled: <span class="keyword">false</span>,  <span class="comment">// デフォルトは非表示</span>
+      position: <span class="number">8</span>,
+      size: <span class="string">'wide'</span>
+    }
+  ]
+};
+            </div>
+            
+            <h3>設定管理フック</h3>
+            <div class="code-block">
+<span class="comment">// hooks/useWidgetConfig.ts</span>
+<span class="keyword">import</span> { useState, useEffect } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { WidgetConfig, DashboardConfig } <span class="keyword">from</span> <span class="string">'../types/widget'</span>;
+<span class="keyword">import</span> { defaultDashboardConfig } <span class="keyword">from</span> <span class="string">'../config/defaultWidgets'</span>;
+
+<span class="keyword">export</span> <span class="keyword">const</span> <span class="function">useWidgetConfig</span> = () => {
+  <span class="keyword">const</span> [config, setConfig] = useState&lt;DashboardConfig&gt;(defaultDashboardConfig);
+  
+  <span class="comment">// ローカルストレージまたはAPIから設定を読み込み</span>
+  useEffect(() => {
+    <span class="keyword">const</span> saved = localStorage.getItem(<span class="string">'dashboardConfig'</span>);
+    <span class="keyword">if</span> (saved) {
+      setConfig(JSON.parse(saved));
+    }
+  }, []);
+  
+  <span class="comment">// 設定を保存</span>
+  <span class="keyword">const</span> <span class="function">saveConfig</span> = (newConfig: DashboardConfig) => {
+    setConfig(newConfig);
+    localStorage.setItem(<span class="string">'dashboardConfig'</span>, JSON.stringify(newConfig));
+    <span class="comment">// APIに保存する場合はここで呼び出し</span>
+    <span class="comment">// await api.saveDashboardConfig(newConfig);</span>
+  };
+  
+  <span class="comment">// ウィジェットを追加</span>
+  <span class="keyword">const</span> <span class="function">addWidget</span> = (widget: WidgetConfig) => {
+    <span class="keyword">const</span> newWidgets = [...config.widgets, widget];
+    saveConfig({ ...config, widgets: newWidgets });
+  };
+  
+  <span class="comment">// ウィジェットを削除</span>
+  <span class="keyword">const</span> <span class="function">removeWidget</span> = (id: <span class="keyword">string</span>) => {
+    <span class="keyword">const</span> newWidgets = config.widgets.filter(w => w.id !== id);
+    saveConfig({ ...config, widgets: newWidgets });
+  };
+  
+  <span class="comment">// ウィジェットを更新</span>
+  <span class="keyword">const</span> <span class="function">updateWidget</span> = (id: <span class="keyword">string</span>, updates: Partial&lt;WidgetConfig&gt;) => {
+    <span class="keyword">const</span> newWidgets = config.widgets.map(w => 
+      w.id === id ? { ...w, ...updates } : w
+    );
+    saveConfig({ ...config, widgets: newWidgets });
+  };
+  
+  <span class="comment">// ウィジェットの順序を変更</span>
+  <span class="keyword">const</span> <span class="function">moveWidget</span> = (id: <span class="keyword">string</span>, newPosition: <span class="keyword">number</span>) => {
+    <span class="keyword">const</span> newWidgets = config.widgets.map(w => 
+      w.id === id ? { ...w, position: newPosition } : w
+    );
+    saveConfig({ ...config, widgets: newWidgets });
+  };
+  
+  <span class="comment">// ウィジェットの表示/非表示を切り替え</span>
+  <span class="keyword">const</span> <span class="function">toggleWidget</span> = (id: <span class="keyword">string</span>) => {
+    updateWidget(id, { 
+      enabled: !config.widgets.find(w => w.id === id)?.enabled 
+    });
+  };
+  
+  <span class="keyword">return</span> {
+    widgets: config.widgets,
+    refreshInterval: config.refreshInterval,
+    addWidget,
+    removeWidget,
+    updateWidget,
+    moveWidget,
+    toggleWidget
+  };
+};
+            </div>
+            
+            <h3>DBでの設定管理（バックエンド）</h3>
+            <div class="code-block">
+<span class="comment"># SQLテーブル定義</span>
+CREATE TABLE dashboard_configs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),  <span class="comment">-- ユーザー別設定</span>
+    config JSONB NOT NULL,                  <span class="comment">-- ウィジェット設定</span>
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+<span class="comment"># 設定例</span>
+INSERT INTO dashboard_configs (user_id, config) VALUES (
+    <span class="number">1</span>,
+    <span class="string">'{
+        "refreshInterval": 300,
+        "widgets": [
+            {"id": "summary-critical", "type": "summary", "enabled": true, ...},
+            {"id": "trend-chart", "type": "trend_chart", "enabled": true, ...}
+        ]
+    }'</span>::jsonb
+);
+            </div>
+            
+            <div class="point-box">
+                <h4>設定管理のメリット</h4>
+                <ul>
+                    <li><strong>コード変更なし</strong>：ウィジェットの追加・削除・並び替えが設定だけで可能</li>
+                    <li><strong>ユーザー別カスタマイズ</strong>：ユーザーごとに異なるダッシュボード構成</li>
+                    <li><strong>A/Bテスト</strong>：異なる設定を試して効果を比較</li>
+                    <li><strong>ロールバック容易</strong>：設定を戻すだけで元の状態に</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ドラッグ&ドロップ -->
+        <div class="section">
+            <h2>🖱️ ドラッグ&ドロップでの並び替え</h2>
+            
+            <p style="margin-bottom: 16px;">
+                ユーザーがウィジェットを自由に並び替えられるようにするには、
+                <strong>react-beautiful-dnd</strong>や<strong>dnd-kit</strong>を使用します。
+            </p>
+            
+            <h3>dnd-kitでの実装例</h3>
+            <div class="code-block">
+<span class="comment">// ドラッグ&ドロップ対応のダッシュボード</span>
+<span class="keyword">import</span> {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} <span class="keyword">from</span> <span class="string">'@dnd-kit/core'</span>;
+<span class="keyword">import</span> {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} <span class="keyword">from</span> <span class="string">'@dnd-kit/sortable'</span>;
+
+<span class="keyword">export</span> <span class="keyword">const</span> <span class="function">DraggableDashboard</span>: React.FC = () => {
+  <span class="keyword">const</span> { widgets, moveWidget } = useWidgetConfig();
+  
+  <span class="keyword">const</span> sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
+  <span class="keyword">const</span> <span class="function">handleDragEnd</span> = (event) => {
+    <span class="keyword">const</span> { active, over } = event;
+    
+    <span class="keyword">if</span> (active.id !== over.id) {
+      <span class="keyword">const</span> oldIndex = widgets.findIndex(w => w.id === active.id);
+      <span class="keyword">const</span> newIndex = widgets.findIndex(w => w.id === over.id);
+      
+      <span class="comment">// 順序を更新</span>
+      <span class="keyword">const</span> newWidgets = arrayMove(widgets, oldIndex, newIndex);
+      newWidgets.forEach((w, i) => {
+        moveWidget(w.id, i + <span class="number">1</span>);
+      });
+    }
+  };
+  
+  <span class="keyword">return</span> (
+    &lt;<span class="component">DndContext</span>
+      <span class="attr">sensors</span>={sensors}
+      <span class="attr">collisionDetection</span>={closestCenter}
+      <span class="attr">onDragEnd</span>={handleDragEnd}
+    &gt;
+      &lt;<span class="component">SortableContext</span>
+        <span class="attr">items</span>={widgets.map(w => w.id)}
+        <span class="attr">strategy</span>={rectSortingStrategy}
+      &gt;
+        &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"dashboard-grid"</span>&gt;
+          {widgets.map(config => (
+            &lt;<span class="component">SortableWidget</span> <span class="attr">key</span>={config.id} <span class="attr">config</span>={config} /&gt;
+          ))}
+        &lt;/<span class="tag">div</span>&gt;
+      &lt;/<span class="component">SortableContext</span>&gt;
+    &lt;/<span class="component">DndContext</span>&gt;
+  );
+};
+            </div>
+            
+            <div class="callout">
+                ドラッグ&ドロップは<strong>Phase 2以降</strong>の追加機能として実装を推奨。
+                まずは基本的なウィジェット表示を完成させてから。
+            </div>
+        </div>
+
+        <!-- APIエンドポイント -->
+        <div class="section">
+            <h2>🔌 バックエンドAPI</h2>
+            
+            <h3>ダッシュボード用APIエンドポイント</h3>
+            <div class="code-block">
+<span class="comment"># api/dashboard.py (FastAPI)</span>
+<span class="keyword">from</span> fastapi <span class="keyword">import</span> APIRouter, Depends
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict, Any
+
+router = APIRouter(prefix=<span class="string">"/api/dashboard"</span>, tags=[<span class="string">"dashboard"</span>])
+
+<span class="decorator">@router.get</span>(<span class="string">"/summary"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_summary</span>() -> Dict[str, Any]:
+    <span class="string">"""サマリーデータを取得"""</span>
+    <span class="keyword">return</span> {
+        <span class="string">"severityCounts"</span>: {
+            <span class="string">"critical"</span>: <span class="number">3</span>,
+            <span class="string">"high"</span>: <span class="number">12</span>,
+            <span class="string">"medium"</span>: <span class="number">28</span>,
+            <span class="string">"low"</span>: <span class="number">45</span>
+        },
+        <span class="string">"prevSeverityCounts"</span>: {
+            <span class="string">"critical"</span>: <span class="number">1</span>,
+            <span class="string">"high"</span>: <span class="number">15</span>,
+            <span class="string">"medium"</span>: <span class="number">25</span>,
+            <span class="string">"low"</span>: <span class="number">40</span>
+        },
+        <span class="string">"statusCounts"</span>: {
+            <span class="string">"open"</span>: <span class="number">88</span>,
+            <span class="string">"in_progress"</span>: <span class="number">12</span>,
+            <span class="string">"resolved"</span>: <span class="number">156</span>
+        }
+    }
+
+<span class="decorator">@router.get</span>(<span class="string">"/trend"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_trend</span>(days: int = <span class="number">30</span>) -> Dict[str, Any]:
+    <span class="string">"""トレンドデータを取得"""</span>
+    <span class="comment"># DBから日別のデータを取得</span>
+    ...
+
+<span class="decorator">@router.get</span>(<span class="string">"/vulnerabilities"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_vulnerabilities</span>(
+    severity: str = <span class="keyword">None</span>,
+    status: str = <span class="keyword">None</span>,
+    limit: int = <span class="number">10</span>,
+    offset: int = <span class="number">0</span>
+) -> Dict[str, Any]:
+    <span class="string">"""脆弱性一覧を取得"""</span>
+    ...
+
+<span class="decorator">@router.get</span>(<span class="string">"/config"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_dashboard_config</span>(current_user = Depends(get_current_user)):
+    <span class="string">"""ユーザーのダッシュボード設定を取得"""</span>
+    ...
+
+<span class="decorator">@router.put</span>(<span class="string">"/config"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">save_dashboard_config</span>(
+    config: DashboardConfig,
+    current_user = Depends(get_current_user)
+):
+    <span class="string">"""ダッシュボード設定を保存"""</span>
+    ...
+            </div>
+        </div>
+
+        <!-- 段階的実装 -->
+        <div class="section">
+            <h2>📅 段階的な実装計画</h2>
+            
+            <table>
+                <tr>
+                    <th>Phase</th>
+                    <th>内容</th>
+                    <th>Sprint</th>
+                </tr>
+                <tr>
+                    <td><strong>Phase 1</strong></td>
+                    <td>
+                        ・基本レイアウト（グリッド）<br>
+                        ・サマリーカード（Critical/High/Medium/Low）<br>
+                        ・脆弱性一覧テーブル
+                    </td>
+                    <td>Sprint 4</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 2</strong></td>
+                    <td>
+                        ・トレンドチャート<br>
+                        ・重要度分布（円グラフ）<br>
+                        ・フィルター機能
+                    </td>
+                    <td>Sprint 4-5</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 3</strong></td>
+                    <td>
+                        ・ウィジェット設定機能<br>
+                        ・追加・削除・並び替え<br>
+                        ・ユーザー設定の保存
+                    </td>
+                    <td>Sprint 5</td>
+                </tr>
+                <tr>
+                    <td><strong>将来</strong></td>
+                    <td>
+                        ・ドラッグ&ドロップ<br>
+                        ・追加ウィジェット（KEV、アクティビティ等）<br>
+                        ・ダークモード対応
+                    </td>
+                    <td>将来拡張</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当Eのタスク</h2>
+            
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>タスク</th>
+                    <th>詳細</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 4</strong></td>
+                    <td>ダッシュボード基本実装</td>
+                    <td>
+                        ・Reactプロジェクトセットアップ<br>
+                        ・グリッドレイアウト実装<br>
+                        ・サマリーカード実装<br>
+                        ・脆弱性一覧テーブル実装
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 4-5</strong></td>
+                    <td>チャート・フィルター</td>
+                    <td>
+                        ・トレンドチャート（Recharts等）<br>
+                        ・重要度分布チャート<br>
+                        ・フィルター・ソート機能
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>設定機能・連携</td>
+                    <td>
+                        ・ウィジェット設定管理<br>
+                        ・レポートダウンロード連携<br>
+                        ・通知設定画面（担当Dと連携）
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>設計方針</strong></td>
+                    <td>ウィジェット方式 + 設定ファイル方式の組み合わせ</td>
+                </tr>
+                <tr>
+                    <td><strong>フレームワーク</strong></td>
+                    <td>React + TypeScript（推奨）</td>
+                </tr>
+                <tr>
+                    <td><strong>柔軟性</strong></td>
+                    <td>設定（JSON/DB）でウィジェットの追加・削除・並び替えが可能</td>
+                </tr>
+                <tr>
+                    <td><strong>拡張性</strong></td>
+                    <td>新しいウィジェットはコンポーネント追加 + レジストリ登録のみ</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 柔軟性を高めるポイント</h4>
+                <ul>
+                    <li><strong>ウィジェットは独立</strong>：各ウィジェットは他に依存しないコンポーネント</li>
+                    <li><strong>設定で制御</strong>：表示内容・順序は設定ファイルまたはDBで管理</li>
+                    <li><strong>レジストリパターン</strong>：新しいウィジェットの追加が容易</li>
+                    <li><strong>段階的実装</strong>：まず基本機能、後から高度な機能を追加</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>React</strong></td>
+                    <td><a href="https://react.dev/" target="_blank">https://react.dev/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>dnd-kit（ドラッグ&ドロップ）</strong></td>
+                    <td><a href="https://dndkit.com/" target="_blank">https://dndkit.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Recharts（グラフ）</strong></td>
+                    <td><a href="https://recharts.org/" target="_blank">https://recharts.org/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>MUI（UIライブラリ）</strong></td>
+                    <td><a href="https://mui.com/" target="_blank">https://mui.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Ant Design（UIライブラリ）</strong></td>
+                    <td><a href="https://ant.design/" target="_blank">https://ant.design/</a></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

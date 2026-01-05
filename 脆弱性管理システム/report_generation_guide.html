@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レポート生成ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        .section h2.phase1 { border-bottom-color: #2da44e; }
+        .section h2.phase2 { border-bottom-color: #0969da; }
+        .section h2.phase3 { border-bottom-color: #bf8700; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        /* フェーズカード */
+        .phase-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .phase-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .phase-card-header {
+            padding: 12px;
+            color: white;
+            font-weight: bold;
+        }
+        .phase-card-header.phase1 { background: #2da44e; }
+        .phase-card-header.phase2 { background: #0969da; }
+        .phase-card-header.phase3 { background: #bf8700; }
+        .phase-card-header.phase4 { background: #8250df; }
+        .phase-card-body {
+            padding: 16px;
+        }
+        .phase-card-body p {
+            font-size: 13px;
+            color: #57606a;
+            margin-bottom: 8px;
+        }
+        .phase-card-sprint {
+            font-size: 12px;
+            color: #57606a;
+            margin-top: 8px;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        .code-block .decorator {
+            color: #ffa657;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* レポートプレビュー */
+        .report-preview {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .report-header {
+            background: #24292f;
+            color: white;
+            padding: 16px 20px;
+        }
+        .report-header h3 {
+            color: white;
+            margin: 0;
+            font-size: 18px;
+        }
+        .report-header p {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .report-body {
+            padding: 20px;
+        }
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            text-align: center;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .summary-card.critical { background: #ffebe9; }
+        .summary-card.high { background: #fff8c5; }
+        .summary-card.medium { background: #ddf4ff; }
+        .summary-card.low { background: #dafbe1; }
+        .summary-card .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .summary-card.critical .number { color: #cf222e; }
+        .summary-card.high .number { color: #9a6700; }
+        .summary-card.medium .number { color: #0969da; }
+        .summary-card.low .number { color: #1a7f37; }
+        .summary-card .label {
+            font-size: 12px;
+            color: #57606a;
+        }
+        
+        /* ロードマップ */
+        .roadmap {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            position: relative;
+        }
+        .roadmap::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: #d0d7de;
+            z-index: 0;
+        }
+        .roadmap-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+        .roadmap-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 24px;
+            color: white;
+        }
+        .roadmap-icon.phase1 { background: #2da44e; }
+        .roadmap-icon.phase2 { background: #0969da; }
+        .roadmap-icon.phase3 { background: #bf8700; }
+        .roadmap-icon.phase4 { background: #8250df; }
+        .roadmap-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .roadmap-desc {
+            font-size: 12px;
+            color: #57606a;
+        }
+        
+        /* 出力形式バッジ */
+        .format-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+        .format-html { background: #ddf4ff; color: #0969da; }
+        .format-csv { background: #dafbe1; color: #1a7f37; }
+        .format-pdf { background: #ffebe9; color: #cf222e; }
+        .format-excel { background: #fff8c5; color: #9a6700; }
+
+        @media (max-width: 768px) {
+            .report-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .roadmap {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .roadmap::before {
+                display: none;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 レポート生成ガイド</h1>
+        <p class="subtitle">段階的な実装アプローチ（HTML → CSV → PDF → グラフ）</p>
+
+        <!-- 概要 -->
+        <div class="section">
+            <h2>📋 レポート生成の全体像</h2>
+            
+            <p style="margin-bottom: 20px;">
+                レポート生成機能は<strong>段階的に拡張</strong>していくアプローチが現実的です。
+                まずコア機能（データ集計 + HTML/CSV出力）を作り、後からPDF、グラフなどを追加します。
+            </p>
+            
+            <h3>実装ロードマップ</h3>
+            <div class="roadmap">
+                <div class="roadmap-item">
+                    <div class="roadmap-icon phase1">📄</div>
+                    <div class="roadmap-title">Phase 1</div>
+                    <div class="roadmap-desc">HTML + CSV<br>Sprint 4</div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-icon phase2">📑</div>
+                    <div class="roadmap-title">Phase 2</div>
+                    <div class="roadmap-desc">PDF出力<br>Sprint 4-5</div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-icon phase3">📈</div>
+                    <div class="roadmap-title">Phase 3</div>
+                    <div class="roadmap-desc">グラフ生成<br>将来拡張</div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-icon phase4">📊</div>
+                    <div class="roadmap-title">Phase 4</div>
+                    <div class="roadmap-desc">Excel連携<br>将来拡張</div>
+                </div>
+            </div>
+            
+            <h3>各Phaseの概要</h3>
+            <div class="phase-cards">
+                <div class="phase-card">
+                    <div class="phase-card-header phase1">Phase 1：コア機能</div>
+                    <div class="phase-card-body">
+                        <p><strong>HTML + CSV出力</strong></p>
+                        <p>データ集計クエリ<br>HTMLテンプレート<br>CSVエクスポート</p>
+                        <div class="phase-card-sprint">🎯 Sprint 4（必須）</div>
+                    </div>
+                </div>
+                <div class="phase-card">
+                    <div class="phase-card-header phase2">Phase 2：PDF出力</div>
+                    <div class="phase-card-body">
+                        <p><strong>PDF変換</strong></p>
+                        <p>WeasyPrint使用<br>メール添付用<br>印刷対応</p>
+                        <div class="phase-card-sprint">🎯 Sprint 4-5</div>
+                    </div>
+                </div>
+                <div class="phase-card">
+                    <div class="phase-card-header phase3">Phase 3：グラフ</div>
+                    <div class="phase-card-body">
+                        <p><strong>視覚化</strong></p>
+                        <p>トレンドグラフ<br>円グラフ<br>棒グラフ</p>
+                        <div class="phase-card-sprint">📅 将来拡張</div>
+                    </div>
+                </div>
+                <div class="phase-card">
+                    <div class="phase-card-header phase4">Phase 4：Excel</div>
+                    <div class="phase-card-body">
+                        <p><strong>Excel連携</strong></p>
+                        <p>テンプレート出力<br>複数シート<br>数式埋め込み</p>
+                        <div class="phase-card-sprint">📅 将来拡張</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>優先順位</h3>
+            <table>
+                <tr>
+                    <th>優先度</th>
+                    <th>機能</th>
+                    <th>出力形式</th>
+                    <th>理由</th>
+                </tr>
+                <tr>
+                    <td><span style="color: #cf222e; font-weight: bold;">高</span></td>
+                    <td>HTMLサマリー</td>
+                    <td><span class="format-badge format-html">HTML</span></td>
+                    <td>ダッシュボードで即表示可能</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #cf222e; font-weight: bold;">高</span></td>
+                    <td>CSV出力</td>
+                    <td><span class="format-badge format-csv">CSV</span></td>
+                    <td>Excelで自由に加工できる</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #bf8700; font-weight: bold;">中</span></td>
+                    <td>PDF出力</td>
+                    <td><span class="format-badge format-pdf">PDF</span></td>
+                    <td>正式レポート、メール添付</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #57606a;">低</span></td>
+                    <td>グラフ生成</td>
+                    <td><span class="format-badge format-html">HTML</span><span class="format-badge format-pdf">PDF</span></td>
+                    <td>見栄えは良いが必須ではない</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #57606a;">低</span></td>
+                    <td>Excelテンプレート</td>
+                    <td><span class="format-badge format-excel">XLSX</span></td>
+                    <td>要件が固まってから</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- レポートの種類 -->
+        <div class="section">
+            <h2>📑 レポートの種類</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">レポート名</th>
+                    <th style="width: 15%;">頻度</th>
+                    <th>内容</th>
+                    <th style="width: 20%;">主な用途</th>
+                </tr>
+                <tr>
+                    <td><strong>日次サマリー</strong></td>
+                    <td>毎日</td>
+                    <td>新規検出数、解消数、未対応数、Critical件数</td>
+                    <td>朝会での確認</td>
+                </tr>
+                <tr>
+                    <td><strong>週次レポート</strong></td>
+                    <td>毎週</td>
+                    <td>週間推移、対応状況、トップ10脆弱性</td>
+                    <td>週次報告、管理者向け</td>
+                </tr>
+                <tr>
+                    <td><strong>月次レポート</strong></td>
+                    <td>毎月</td>
+                    <td>月間統計、トレンド分析、KPI達成状況</td>
+                    <td>経営報告、監査対応</td>
+                </tr>
+                <tr>
+                    <td><strong>資産別レポート</strong></td>
+                    <td>随時</td>
+                    <td>特定資産の脆弱性一覧、対応履歴</td>
+                    <td>担当者向け、改善計画</td>
+                </tr>
+                <tr>
+                    <td><strong>CVE詳細レポート</strong></td>
+                    <td>随時</td>
+                    <td>特定CVEの影響範囲、該当資産一覧</td>
+                    <td>インシデント対応</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Phase 1: コア機能 -->
+        <div class="section">
+            <h2 class="phase1">🟢 Phase 1：コア機能（HTML + CSV）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                まず最小限のレポート機能を実装します。データ集計とシンプルな出力が中心です。
+            </p>
+            
+            <h3>レポート基底クラスの設計</h3>
+            <div class="code-block">
+<span class="comment"># report_generator.py</span>
+<span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict, List, Any
+<span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+<span class="keyword">import</span> csv
+<span class="keyword">import</span> io
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="class">ReportData</span>:
+    <span class="string">"""レポートデータの構造"""</span>
+    title: str
+    generated_at: datetime
+    period_start: datetime
+    period_end: datetime
+    summary: Dict[str, Any]
+    details: List[Dict[str, Any]]
+
+
+<span class="keyword">class</span> <span class="class">ReportGenerator</span>(ABC):
+    <span class="string">"""レポート生成の基底クラス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, db_session):
+        self.db = db_session
+    
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">collect_data</span>(self, start_date: datetime, end_date: datetime) -> ReportData:
+        <span class="string">"""データを収集（サブクラスで実装）"""</span>
+        <span class="keyword">pass</span>
+    
+    <span class="keyword">def</span> <span class="function">to_html</span>(self, data: ReportData) -> str:
+        <span class="string">"""HTML形式で出力"""</span>
+        <span class="keyword">raise</span> NotImplementedError
+    
+    <span class="keyword">def</span> <span class="function">to_csv</span>(self, data: ReportData) -> str:
+        <span class="string">"""CSV形式で出力"""</span>
+        <span class="keyword">raise</span> NotImplementedError
+    
+    <span class="keyword">def</span> <span class="function">to_pdf</span>(self, data: ReportData) -> bytes:
+        <span class="string">"""PDF形式で出力（Phase 2で実装）"""</span>
+        <span class="keyword">raise</span> NotImplementedError
+            </div>
+            
+            <h3>サマリーレポートの実装</h3>
+            <div class="code-block">
+<span class="comment"># summary_report.py</span>
+<span class="keyword">from</span> jinja2 <span class="keyword">import</span> Template
+
+<span class="keyword">class</span> <span class="class">SummaryReportGenerator</span>(ReportGenerator):
+    <span class="string">"""サマリーレポート生成"""</span>
+    
+    <span class="keyword">def</span> <span class="function">collect_data</span>(self, start_date: datetime, end_date: datetime) -> ReportData:
+        <span class="string">"""データを収集"""</span>
+        
+        <span class="comment"># 重要度別の集計</span>
+        severity_counts = self.db.execute(<span class="string">"""
+            SELECT 
+                severity,
+                COUNT(*) as count
+            FROM vulnerability_matches vm
+            JOIN vulnerabilities v ON vm.vulnerability_id = v.id
+            WHERE vm.detected_at BETWEEN :start AND :end
+              AND vm.status = 'OPEN'
+            GROUP BY severity
+        """</span>, {<span class="string">"start"</span>: start_date, <span class="string">"end"</span>: end_date}).fetchall()
+        
+        <span class="comment"># ステータス別の集計</span>
+        status_counts = self.db.execute(<span class="string">"""
+            SELECT 
+                status,
+                COUNT(*) as count
+            FROM vulnerability_matches
+            WHERE detected_at BETWEEN :start AND :end
+            GROUP BY status
+        """</span>, {<span class="string">"start"</span>: start_date, <span class="string">"end"</span>: end_date}).fetchall()
+        
+        <span class="comment"># 詳細データ（Critical/High）</span>
+        critical_vulns = self.db.execute(<span class="string">"""
+            SELECT 
+                v.cve_id,
+                v.title,
+                v.cvss_score,
+                v.severity,
+                a.hostname,
+                a.environment,
+                vm.detected_at,
+                vm.status
+            FROM vulnerability_matches vm
+            JOIN vulnerabilities v ON vm.vulnerability_id = v.id
+            JOIN assets a ON vm.asset_id = a.id
+            WHERE vm.detected_at BETWEEN :start AND :end
+              AND v.severity IN ('Critical', 'High')
+            ORDER BY v.cvss_score DESC
+            LIMIT 50
+        """</span>, {<span class="string">"start"</span>: start_date, <span class="string">"end"</span>: end_date}).fetchall()
+        
+        <span class="keyword">return</span> ReportData(
+            title=<span class="string">"脆弱性サマリーレポート"</span>,
+            generated_at=datetime.now(),
+            period_start=start_date,
+            period_end=end_date,
+            summary={
+                <span class="string">"severity_counts"</span>: {row.severity: row.count <span class="keyword">for</span> row <span class="keyword">in</span> severity_counts},
+                <span class="string">"status_counts"</span>: {row.status: row.count <span class="keyword">for</span> row <span class="keyword">in</span> status_counts},
+                <span class="string">"total"</span>: sum(row.count <span class="keyword">for</span> row <span class="keyword">in</span> severity_counts)
+            },
+            details=[dict(row) <span class="keyword">for</span> row <span class="keyword">in</span> critical_vulns]
+        )
+            </div>
+            
+            <h3>HTML出力の実装</h3>
+            <div class="code-block">
+<span class="comment"># HTMLテンプレート</span>
+SUMMARY_HTML_TEMPLATE = <span class="string">"""
+&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;{{ data.title }}&lt;/title&gt;
+    &lt;style&gt;
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #24292f; color: white; padding: 20px; }
+        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }
+        .card { text-align: center; padding: 20px; border-radius: 8px; }
+        .card.critical { background: #ffebe9; }
+        .card.high { background: #fff8c5; }
+        .card.medium { background: #ddf4ff; }
+        .card.low { background: #dafbe1; }
+        .card .number { font-size: 36px; font-weight: bold; }
+        .card.critical .number { color: #cf222e; }
+        .card.high .number { color: #9a6700; }
+        .card.medium .number { color: #0969da; }
+        .card.low .number { color: #1a7f37; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #f6f8fa; }
+        .severity-critical { color: #cf222e; font-weight: bold; }
+        .severity-high { color: #9a6700; font-weight: bold; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="header"&gt;
+        &lt;h1&gt;{{ data.title }}&lt;/h1&gt;
+        &lt;p&gt;期間: {{ data.period_start.strftime('%Y/%m/%d') }} - {{ data.period_end.strftime('%Y/%m/%d') }}&lt;/p&gt;
+        &lt;p&gt;生成日時: {{ data.generated_at.strftime('%Y/%m/%d %H:%M') }}&lt;/p&gt;
+    &lt;/div&gt;
+    
+    &lt;h2&gt;サマリー&lt;/h2&gt;
+    &lt;div class="summary-cards"&gt;
+        &lt;div class="card critical"&gt;
+            &lt;div class="number"&gt;{{ data.summary.severity_counts.get('Critical', 0) }}&lt;/div&gt;
+            &lt;div&gt;Critical&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="card high"&gt;
+            &lt;div class="number"&gt;{{ data.summary.severity_counts.get('High', 0) }}&lt;/div&gt;
+            &lt;div&gt;High&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="card medium"&gt;
+            &lt;div class="number"&gt;{{ data.summary.severity_counts.get('Medium', 0) }}&lt;/div&gt;
+            &lt;div&gt;Medium&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="card low"&gt;
+            &lt;div class="number"&gt;{{ data.summary.severity_counts.get('Low', 0) }}&lt;/div&gt;
+            &lt;div&gt;Low&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;h2&gt;Critical/High 脆弱性一覧&lt;/h2&gt;
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;th&gt;CVE ID&lt;/th&gt;
+            &lt;th&gt;タイトル&lt;/th&gt;
+            &lt;th&gt;CVSS&lt;/th&gt;
+            &lt;th&gt;重要度&lt;/th&gt;
+            &lt;th&gt;対象資産&lt;/th&gt;
+            &lt;th&gt;環境&lt;/th&gt;
+            &lt;th&gt;ステータス&lt;/th&gt;
+        &lt;/tr&gt;
+        {% for item in data.details %}
+        &lt;tr&gt;
+            &lt;td&gt;{{ item.cve_id }}&lt;/td&gt;
+            &lt;td&gt;{{ item.title[:50] }}...&lt;/td&gt;
+            &lt;td&gt;{{ item.cvss_score }}&lt;/td&gt;
+            &lt;td class="severity-{{ item.severity|lower }}"&gt;{{ item.severity }}&lt;/td&gt;
+            &lt;td&gt;{{ item.hostname }}&lt;/td&gt;
+            &lt;td&gt;{{ item.environment }}&lt;/td&gt;
+            &lt;td&gt;{{ item.status }}&lt;/td&gt;
+        &lt;/tr&gt;
+        {% endfor %}
+    &lt;/table&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"""</span>
+
+<span class="keyword">class</span> <span class="class">SummaryReportGenerator</span>(ReportGenerator):
+    <span class="comment"># ... collect_data は上記の通り ...</span>
+    
+    <span class="keyword">def</span> <span class="function">to_html</span>(self, data: ReportData) -> str:
+        <span class="string">"""HTML形式で出力"""</span>
+        template = Template(SUMMARY_HTML_TEMPLATE)
+        <span class="keyword">return</span> template.render(data=data)
+            </div>
+            
+            <h3>CSV出力の実装</h3>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">to_csv</span>(self, data: ReportData) -> str:
+    <span class="string">"""CSV形式で出力"""</span>
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    <span class="comment"># ヘッダー情報</span>
+    writer.writerow([<span class="string">"レポート名"</span>, data.title])
+    writer.writerow([<span class="string">"期間"</span>, f<span class="string">"{data.period_start} - {data.period_end}"</span>])
+    writer.writerow([<span class="string">"生成日時"</span>, data.generated_at.strftime(<span class="string">"%Y/%m/%d %H:%M"</span>)])
+    writer.writerow([])
+    
+    <span class="comment"># サマリー</span>
+    writer.writerow([<span class="string">"【サマリー】"</span>])
+    writer.writerow([<span class="string">"重要度"</span>, <span class="string">"件数"</span>])
+    <span class="keyword">for</span> severity, count <span class="keyword">in</span> data.summary[<span class="string">"severity_counts"</span>].items():
+        writer.writerow([severity, count])
+    writer.writerow([])
+    
+    <span class="comment"># 詳細データ</span>
+    writer.writerow([<span class="string">"【詳細一覧】"</span>])
+    writer.writerow([<span class="string">"CVE ID"</span>, <span class="string">"タイトル"</span>, <span class="string">"CVSS"</span>, <span class="string">"重要度"</span>, <span class="string">"対象資産"</span>, <span class="string">"環境"</span>, <span class="string">"ステータス"</span>])
+    <span class="keyword">for</span> item <span class="keyword">in</span> data.details:
+        writer.writerow([
+            item[<span class="string">"cve_id"</span>],
+            item[<span class="string">"title"</span>],
+            item[<span class="string">"cvss_score"</span>],
+            item[<span class="string">"severity"</span>],
+            item[<span class="string">"hostname"</span>],
+            item[<span class="string">"environment"</span>],
+            item[<span class="string">"status"</span>]
+        ])
+    
+    <span class="keyword">return</span> output.getvalue()
+            </div>
+            
+            <h3>レポートプレビュー（HTML）</h3>
+            <div class="report-preview">
+                <div class="report-header">
+                    <h3>脆弱性サマリーレポート</h3>
+                    <p>期間: 2024/12/01 - 2024/12/07 | 生成日時: 2024/12/08 09:00</p>
+                </div>
+                <div class="report-body">
+                    <h4 style="margin-bottom: 16px;">サマリー</h4>
+                    <div class="report-summary">
+                        <div class="summary-card critical">
+                            <div class="number">3</div>
+                            <div class="label">Critical</div>
+                        </div>
+                        <div class="summary-card high">
+                            <div class="number">12</div>
+                            <div class="label">High</div>
+                        </div>
+                        <div class="summary-card medium">
+                            <div class="number">28</div>
+                            <div class="label">Medium</div>
+                        </div>
+                        <div class="summary-card low">
+                            <div class="number">45</div>
+                            <div class="label">Low</div>
+                        </div>
+                    </div>
+                    <h4 style="margin: 20px 0 16px;">Critical/High 脆弱性一覧</h4>
+                    <table style="font-size: 13px;">
+                        <tr>
+                            <th>CVE ID</th>
+                            <th>タイトル</th>
+                            <th>CVSS</th>
+                            <th>対象資産</th>
+                            <th>環境</th>
+                        </tr>
+                        <tr>
+                            <td>CVE-2024-1234</td>
+                            <td>Apache HTTP Server の重大な脆弱性</td>
+                            <td>9.8</td>
+                            <td>web-server-01</td>
+                            <td>本番</td>
+                        </tr>
+                        <tr>
+                            <td>CVE-2024-5678</td>
+                            <td>OpenSSL バッファオーバーフロー</td>
+                            <td>8.1</td>
+                            <td>api-server-01</td>
+                            <td>本番</td>
+                        </tr>
+                        <tr>
+                            <td>CVE-2024-9012</td>
+                            <td>PostgreSQL 認証バイパス</td>
+                            <td>7.5</td>
+                            <td>db-server-01</td>
+                            <td>本番</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 2: PDF出力 -->
+        <div class="section">
+            <h2 class="phase2">🔵 Phase 2：PDF出力</h2>
+            
+            <p style="margin-bottom: 16px;">
+                HTMLをPDFに変換します。<strong>WeasyPrint</strong>を使用するのが最も簡単です。
+            </p>
+            
+            <h3>ライブラリの比較</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">ライブラリ</th>
+                    <th>特徴</th>
+                    <th style="width: 20%;">推奨度</th>
+                </tr>
+                <tr>
+                    <td><strong>WeasyPrint</strong></td>
+                    <td>HTML/CSSをそのままPDFに変換。日本語対応◎</td>
+                    <td><span style="color: #2da44e; font-weight: bold;">⭐ 推奨</span></td>
+                </tr>
+                <tr>
+                    <td><strong>ReportLab</strong></td>
+                    <td>Pythonコードで直接PDF生成。細かい制御可能</td>
+                    <td>複雑なレイアウト向け</td>
+                </tr>
+                <tr>
+                    <td><strong>pdfkit</strong></td>
+                    <td>wkhtmltopdfのラッパー。外部依存あり</td>
+                    <td>環境構築が必要</td>
+                </tr>
+            </table>
+            
+            <h3>WeasyPrintのインストール</h3>
+            <div class="code-block">
+<span class="comment"># インストール</span>
+pip install weasyprint
+
+<span class="comment"># 日本語フォント（Ubuntu/Debian）</span>
+apt-get install fonts-noto-cjk
+            </div>
+            
+            <h3>PDF出力の実装</h3>
+            <div class="code-block">
+<span class="comment"># pdf_generator.py</span>
+<span class="keyword">from</span> weasyprint <span class="keyword">import</span> HTML, CSS
+<span class="keyword">from</span> weasyprint.text.fonts <span class="keyword">import</span> FontConfiguration
+
+<span class="keyword">class</span> <span class="class">SummaryReportGenerator</span>(ReportGenerator):
+    <span class="comment"># ... collect_data, to_html, to_csv は上記の通り ...</span>
+    
+    <span class="keyword">def</span> <span class="function">to_pdf</span>(self, data: ReportData) -> bytes:
+        <span class="string">"""PDF形式で出力"""</span>
+        
+        <span class="comment"># HTMLを生成</span>
+        html_content = self.to_html(data)
+        
+        <span class="comment"># PDF用の追加CSS（印刷向け調整）</span>
+        pdf_css = CSS(string=<span class="string">"""
+            @page {
+                size: A4;
+                margin: 2cm;
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                    font-size: 10px;
+                }
+            }
+            body {
+                font-family: 'Noto Sans CJK JP', sans-serif;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        """</span>)
+        
+        <span class="comment"># フォント設定</span>
+        font_config = FontConfiguration()
+        
+        <span class="comment"># PDF生成</span>
+        html = HTML(string=html_content)
+        pdf_bytes = html.write_pdf(
+            stylesheets=[pdf_css],
+            font_config=font_config
+        )
+        
+        <span class="keyword">return</span> pdf_bytes
+    
+    <span class="keyword">def</span> <span class="function">save_pdf</span>(self, data: ReportData, filepath: str):
+        <span class="string">"""PDFをファイルに保存"""</span>
+        pdf_bytes = self.to_pdf(data)
+        <span class="keyword">with</span> open(filepath, <span class="string">"wb"</span>) <span class="keyword">as</span> f:
+            f.write(pdf_bytes)
+            </div>
+            
+            <h3>使用例</h3>
+            <div class="code-block">
+<span class="comment"># レポート生成と出力</span>
+generator = SummaryReportGenerator(db_session)
+
+<span class="comment"># データ収集</span>
+data = generator.collect_data(
+    start_date=datetime(<span class="number">2024</span>, <span class="number">12</span>, <span class="number">1</span>),
+    end_date=datetime(<span class="number">2024</span>, <span class="number">12</span>, <span class="number">7</span>)
+)
+
+<span class="comment"># HTML出力（ダッシュボード表示用）</span>
+html = generator.to_html(data)
+
+<span class="comment"># CSV出力（Excelで開ける）</span>
+csv_content = generator.to_csv(data)
+<span class="keyword">with</span> open(<span class="string">"report.csv"</span>, <span class="string">"w"</span>, encoding=<span class="string">"utf-8-sig"</span>) <span class="keyword">as</span> f:
+    f.write(csv_content)
+
+<span class="comment"># PDF出力（メール添付用）</span>
+generator.save_pdf(data, <span class="string">"report.pdf"</span>)
+            </div>
+            
+            <div class="callout">
+                CSV出力時は <code>utf-8-sig</code> エンコーディングを使用すると、Excelで文字化けしません。
+            </div>
+        </div>
+
+        <!-- Phase 3: グラフ生成 -->
+        <div class="section">
+            <h2 class="phase3">🟡 Phase 3：グラフ生成（将来拡張）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                視覚的なレポートが必要になったら、グラフ生成機能を追加します。
+            </p>
+            
+            <h3>ライブラリの選択肢</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">ライブラリ</th>
+                    <th>特徴</th>
+                    <th style="width: 25%;">用途</th>
+                </tr>
+                <tr>
+                    <td><strong>matplotlib</strong></td>
+                    <td>定番のグラフライブラリ。静的な画像出力</td>
+                    <td>PDF埋め込み用</td>
+                </tr>
+                <tr>
+                    <td><strong>Plotly</strong></td>
+                    <td>インタラクティブなグラフ。HTML出力</td>
+                    <td>ダッシュボード用</td>
+                </tr>
+                <tr>
+                    <td><strong>Chart.js</strong></td>
+                    <td>JavaScript。HTMLに埋め込み</td>
+                    <td>Webダッシュボード用</td>
+                </tr>
+            </table>
+            
+            <h3>matplotlib でのグラフ生成例</h3>
+            <div class="code-block">
+<span class="comment"># chart_generator.py</span>
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> matplotlib
+<span class="keyword">import</span> io
+<span class="keyword">import</span> base64
+
+<span class="comment"># 日本語フォント設定</span>
+matplotlib.rcParams[<span class="string">'font.family'</span>] = <span class="string">'Noto Sans CJK JP'</span>
+
+<span class="keyword">class</span> <span class="class">ChartGenerator</span>:
+    <span class="string">"""グラフ生成クラス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">severity_pie_chart</span>(self, severity_counts: dict) -> str:
+        <span class="string">"""重要度別の円グラフを生成（Base64画像）"""</span>
+        
+        labels = list(severity_counts.keys())
+        sizes = list(severity_counts.values())
+        colors = [<span class="string">'#cf222e'</span>, <span class="string">'#bf8700'</span>, <span class="string">'#0969da'</span>, <span class="string">'#2da44e'</span>]
+        
+        fig, ax = plt.subplots(figsize=(<span class="number">6</span>, <span class="number">6</span>))
+        ax.pie(sizes, labels=labels, colors=colors, autopct=<span class="string">'%1.1f%%'</span>)
+        ax.set_title(<span class="string">'重要度別 脆弱性分布'</span>)
+        
+        <span class="comment"># Base64エンコード</span>
+        buf = io.BytesIO()
+        plt.savefig(buf, format=<span class="string">'png'</span>, bbox_inches=<span class="string">'tight'</span>)
+        buf.seek(<span class="number">0</span>)
+        img_base64 = base64.b64encode(buf.read()).decode(<span class="string">'utf-8'</span>)
+        plt.close()
+        
+        <span class="keyword">return</span> f<span class="string">'data:image/png;base64,{img_base64}'</span>
+    
+    <span class="keyword">def</span> <span class="function">trend_line_chart</span>(self, dates: list, counts: list) -> str:
+        <span class="string">"""トレンドの折れ線グラフを生成"""</span>
+        
+        fig, ax = plt.subplots(figsize=(<span class="number">10</span>, <span class="number">4</span>))
+        ax.plot(dates, counts, marker=<span class="string">'o'</span>, color=<span class="string">'#0969da'</span>)
+        ax.set_title(<span class="string">'脆弱性検出数の推移'</span>)
+        ax.set_xlabel(<span class="string">'日付'</span>)
+        ax.set_ylabel(<span class="string">'検出数'</span>)
+        ax.grid(<span class="keyword">True</span>, alpha=<span class="number">0.3</span>)
+        
+        <span class="comment"># Base64エンコード</span>
+        buf = io.BytesIO()
+        plt.savefig(buf, format=<span class="string">'png'</span>, bbox_inches=<span class="string">'tight'</span>)
+        buf.seek(<span class="number">0</span>)
+        img_base64 = base64.b64encode(buf.read()).decode(<span class="string">'utf-8'</span>)
+        plt.close()
+        
+        <span class="keyword">return</span> f<span class="string">'data:image/png;base64,{img_base64}'</span>
+            </div>
+            
+            <h3>HTMLへのグラフ埋め込み</h3>
+            <div class="code-block">
+<span class="comment"># HTMLテンプレートにグラフを埋め込み</span>
+REPORT_WITH_CHART_TEMPLATE = <span class="string">"""
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;...&lt;/head&gt;
+&lt;body&gt;
+    &lt;h2&gt;重要度分布&lt;/h2&gt;
+    &lt;img src="{{ pie_chart_base64 }}" alt="重要度別分布"&gt;
+    
+    &lt;h2&gt;検出数トレンド&lt;/h2&gt;
+    &lt;img src="{{ trend_chart_base64 }}" alt="トレンド"&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"""</span>
+
+<span class="keyword">def</span> <span class="function">to_html_with_charts</span>(self, data: ReportData) -> str:
+    chart_gen = ChartGenerator()
+    
+    pie_chart = chart_gen.severity_pie_chart(data.summary[<span class="string">"severity_counts"</span>])
+    trend_chart = chart_gen.trend_line_chart(data.trend_dates, data.trend_counts)
+    
+    template = Template(REPORT_WITH_CHART_TEMPLATE)
+    <span class="keyword">return</span> template.render(
+        data=data,
+        pie_chart_base64=pie_chart,
+        trend_chart_base64=trend_chart
+    )
+            </div>
+        </div>
+
+        <!-- 週次/月次レポート -->
+        <div class="section">
+            <h2>📅 週次/月次レポートの実装</h2>
+            
+            <h3>週次レポートの追加データ</h3>
+            <div class="code-block">
+<span class="keyword">class</span> <span class="class">WeeklyReportGenerator</span>(ReportGenerator):
+    <span class="string">"""週次レポート生成"""</span>
+    
+    <span class="keyword">def</span> <span class="function">collect_data</span>(self, start_date: datetime, end_date: datetime) -> ReportData:
+        <span class="comment"># 基本のサマリーデータ</span>
+        summary = self._get_summary(start_date, end_date)
+        
+        <span class="comment"># 週間の日別推移</span>
+        daily_trend = self.db.execute(<span class="string">"""
+            SELECT 
+                DATE(detected_at) as date,
+                COUNT(*) as count
+            FROM vulnerability_matches
+            WHERE detected_at BETWEEN :start AND :end
+            GROUP BY DATE(detected_at)
+            ORDER BY date
+        """</span>, {<span class="string">"start"</span>: start_date, <span class="string">"end"</span>: end_date}).fetchall()
+        
+        <span class="comment"># 前週との比較</span>
+        prev_start = start_date - timedelta(days=<span class="number">7</span>)
+        prev_end = start_date
+        prev_summary = self._get_summary(prev_start, prev_end)
+        
+        <span class="comment"># 対応完了率</span>
+        resolution_rate = self._get_resolution_rate(start_date, end_date)
+        
+        <span class="comment"># 資産別ランキング</span>
+        top_assets = self.db.execute(<span class="string">"""
+            SELECT 
+                a.hostname,
+                a.environment,
+                COUNT(*) as vuln_count
+            FROM vulnerability_matches vm
+            JOIN assets a ON vm.asset_id = a.id
+            WHERE vm.detected_at BETWEEN :start AND :end
+              AND vm.status = 'OPEN'
+            GROUP BY a.id
+            ORDER BY vuln_count DESC
+            LIMIT 10
+        """</span>, {<span class="string">"start"</span>: start_date, <span class="string">"end"</span>: end_date}).fetchall()
+        
+        <span class="keyword">return</span> ReportData(
+            title=<span class="string">"週次脆弱性レポート"</span>,
+            generated_at=datetime.now(),
+            period_start=start_date,
+            period_end=end_date,
+            summary={
+                <span class="string">"current"</span>: summary,
+                <span class="string">"previous"</span>: prev_summary,
+                <span class="string">"daily_trend"</span>: daily_trend,
+                <span class="string">"resolution_rate"</span>: resolution_rate,
+                <span class="string">"top_assets"</span>: top_assets
+            },
+            details=self._get_critical_vulns(start_date, end_date)
+        )
+            </div>
+            
+            <h3>前週比較の表示例</h3>
+            <div class="code-block">
+<span class="comment"># 前週比較をHTMLに含める</span>
+COMPARISON_HTML = <span class="string">"""
+&lt;div class="comparison"&gt;
+    &lt;h3&gt;前週との比較&lt;/h3&gt;
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;th&gt;項目&lt;/th&gt;
+            &lt;th&gt;今週&lt;/th&gt;
+            &lt;th&gt;前週&lt;/th&gt;
+            &lt;th&gt;増減&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;新規検出&lt;/td&gt;
+            &lt;td&gt;{{ current.new_count }}&lt;/td&gt;
+            &lt;td&gt;{{ previous.new_count }}&lt;/td&gt;
+            &lt;td class="{{ 'increase' if diff &gt; 0 else 'decrease' }}"&gt;
+                {{ '+' if diff &gt; 0 else '' }}{{ diff }}
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        ...
+    &lt;/table&gt;
+&lt;/div&gt;
+"""</span>
+            </div>
+        </div>
+
+        <!-- APIエンドポイント -->
+        <div class="section">
+            <h2>🔌 APIエンドポイント</h2>
+            
+            <p style="margin-bottom: 16px;">
+                ダッシュボードやメール配信から呼び出すためのAPIを用意します。
+            </p>
+            
+            <div class="code-block">
+<span class="comment"># api/reports.py (FastAPI)</span>
+<span class="keyword">from</span> fastapi <span class="keyword">import</span> APIRouter, Query
+<span class="keyword">from</span> fastapi.responses <span class="keyword">import</span> HTMLResponse, StreamingResponse
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+<span class="keyword">import</span> io
+
+router = APIRouter(prefix=<span class="string">"/api/reports"</span>, tags=[<span class="string">"reports"</span>])
+
+<span class="decorator">@router.get</span>(<span class="string">"/summary"</span>, response_class=HTMLResponse)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_summary_html</span>(
+    start_date: datetime = Query(<span class="keyword">None</span>),
+    end_date: datetime = Query(<span class="keyword">None</span>)
+):
+    <span class="string">"""サマリーレポート（HTML）を取得"""</span>
+    
+    <span class="keyword">if not</span> end_date:
+        end_date = datetime.now()
+    <span class="keyword">if not</span> start_date:
+        start_date = end_date - timedelta(days=<span class="number">7</span>)
+    
+    generator = SummaryReportGenerator(db_session)
+    data = generator.collect_data(start_date, end_date)
+    html = generator.to_html(data)
+    
+    <span class="keyword">return</span> HTMLResponse(content=html)
+
+
+<span class="decorator">@router.get</span>(<span class="string">"/summary/csv"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_summary_csv</span>(
+    start_date: datetime = Query(<span class="keyword">None</span>),
+    end_date: datetime = Query(<span class="keyword">None</span>)
+):
+    <span class="string">"""サマリーレポート（CSV）をダウンロード"""</span>
+    
+    <span class="keyword">if not</span> end_date:
+        end_date = datetime.now()
+    <span class="keyword">if not</span> start_date:
+        start_date = end_date - timedelta(days=<span class="number">7</span>)
+    
+    generator = SummaryReportGenerator(db_session)
+    data = generator.collect_data(start_date, end_date)
+    csv_content = generator.to_csv(data)
+    
+    <span class="comment"># ダウンロード用レスポンス</span>
+    <span class="keyword">return</span> StreamingResponse(
+        io.StringIO(csv_content),
+        media_type=<span class="string">"text/csv"</span>,
+        headers={
+            <span class="string">"Content-Disposition"</span>: f<span class="string">"attachment; filename=report_{end_date.strftime('%Y%m%d')}.csv"</span>
+        }
+    )
+
+
+<span class="decorator">@router.get</span>(<span class="string">"/summary/pdf"</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_summary_pdf</span>(
+    start_date: datetime = Query(<span class="keyword">None</span>),
+    end_date: datetime = Query(<span class="keyword">None</span>)
+):
+    <span class="string">"""サマリーレポート（PDF）をダウンロード"""</span>
+    
+    <span class="keyword">if not</span> end_date:
+        end_date = datetime.now()
+    <span class="keyword">if not</span> start_date:
+        start_date = end_date - timedelta(days=<span class="number">7</span>)
+    
+    generator = SummaryReportGenerator(db_session)
+    data = generator.collect_data(start_date, end_date)
+    pdf_bytes = generator.to_pdf(data)
+    
+    <span class="keyword">return</span> StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type=<span class="string">"application/pdf"</span>,
+        headers={
+            <span class="string">"Content-Disposition"</span>: f<span class="string">"attachment; filename=report_{end_date.strftime('%Y%m%d')}.pdf"</span>
+        }
+    )
+            </div>
+        </div>
+
+        <!-- 定期配信 -->
+        <div class="section">
+            <h2>⏰ 定期レポート配信</h2>
+            
+            <p style="margin-bottom: 16px;">
+                通知サービスと連携して、定期的にレポートを配信します。
+            </p>
+            
+            <div class="code-block">
+<span class="comment"># scheduled_reports.py</span>
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+
+<span class="keyword">def</span> <span class="function">send_weekly_report</span>():
+    <span class="string">"""週次レポートを生成してメール送信"""</span>
+    
+    <span class="comment"># 期間設定（先週の月曜〜日曜）</span>
+    today = datetime.now()
+    end_date = today - timedelta(days=today.weekday())  <span class="comment"># 今週月曜</span>
+    start_date = end_date - timedelta(days=<span class="number">7</span>)           <span class="comment"># 先週月曜</span>
+    
+    <span class="comment"># レポート生成</span>
+    generator = WeeklyReportGenerator(db_session)
+    data = generator.collect_data(start_date, end_date)
+    
+    <span class="comment"># PDF生成</span>
+    pdf_bytes = generator.to_pdf(data)
+    pdf_path = f<span class="string">"/tmp/weekly_report_{end_date.strftime('%Y%m%d')}.pdf"</span>
+    <span class="keyword">with</span> open(pdf_path, <span class="string">"wb"</span>) <span class="keyword">as</span> f:
+        f.write(pdf_bytes)
+    
+    <span class="comment"># メール送信</span>
+    email_notifier.send_email(
+        to=[<span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f18294928483988588dc8594909cb19489909c819d94df929e9c">[email&#160;protected]</a>"</span>, <span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fa979b949b9d9f8889ba9f829b978a969fd4999597">[email&#160;protected]</a>"</span>],
+        subject=f<span class="string">"【週次】脆弱性レポート {start_date.strftime('%m/%d')}〜{end_date.strftime('%m/%d')}"</span>,
+        body_html=generator.to_html(data),
+        attachments=[pdf_path]
+    )
+    
+    <span class="comment"># Teamsにもサマリーを投稿</span>
+    teams_notifier.send_weekly_summary({
+        <span class="string">"period"</span>: f<span class="string">"{start_date.strftime('%m/%d')}〜{end_date.strftime('%m/%d')}"</span>,
+        <span class="string">"new_count"</span>: data.summary[<span class="string">"current"</span>][<span class="string">"new_count"</span>],
+        <span class="string">"resolved_count"</span>: data.summary[<span class="string">"current"</span>][<span class="string">"resolved_count"</span>],
+        <span class="string">"critical_count"</span>: data.summary[<span class="string">"current"</span>][<span class="string">"critical_count"</span>]
+    })
+
+
+<span class="comment"># cron設定: 毎週月曜 09:00</span>
+<span class="comment"># 0 9 * * 1 python -c "from scheduled_reports import send_weekly_report; send_weekly_report()"</span>
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当Eのタスク</h2>
+            
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>タスク</th>
+                    <th>詳細</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 4</strong></td>
+                    <td>Phase 1：コア機能</td>
+                    <td>
+                        ・ReportGenerator基底クラス作成<br>
+                        ・サマリーレポートの集計クエリ<br>
+                        ・HTML出力（Jinja2テンプレート）<br>
+                        ・CSV出力
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 4-5</strong></td>
+                    <td>Phase 2：PDF出力</td>
+                    <td>
+                        ・WeasyPrint導入<br>
+                        ・印刷用CSS調整<br>
+                        ・日本語フォント設定
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>APIエンドポイント</td>
+                    <td>
+                        ・/api/reports/* の実装<br>
+                        ・ダッシュボードからの呼び出し<br>
+                        ・ダウンロード機能
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>定期配信連携</td>
+                    <td>
+                        ・担当Dの通知サービスと連携<br>
+                        ・週次レポートのスケジュール設定
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>将来</strong></td>
+                    <td>Phase 3-4：拡張機能</td>
+                    <td>
+                        ・グラフ生成（matplotlib）<br>
+                        ・トレンド分析<br>
+                        ・Excelテンプレート出力
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 15%;">Phase</th>
+                    <th style="width: 20%;">機能</th>
+                    <th>出力形式</th>
+                    <th style="width: 15%;">時期</th>
+                </tr>
+                <tr>
+                    <td><strong>Phase 1</strong></td>
+                    <td>コア機能</td>
+                    <td><span class="format-badge format-html">HTML</span><span class="format-badge format-csv">CSV</span></td>
+                    <td>Sprint 4</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 2</strong></td>
+                    <td>PDF出力</td>
+                    <td><span class="format-badge format-pdf">PDF</span></td>
+                    <td>Sprint 4-5</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 3</strong></td>
+                    <td>グラフ生成</td>
+                    <td><span class="format-badge format-html">HTML</span><span class="format-badge format-pdf">PDF</span></td>
+                    <td>将来拡張</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 4</strong></td>
+                    <td>Excel連携</td>
+                    <td><span class="format-badge format-excel">XLSX</span></td>
+                    <td>将来拡張</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 段階的アプローチのメリット</h4>
+                <ul>
+                    <li><strong>早期に価値提供</strong>：Phase 1だけで十分使えるレポート機能</li>
+                    <li><strong>リスク低減</strong>：小さく作って確認しながら進める</li>
+                    <li><strong>柔軟な拡張</strong>：要件が固まってからグラフ等を追加</li>
+                    <li><strong>工数の最適化</strong>：必要なものから優先的に実装</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>WeasyPrint</strong></td>
+                    <td><a href="https://weasyprint.org/" target="_blank">https://weasyprint.org/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Jinja2 テンプレート</strong></td>
+                    <td><a href="https://jinja.palletsprojects.com/" target="_blank">https://jinja.palletsprojects.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>matplotlib</strong></td>
+                    <td><a href="https://matplotlib.org/" target="_blank">https://matplotlib.org/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Plotly</strong></td>
+                    <td><a href="https://plotly.com/python/" target="_blank">https://plotly.com/python/</a></td>
+                </tr>
+            

@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>資産情報収集 ガイド（AWS + テレワークPC）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ff9900;
+        }
+        
+        /* AWS カラー */
+        .aws-orange { color: #ff9900; }
+        .aws-bg { background: #ff9900; color: white; }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 環境カード */
+        .env-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .env-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .env-card.active {
+            border-color: #2da44e;
+            background: #dafbe1;
+        }
+        .env-card.partial {
+            border-color: #bf8700;
+            background: #fff8c5;
+        }
+        .env-card.inactive {
+            border-color: #57606a;
+            background: #f6f8fa;
+        }
+        .env-card.planned {
+            border-color: #0969da;
+            background: #ddf4ff;
+        }
+        .env-card h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .env-card p {
+            font-size: 12px;
+            color: #57606a;
+        }
+        .env-card .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .env-card.active .status { background: #2da44e; color: white; }
+        .env-card.partial .status { background: #bf8700; color: white; }
+        .env-card.inactive .status { background: #57606a; color: white; }
+        .env-card.planned .status { background: #0969da; color: white; }
+        
+        /* システム図 */
+        .system-diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .system-svg {
+            width: 100%;
+            min-width: 750px;
+            height: 450px;
+        }
+        
+        /* 方式カード */
+        .method-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .method-card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .method-card-header {
+            padding: 12px 16px;
+            color: white;
+            font-weight: bold;
+        }
+        .method-card-header.ssm { background: #ff9900; }
+        .method-card-header.api { background: #0969da; }
+        .method-card-header.inspector { background: #2da44e; }
+        .method-card-header.script { background: #8250df; }
+        .method-card-body {
+            padding: 16px;
+        }
+        .method-card-body ul {
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .method-card-body li {
+            margin: 6px 0;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* フロー図 */
+        .flow-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .flow-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .flow-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            color: white;
+        }
+        .flow-content {
+            flex: 1;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .flow-content h4 {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .flow-content p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 20px;
+            color: #8c959f;
+            margin: 8px 0;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .key {
+            color: #7ee787;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        /* 比較表 */
+        .compare-table .recommend {
+            background: #dafbe1;
+        }
+        
+        /* フェーズ */
+        .phase-timeline {
+            margin: 20px 0;
+        }
+        .phase-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #ff9900;
+        }
+        .phase-number {
+            width: 40px;
+            height: 40px;
+            background: #ff9900;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .phase-content h4 {
+            margin-bottom: 4px;
+        }
+        .phase-content p {
+            font-size: 14px;
+            color: #57606a;
+        }
+
+        /* AWSサービスアイコン風 */
+        .aws-service {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #232f3e;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+            margin: 2px;
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☁️ 資産情報収集 ガイド</h1>
+        <p class="subtitle">AWS環境 + テレワークPC（180台）の脆弱性管理を統合する</p>
+
+        <!-- 現在の環境 -->
+        <div class="section">
+            <h2>📊 現在の環境状況</h2>
+            
+            <div class="env-status">
+                <div class="env-card partial">
+                    <h4>🖥️ EC2 + SSM Agent</h4>
+                    <p>一部のインスタンスに導入済み</p>
+                    <span class="status">混在</span>
+                </div>
+                <div class="env-card active">
+                    <h4>🗄️ RDS</h4>
+                    <p>データベースサービス利用中</p>
+                    <span class="status">利用中</span>
+                </div>
+                <div class="env-card active">
+                    <h4>⚡ Lambda</h4>
+                    <p>サーバーレス関数を利用中</p>
+                    <span class="status">利用中</span>
+                </div>
+                <div class="env-card active">
+                    <h4>🐳 ECS</h4>
+                    <p>コンテナを一部利用</p>
+                    <span class="status">一部利用</span>
+                </div>
+                <div class="env-card planned">
+                    <h4>🔍 AWS Inspector</h4>
+                    <p>社内監査用に導入予定</p>
+                    <span class="status">導入予定</span>
+                </div>
+                <div class="env-card active">
+                    <h4>💻 テレワークPC</h4>
+                    <p>約180台（Windows / AD参加）</p>
+                    <span class="status">VPN接続</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 推奨構成 -->
+        <div class="section">
+            <h2>🎯 推奨する収集構成</h2>
+            
+            <p style="margin-bottom: 20px;">現在の環境を踏まえ、以下の構成を推奨します。</p>
+            
+            <div class="system-diagram">
+                <svg class="system-svg" viewBox="0 0 750 420">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="740" height="410" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="375" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">推奨構成：AWS環境の資産情報収集</text>
+                    
+                    <!-- AWS領域 -->
+                    <rect x="20" y="50" width="350" height="350" rx="6" fill="#fff8e6" stroke="#ff9900" stroke-width="2"/>
+                    <text x="195" y="75" text-anchor="middle" font-size="14" font-weight="bold" fill="#ff9900">AWS環境</text>
+                    
+                    <!-- EC2 (SSMあり) -->
+                    <rect x="35" y="95" width="100" height="70" rx="4" fill="#ff9900"/>
+                    <text x="85" y="120" text-anchor="middle" font-size="11" font-weight="bold" fill="white">EC2</text>
+                    <text x="85" y="135" text-anchor="middle" font-size="9" fill="white">(SSMあり)</text>
+                    <text x="85" y="155" text-anchor="middle" font-size="9" fill="white">→ SSM経由</text>
+                    
+                    <!-- EC2 (SSMなし) -->
+                    <rect x="145" y="95" width="100" height="70" rx="4" fill="#bf8700"/>
+                    <text x="195" y="120" text-anchor="middle" font-size="11" font-weight="bold" fill="white">EC2</text>
+                    <text x="195" y="135" text-anchor="middle" font-size="9" fill="white">(SSMなし)</text>
+                    <text x="195" y="155" text-anchor="middle" font-size="9" fill="white">→ SSM導入推奨</text>
+                    
+                    <!-- RDS -->
+                    <rect x="255" y="95" width="100" height="70" rx="4" fill="#3b48cc"/>
+                    <text x="305" y="125" text-anchor="middle" font-size="11" font-weight="bold" fill="white">RDS</text>
+                    <text x="305" y="145" text-anchor="middle" font-size="9" fill="white">→ AWS API</text>
+                    
+                    <!-- Lambda -->
+                    <rect x="35" y="180" width="100" height="70" rx="4" fill="#ff9900"/>
+                    <text x="85" y="210" text-anchor="middle" font-size="11" font-weight="bold" fill="white">Lambda</text>
+                    <text x="85" y="230" text-anchor="middle" font-size="9" fill="white">→ API + Inspector</text>
+                    
+                    <!-- ECS -->
+                    <rect x="145" y="180" width="100" height="70" rx="4" fill="#ff9900"/>
+                    <text x="195" y="210" text-anchor="middle" font-size="11" font-weight="bold" fill="white">ECS</text>
+                    <text x="195" y="230" text-anchor="middle" font-size="9" fill="white">→ ECR + Inspector</text>
+                    
+                    <!-- AWS Inspector -->
+                    <rect x="35" y="270" width="320" height="55" rx="4" fill="#2da44e"/>
+                    <text x="195" y="295" text-anchor="middle" font-size="12" font-weight="bold" fill="white">AWS Inspector（新規導入推奨）</text>
+                    <text x="195" y="315" text-anchor="middle" font-size="10" fill="white">EC2・Lambda・ECRの脆弱性を自動スキャン</text>
+                    
+                    <!-- AWS API/SSM 集約 -->
+                    <rect x="35" y="340" width="320" height="45" rx="4" fill="#232f3e"/>
+                    <text x="195" y="368" text-anchor="middle" font-size="11" font-weight="bold" fill="white">AWS API (boto3) / SSM Inventory</text>
+                    
+                    <!-- 矢印群 -->
+                    <line x1="370" y1="200" x2="400" y2="200" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <line x1="370" y1="300" x2="400" y2="250" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <line x1="370" y1="365" x2="400" y2="280" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- 脆弱性管理システム -->
+                    <rect x="405" y="130" width="175" height="180" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="492" y="155" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">脆弱性管理システム</text>
+                    
+                    <rect x="420" y="170" width="145" height="35" rx="4" fill="white" stroke="#d0d7de"/>
+                    <text x="492" y="192" text-anchor="middle" font-size="10" fill="#24292f">AWS資産情報取得</text>
+                    
+                    <rect x="420" y="215" width="145" height="35" rx="4" fill="white" stroke="#d0d7de"/>
+                    <text x="492" y="237" text-anchor="middle" font-size="10" fill="#24292f">JVN/NVD連携</text>
+                    
+                    <rect x="420" y="260" width="145" height="35" rx="4" fill="white" stroke="#d0d7de"/>
+                    <text x="492" y="282" text-anchor="middle" font-size="10" fill="#24292f">マッチング・分析</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="585" y1="220" x2="620" y2="220" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- 出力 -->
+                    <rect x="625" y="150" width="110" height="140" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="680" y="175" text-anchor="middle" font-size="11" font-weight="bold" fill="#8250df">出力</text>
+                    <text x="680" y="200" text-anchor="middle" font-size="10" fill="#24292f">📊 ダッシュボード</text>
+                    <text x="680" y="220" text-anchor="middle" font-size="10" fill="#24292f">📧 通知</text>
+                    <text x="680" y="240" text-anchor="middle" font-size="10" fill="#24292f">📄 レポート</text>
+                    <text x="680" y="260" text-anchor="middle" font-size="10" fill="#24292f">📋 監査資料</text>
+                    
+                    <!-- ローカルPC -->
+                    <rect x="405" y="330" width="175" height="60" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+                    <text x="492" y="355" text-anchor="middle" font-size="11" font-weight="bold" fill="#57606a">ローカルPC（少数）</text>
+                    <text x="492" y="375" text-anchor="middle" font-size="10" fill="#57606a">→ 手動 or エージェント</text>
+                    
+                    <!-- 矢印マーカー -->
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨ポイント</h4>
+                <ul>
+                    <li><strong>AWS Inspector を導入</strong>：社内監査にも使え、脆弱性スキャンを自動化</li>
+                    <li><strong>SSM Agent 未導入EC2にも導入</strong>：統一的な管理が可能に</li>
+                    <li><strong>本システムで統合</strong>：Inspector結果 + JVN/NVD情報を組み合わせて分析</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 収集方法の詳細 -->
+        <div class="section">
+            <h2>🔧 AWSリソース別の収集方法</h2>
+            
+            <div class="method-cards">
+                <div class="method-card">
+                    <div class="method-card-header ssm">🖥️ EC2インスタンス</div>
+                    <div class="method-card-body">
+                        <p style="margin-bottom: 12px;"><strong>SSM Agent 導入済み</strong></p>
+                        <ul>
+                            <li>SSM Inventory で自動収集</li>
+                            <li>OS、パッケージ、サービス情報</li>
+                            <li>パッチ適用状況</li>
+                        </ul>
+                        <p style="margin: 12px 0;"><strong>SSM Agent 未導入</strong></p>
+                        <ul>
+                            <li>SSM Agent の追加導入を推奨</li>
+                            <li>または SSH 経由でスクリプト実行</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-card-header api">🗄️ RDS</div>
+                    <div class="method-card-body">
+                        <p style="margin-bottom: 12px;"><strong>AWS API (boto3) で取得</strong></p>
+                        <ul>
+                            <li>DBエンジン種類（MySQL, PostgreSQL等）</li>
+                            <li>エンジンバージョン</li>
+                            <li>インスタンスクラス</li>
+                            <li>パラメータグループ</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #57606a;">
+                            ※ DB内部のソフトウェアはAWS管理のため、エンジンバージョンの脆弱性をチェック
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-card-header api">⚡ Lambda</div>
+                    <div class="method-card-body">
+                        <p style="margin-bottom: 12px;"><strong>AWS API + Inspector</strong></p>
+                        <ul>
+                            <li>ランタイム（Python 3.9等）</li>
+                            <li>使用レイヤー</li>
+                            <li>依存ライブラリ（Inspectorでスキャン）</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #57606a;">
+                            ※ Inspector を有効化すると Lambda の脆弱性を自動検出
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-card-header inspector">🐳 ECS / ECR</div>
+                    <div class="method-card-body">
+                        <p style="margin-bottom: 12px;"><strong>ECR スキャン + Inspector</strong></p>
+                        <ul>
+                            <li>コンテナイメージの脆弱性スキャン</li>
+                            <li>ベースイメージの脆弱性</li>
+                            <li>含まれるパッケージの脆弱性</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #57606a;">
+                            ※ ECR の拡張スキャンまたは Inspector でスキャン可能
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 24px 0 16px;">取得情報の一覧</h3>
+            <table>
+                <tr>
+                    <th>AWSサービス</th>
+                    <th>取得方法</th>
+                    <th>取得情報</th>
+                    <th>脆弱性チェック対象</th>
+                </tr>
+                <tr>
+                    <td><span class="aws-service">EC2</span></td>
+                    <td>SSM Inventory / API</td>
+                    <td>OS、パッケージ、サービス</td>
+                    <td>OS、ミドルウェア、ライブラリ</td>
+                </tr>
+                <tr>
+                    <td><span class="aws-service">RDS</span></td>
+                    <td>AWS API</td>
+                    <td>エンジン、バージョン</td>
+                    <td>DBエンジンの脆弱性</td>
+                </tr>
+                <tr>
+                    <td><span class="aws-service">Lambda</span></td>
+                    <td>API + Inspector</td>
+                    <td>ランタイム、レイヤー</td>
+                    <td>ランタイム、依存ライブラリ</td>
+                </tr>
+                <tr>
+                    <td><span class="aws-service">ECS/ECR</span></td>
+                    <td>ECR スキャン / Inspector</td>
+                    <td>イメージ、パッケージ</td>
+                    <td>コンテナ内の全パッケージ</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- AWS Inspector導入 -->
+        <div class="section">
+            <h2>🔍 AWS Inspector 導入のすすめ</h2>
+            
+            <p style="margin-bottom: 16px;">
+                社内監査用にも使いたいとのことなので、<strong>AWS Inspector の導入を強く推奨</strong>します。
+            </p>
+            
+            <h3 style="margin: 20px 0 12px;">Inspector でできること</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">対象</th>
+                    <th>スキャン内容</th>
+                </tr>
+                <tr>
+                    <td><strong>EC2</strong></td>
+                    <td>OS、インストール済みパッケージの脆弱性を継続的にスキャン</td>
+                </tr>
+                <tr>
+                    <td><strong>ECR</strong></td>
+                    <td>コンテナイメージの脆弱性をプッシュ時・継続的にスキャン</td>
+                </tr>
+                <tr>
+                    <td><strong>Lambda</strong></td>
+                    <td>関数コードと依存ライブラリの脆弱性をスキャン</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 24px 0 12px;">Inspector の利点</h3>
+            <div class="method-cards">
+                <div class="method-card">
+                    <div class="method-card-header inspector">自動スキャン</div>
+                    <div class="method-card-body">
+                        <ul>
+                            <li>有効化するだけで自動的にスキャン開始</li>
+                            <li>新しい脆弱性が公開されると再スキャン</li>
+                            <li>リソースの変更を検知して再スキャン</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-card-header inspector">監査対応</div>
+                    <div class="method-card-body">
+                        <ul>
+                            <li>脆弱性の検出履歴が残る</li>
+                            <li>レポート出力機能</li>
+                            <li>「定期的にスキャンしている」証跡になる</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 24px 0 12px;">本システムとの連携</h3>
+            <div class="flow-vertical" style="background: white; border: 1px solid #d0d7de;">
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #2da44e;">🔍</div>
+                    <div class="flow-content" style="border-color: #2da44e;">
+                        <h4>AWS Inspector</h4>
+                        <p>EC2/Lambda/ECRの脆弱性を自動スキャン</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ APIで結果を取得</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #0969da;">🔄</div>
+                    <div class="flow-content" style="border-color: #0969da;">
+                        <h4>脆弱性管理システム（本システム）</h4>
+                        <p>Inspector結果 + JVN日本語情報 + NVD詳細情報を統合</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ 分析・優先度付け</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #8250df;">📊</div>
+                    <div class="flow-content" style="border-color: #8250df;">
+                        <h4>統合ダッシュボード・レポート</h4>
+                        <p>ビジネス影響を考慮した優先度、日本語の対策情報、監査用レポート</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                Inspector だけでも脆弱性は検出できますが、本システムと連携することで「日本語での対策情報」「ビジネス影響を考慮した優先度」「統合レポート」が得られます
+            </div>
+        </div>
+
+        <!-- SSM未導入EC2の対応 -->
+        <div class="section">
+            <h2>⚠️ SSM Agent 未導入EC2への対応</h2>
+            
+            <p style="margin-bottom: 16px;">SSM Agent が入っていないEC2については、以下の選択肢があります。</p>
+            
+            <table class="compare-table">
+                <tr>
+                    <th>方法</th>
+                    <th>メリット</th>
+                    <th>デメリット</th>
+                    <th>推奨度</th>
+                </tr>
+                <tr class="recommend">
+                    <td><strong>SSM Agent を追加導入</strong></td>
+                    <td>・統一管理が可能<br>・Inspector も使える<br>・SSHポート不要</td>
+                    <td>・導入作業が必要</td>
+                    <td>⭐⭐⭐<br>最も推奨</td>
+                </tr>
+                <tr>
+                    <td><strong>SSH経由でスクリプト実行</strong></td>
+                    <td>・Agent不要</td>
+                    <td>・SSH接続設定が必要<br>・セキュリティ考慮が必要</td>
+                    <td>⭐⭐<br>次善策</td>
+                </tr>
+                <tr>
+                    <td><strong>手動で情報収集</strong></td>
+                    <td>・すぐ始められる</td>
+                    <td>・運用負荷が高い<br>・漏れが発生しやすい</td>
+                    <td>⭐<br>一時的な対応のみ</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨：SSM Agent の追加導入</h4>
+                <p>以下の手順で導入できます：</p>
+                <ol style="margin-left: 20px; margin-top: 8px;">
+                    <li>EC2にIAMロール（AmazonSSMManagedInstanceCore）をアタッチ</li>
+                    <li>SSM Agent をインストール（Amazon Linux 2/2023 は標準で入っている）</li>
+                    <li>Systems Manager コンソールで管理対象として表示されることを確認</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- テレワークPC管理 -->
+        <div class="section">
+            <h2>💻 テレワークPC（Windows 約180台）の管理</h2>
+            
+            <h3 style="margin-bottom: 16px;">現在の環境</h3>
+            <div class="env-status">
+                <div class="env-card active">
+                    <h4>🖥️ Windows PC</h4>
+                    <p>約180台</p>
+                    <span class="status">テレワーク</span>
+                </div>
+                <div class="env-card active">
+                    <h4>🔐 Active Directory</h4>
+                    <p>全PC参加済み</p>
+                    <span class="status">GPO利用可</span>
+                </div>
+                <div class="env-card active">
+                    <h4>🔒 VPN</h4>
+                    <p>社外接続時に使用</p>
+                    <span class="status">利用中</span>
+                </div>
+                <div class="env-card active">
+                    <h4>📁 ファイルサーバー</h4>
+                    <p>オンプレ / S3 / Google Drive</p>
+                    <span class="status">利用可</span>
+                </div>
+                <div class="env-card active">
+                    <h4>🛡️ Windows Defender</h4>
+                    <p>標準搭載</p>
+                    <span class="status">利用中</span>
+                </div>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨方式：GPO + PowerShellスクリプト</h4>
+                <p>ADに参加済みのため、グループポリシーでスクリプトを配布・実行できます。<br>
+                MDMなしでも180台を効率的に管理可能です。</p>
+            </div>
+        </div>
+
+        <!-- PC管理の構成図 -->
+        <div class="section">
+            <h2>🏗️ テレワークPC管理の構成</h2>
+            
+            <div class="system-diagram">
+                <svg class="system-svg" viewBox="0 0 750 380">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="740" height="370" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="375" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">テレワークPC 資産情報収集の構成</text>
+                    
+                    <!-- テレワーク環境 -->
+                    <rect x="20" y="50" width="300" height="180" rx="6" fill="#f6f8fa" stroke="#57606a" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="170" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#57606a">テレワーク環境（VPN接続）</text>
+                    
+                    <!-- PC群 -->
+                    <rect x="35" y="95" width="70" height="50" rx="4" fill="#0969da"/>
+                    <text x="70" y="115" text-anchor="middle" font-size="10" font-weight="bold" fill="white">💻 PC</text>
+                    <text x="70" y="135" text-anchor="middle" font-size="9" fill="white">スクリプト</text>
+                    
+                    <rect x="115" y="95" width="70" height="50" rx="4" fill="#0969da"/>
+                    <text x="150" y="115" text-anchor="middle" font-size="10" font-weight="bold" fill="white">💻 PC</text>
+                    <text x="150" y="135" text-anchor="middle" font-size="9" fill="white">スクリプト</text>
+                    
+                    <rect x="195" y="95" width="70" height="50" rx="4" fill="#0969da"/>
+                    <text x="230" y="115" text-anchor="middle" font-size="10" font-weight="bold" fill="white">💻 PC</text>
+                    <text x="230" y="135" text-anchor="middle" font-size="9" fill="white">スクリプト</text>
+                    
+                    <text x="280" y="120" font-size="14" fill="#57606a">...</text>
+                    
+                    <text x="170" y="170" text-anchor="middle" font-size="11" fill="#24292f">約180台（AD参加済み）</text>
+                    
+                    <!-- 矢印（VPN経由） -->
+                    <line x1="170" y1="200" x2="170" y2="250" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <text x="200" y="230" font-size="10" fill="#57606a">VPN経由</text>
+                    
+                    <!-- 社内環境 -->
+                    <rect x="20" y="255" width="300" height="110" rx="6" fill="#fff8e6" stroke="#ff9900" stroke-width="2"/>
+                    <text x="170" y="280" text-anchor="middle" font-size="13" font-weight="bold" fill="#ff9900">社内環境</text>
+                    
+                    <!-- AD -->
+                    <rect x="35" y="295" width="80" height="55" rx="4" fill="#5c2d91"/>
+                    <text x="75" y="318" text-anchor="middle" font-size="10" font-weight="bold" fill="white">AD</text>
+                    <text x="75" y="335" text-anchor="middle" font-size="8" fill="white">GPOで配布</text>
+                    
+                    <!-- ファイルサーバー -->
+                    <rect x="125" y="295" width="80" height="55" rx="4" fill="#2da44e"/>
+                    <text x="165" y="318" text-anchor="middle" font-size="10" font-weight="bold" fill="white">ファイル</text>
+                    <text x="165" y="335" text-anchor="middle" font-size="8" fill="white">サーバー/S3</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="325" y1="320" x2="380" y2="200" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- 脆弱性管理システム -->
+                    <rect x="385" y="90" width="175" height="200" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="472" y="115" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">脆弱性管理システム</text>
+                    
+                    <rect x="400" y="130" width="145" height="35" rx="4" fill="white" stroke="#d0d7de"/>
+                    <text x="472" y="152" text-anchor="middle" font-size="10" fill="#24292f">PC資産情報取得</text>
+                    
+                    <rect x="400" y="175" width="145" height="35" rx="4" fill="white" stroke="#d0d7de"/>
+                    <text x="472" y="197" text-anchor="middle" font-size="10" fill="#24292f">AWS資産情報取得</text>
+                    
+                    <rect x="400" y="220" width="145" height="35" rx="4" fill="white" stroke="#d0d7de"/>
+                    <text x="472" y="242" text-anchor="middle" font-size="10" fill="#24292f">JVN/NVD/Inspector</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="565" y1="190" x2="610" y2="190" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- 出力 -->
+                    <rect x="615" y="120" width="120" height="140" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="675" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#8250df">統合出力</text>
+                    <text x="675" y="170" text-anchor="middle" font-size="10" fill="#24292f">📊 ダッシュボード</text>
+                    <text x="675" y="190" text-anchor="middle" font-size="10" fill="#24292f">📧 通知</text>
+                    <text x="675" y="210" text-anchor="middle" font-size="10" fill="#24292f">📄 監査レポート</text>
+                    <text x="675" y="230" text-anchor="middle" font-size="10" fill="#24292f">🖥️ PC一覧</text>
+                    
+                    <!-- 説明 -->
+                    <rect x="385" y="310" width="350" height="50" rx="4" fill="#dafbe1" stroke="#2da44e"/>
+                    <text x="560" y="332" text-anchor="middle" font-size="11" fill="#1a7f37">✅ AWS環境 + テレワークPC を統合管理</text>
+                    <text x="560" y="350" text-anchor="middle" font-size="10" fill="#1a7f37">全資産の脆弱性を一元的に可視化</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 処理の流れ -->
+        <div class="section">
+            <h2>🔄 テレワークPC 情報収集の流れ</h2>
+            
+            <div class="flow-vertical" style="background: white; border: 1px solid #d0d7de;">
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #5c2d91;">📋</div>
+                    <div class="flow-content" style="border-color: #5c2d91;">
+                        <h4>1. GPOでスクリプト配布</h4>
+                        <p>Active Directoryのグループポリシーで、PowerShellスクリプトを全PCに配布。<br>タスクスケジューラへの登録も自動化。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #0969da;">⏰</div>
+                    <div class="flow-content" style="border-color: #0969da;">
+                        <h4>2. 各PCで定期実行（毎日）</h4>
+                        <p>タスクスケジューラで毎日自動実行。<br>OS情報、インストール済みソフトウェア、パッチ状況を収集。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #2da44e;">📤</div>
+                    <div class="flow-content" style="border-color: #2da44e;">
+                        <h4>3. VPN接続時にデータ送信</h4>
+                        <p>収集したデータをJSONファイルとしてファイルサーバー（またはS3）にアップロード。<br>VPN接続時に自動送信。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #ff9900;">🔄</div>
+                    <div class="flow-content" style="border-color: #ff9900;">
+                        <h4>4. 管理システムで取り込み</h4>
+                        <p>脆弱性管理システムがファイルサーバーを定期監視。<br>新しいデータをDBに登録。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #cf222e;">🔍</div>
+                    <div class="flow-content" style="border-color: #cf222e;">
+                        <h4>5. 脆弱性マッチング</h4>
+                        <p>収集した資産情報とJVN/NVDの脆弱性情報をマッチング。<br>該当する脆弱性があればアラート。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 収集する情報 -->
+        <div class="section">
+            <h2>📊 テレワークPCから収集する情報</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">情報</th>
+                    <th style="width: 35%;">PowerShellコマンド</th>
+                    <th>用途</th>
+                </tr>
+                <tr>
+                    <td><strong>コンピュータ名</strong></td>
+                    <td><code>$env:COMPUTERNAME</code></td>
+                    <td>PC識別</td>
+                </tr>
+                <tr>
+                    <td><strong>OS情報</strong></td>
+                    <td><code>Get-ComputerInfo</code></td>
+                    <td>OSバージョンの脆弱性チェック</td>
+                </tr>
+                <tr>
+                    <td><strong>インストール済みソフトウェア</strong></td>
+                    <td><code>Get-ItemProperty</code>（レジストリ）</td>
+                    <td>ソフトウェアの脆弱性チェック</td>
+                </tr>
+                <tr>
+                    <td><strong>Windows Update</strong></td>
+                    <td><code>Get-HotFix</code></td>
+                    <td>パッチ適用状況の確認</td>
+                </tr>
+                <tr>
+                    <td><strong>Defender状態</strong></td>
+                    <td><code>Get-MpComputerStatus</code></td>
+                    <td>アンチウイルスの有効性確認</td>
+                </tr>
+                <tr>
+                    <td><strong>最終起動日時</strong></td>
+                    <td><code>(Get-CimInstance Win32_OperatingSystem).LastBootUpTime</code></td>
+                    <td>PC稼働状況の把握</td>
+                </tr>
+            </table>
+            
+            <h4 style="margin: 20px 0 12px;">出力JSONの例</h4>
+            <div class="code-block">
+{
+  <span class="key">"computerName"</span>: <span class="string">"PC-TANAKA-001"</span>,
+  <span class="key">"collectedAt"</span>: <span class="string">"2025-01-15T09:30:00Z"</span>,
+  <span class="key">"os"</span>: {
+    <span class="key">"name"</span>: <span class="string">"Microsoft Windows 11 Pro"</span>,
+    <span class="key">"version"</span>: <span class="string">"10.0.22631"</span>,
+    <span class="key">"build"</span>: <span class="string">"22631.2861"</span>
+  },
+  <span class="key">"software"</span>: [
+    {<span class="key">"name"</span>: <span class="string">"Google Chrome"</span>, <span class="key">"version"</span>: <span class="string">"120.0.6099.130"</span>},
+    {<span class="key">"name"</span>: <span class="string">"Microsoft Office"</span>, <span class="key">"version"</span>: <span class="string">"16.0.17126.20132"</span>},
+    {<span class="key">"name"</span>: <span class="string">"Zoom"</span>, <span class="key">"version"</span>: <span class="string">"5.17.0"</span>}
+  ],
+  <span class="key">"hotfixes"</span>: [
+    {<span class="key">"id"</span>: <span class="string">"KB5034123"</span>, <span class="key">"installedOn"</span>: <span class="string">"2025-01-10"</span>},
+    {<span class="key">"id"</span>: <span class="string">"KB5034441"</span>, <span class="key">"installedOn"</span>: <span class="string">"2025-01-10"</span>}
+  ],
+  <span class="key">"defender"</span>: {
+    <span class="key">"enabled"</span>: <span class="number">true</span>,
+    <span class="key">"signatureVersion"</span>: <span class="string">"1.403.2134.0"</span>,
+    <span class="key">"lastScan"</span>: <span class="string">"2025-01-14T22:00:00Z"</span>
+  }
+}
+            </div>
+        </div>
+
+        <!-- GPOでの配布方法 -->
+        <div class="section">
+            <h2>⚙️ GPOでの配布設定</h2>
+            
+            <h4 style="margin-bottom: 12px;">配布手順の概要</h4>
+            <div class="phase-timeline">
+                <div class="phase-item" style="border-color: #5c2d91;">
+                    <div class="phase-number" style="background: #5c2d91;">1</div>
+                    <div class="phase-content">
+                        <h4>スクリプトをファイルサーバーに配置</h4>
+                        <p><code>\\fileserver\scripts\collect-asset.ps1</code> として配置。<br>
+                        全PCからアクセス可能な共有フォルダに置く。</p>
+                    </div>
+                </div>
+                
+                <div class="phase-item" style="border-color: #5c2d91;">
+                    <div class="phase-number" style="background: #5c2d91;">2</div>
+                    <div class="phase-content">
+                        <h4>GPOで「スケジュールされたタスク」を作成</h4>
+                        <p>グループポリシー管理 → コンピュータの構成 → 基本設定 → コントロールパネルの設定 → スケジュールされたタスク</p>
+                    </div>
+                </div>
+                
+                <div class="phase-item" style="border-color: #5c2d91;">
+                    <div class="phase-number" style="background: #5c2d91;">3</div>
+                    <div class="phase-content">
+                        <h4>タスクの設定</h4>
+                        <p>トリガー：毎日12:00（昼休み中を想定）<br>
+                        操作：<code>powershell.exe -ExecutionPolicy Bypass -File \\fileserver\scripts\collect-asset.ps1</code></p>
+                    </div>
+                </div>
+                
+                <div class="phase-item" style="border-color: #5c2d91;">
+                    <div class="phase-number" style="background: #5c2d91;">4</div>
+                    <div class="phase-content">
+                        <h4>出力先の設定</h4>
+                        <p>スクリプト内で出力先を指定：<code>\\fileserver\asset-data\</code> または S3バケット</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                GPOの変更は次回のポリシー更新時（デフォルト90分ごと）に反映されます。<br>
+                即時反映したい場合は <code>gpupdate /force</code> を実行。
+            </div>
+        </div>
+
+        <!-- データ送信方法 -->
+        <div class="section">
+            <h2>📤 データ送信方法の選択肢</h2>
+            
+            <table class="compare-table">
+                <tr>
+                    <th>方法</th>
+                    <th>メリット</th>
+                    <th>デメリット</th>
+                    <th>推奨度</th>
+                </tr>
+                <tr class="recommend">
+                    <td><strong>ファイルサーバー<br>（共有フォルダ）</strong></td>
+                    <td>・設定が簡単<br>・既存インフラを活用<br>・VPN接続時に自動アクセス</td>
+                    <td>・VPN必須</td>
+                    <td>⭐⭐⭐<br>最も簡単</td>
+                </tr>
+                <tr>
+                    <td><strong>S3（直接）</strong></td>
+                    <td>・VPNなしでもアクセス可<br>・スケーラブル</td>
+                    <td>・AWS CLIまたはSDKが必要<br>・認証設定が必要</td>
+                    <td>⭐⭐<br>AWS寄せなら</td>
+                </tr>
+                <tr>
+                    <td><strong>HTTPS API</strong></td>
+                    <td>・リアルタイム送信<br>・VPNなしでも可</td>
+                    <td>・API構築が必要<br>・認証の仕組みが必要</td>
+                    <td>⭐⭐<br>将来的に</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨：まずはファイルサーバー方式</h4>
+                <p>既存のファイルサーバーを使えば、追加構築なしで始められます。<br>
+                VPN接続時に自動でアクセスできるので、テレワーク環境でも問題ありません。</p>
+            </div>
+        </div>
+
+        <!-- 未収集PCの検知 -->
+        <div class="section">
+            <h2>⚠️ 未収集PCの検知</h2>
+            
+            <p style="margin-bottom: 16px;">180台のうち、データが来ていないPCを検知する仕組みも重要です。</p>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">チェック項目</th>
+                    <th>対応</th>
+                </tr>
+                <tr>
+                    <td><strong>3日以上データなし</strong></td>
+                    <td>長期休暇 or 退職 → 確認が必要</td>
+                </tr>
+                <tr>
+                    <td><strong>7日以上データなし</strong></td>
+                    <td>アラート通知 → 情シスで確認</td>
+                </tr>
+                <tr>
+                    <td><strong>ADには存在するがデータなし</strong></td>
+                    <td>スクリプト未実行 → GPO適用を確認</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>ADとの突合</h4>
+                <p>ADのコンピュータ一覧と、収集データのPC一覧を定期的に突合することで、漏れを検知できます。</p>
+            </div>
+        </div>
+
+        <!-- 実装フェーズ -->
+        <div class="section">
+            <h2>📅 実装フェーズ</h2>
+            
+            <div class="phase-timeline">
+                <div class="phase-item">
+                    <div class="phase-number">1</div>
+                    <div class="phase-content">
+                        <h4>Phase 1：AWS API 連携（Sprint 2）</h4>
+                        <p>boto3 を使って EC2/RDS/Lambda/ECS の基本情報を取得。<br>
+                        SSM Inventory からパッケージ情報を取得（SSM導入済みEC2のみ）。</p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">2</div>
+                    <div class="phase-content">
+                        <h4>Phase 2：テレワークPC収集スクリプト（Sprint 2-3）</h4>
+                        <p>PowerShellスクリプトを作成し、GPOで180台に配布。<br>
+                        ファイルサーバー経由でデータを収集する仕組みを構築。</p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">3</div>
+                    <div class="phase-content">
+                        <h4>Phase 3：AWS Inspector 導入（Sprint 3）</h4>
+                        <p>Inspector を有効化し、スキャン結果をAPI経由で取得。<br>
+                        本システムに統合して、JVN/NVD情報と組み合わせる。</p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">4</div>
+                    <div class="phase-content">
+                        <h4>Phase 4：SSM Agent 展開（Sprint 3-4）</h4>
+                        <p>未導入EC2にSSM Agent を展開。<br>
+                        全EC2を統一的に管理できる状態にする。</p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">5</div>
+                    <div class="phase-content">
+                        <h4>Phase 5：統合ダッシュボード・監査レポート（Sprint 4-5）</h4>
+                        <p>AWS環境 + テレワークPC を統合表示するダッシュボード。<br>
+                        社内監査用のレポート出力機能を実装。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- boto3 コード例 -->
+        <div class="section">
+            <h2>💻 参考：boto3 でのAWS情報取得例</h2>
+            
+            <h4 style="margin-bottom: 12px;">EC2インスタンス情報の取得</h4>
+            <div class="code-block">
+<span class="comment"># EC2インスタンス情報を取得</span>
+<span class="key">import</span> boto3
+
+ec2 = boto3.client(<span class="string">'ec2'</span>)
+response = ec2.describe_instances()
+
+<span class="key">for</span> reservation <span class="key">in</span> response[<span class="string">'Reservations'</span>]:
+    <span class="key">for</span> instance <span class="key">in</span> reservation[<span class="string">'Instances'</span>]:
+        instance_id = instance[<span class="string">'InstanceId'</span>]
+        instance_type = instance[<span class="string">'InstanceType'</span>]
+        image_id = instance[<span class="string">'ImageId'</span>]  <span class="comment"># AMI ID</span>
+        <span class="key">print</span>(f<span class="string">"{instance_id}: {instance_type}"</span>)
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">RDSインスタンス情報の取得</h4>
+            <div class="code-block">
+<span class="comment"># RDSインスタンス情報を取得</span>
+rds = boto3.client(<span class="string">'rds'</span>)
+response = rds.describe_db_instances()
+
+<span class="key">for</span> db <span class="key">in</span> response[<span class="string">'DBInstances'</span>]:
+    db_id = db[<span class="string">'DBInstanceIdentifier'</span>]
+    engine = db[<span class="string">'Engine'</span>]  <span class="comment"># mysql, postgres 等</span>
+    version = db[<span class="string">'EngineVersion'</span>]  <span class="comment"># 8.0.32 等</span>
+    <span class="key">print</span>(f<span class="string">"{db_id}: {engine} {version}"</span>)
+    
+    <span class="comment"># CPE形式に変換例</span>
+    <span class="comment"># cpe:2.3:a:mysql:mysql:8.0.32:*:*:*:*:*:*:*</span>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">Lambda関数情報の取得</h4>
+            <div class="code-block">
+<span class="comment"># Lambda関数情報を取得</span>
+lambda_client = boto3.client(<span class="string">'lambda'</span>)
+response = lambda_client.list_functions()
+
+<span class="key">for</span> func <span class="key">in</span> response[<span class="string">'Functions'</span>]:
+    name = func[<span class="string">'FunctionName'</span>]
+    runtime = func[<span class="string">'Runtime'</span>]  <span class="comment"># python3.9, nodejs18.x 等</span>
+    <span class="key">print</span>(f<span class="string">"{name}: {runtime}"</span>)
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">Inspector検出結果の取得</h4>
+            <div class="code-block">
+<span class="comment"># Inspector の検出結果を取得</span>
+inspector = boto3.client(<span class="string">'inspector2'</span>)
+response = inspector.list_findings(
+    filterCriteria={
+        <span class="string">'severity'</span>: [{<span class="string">'comparison'</span>: <span class="string">'EQUALS'</span>, <span class="string">'value'</span>: <span class="string">'CRITICAL'</span>}]
+    }
+)
+
+<span class="key">for</span> finding <span class="key">in</span> response[<span class="string">'findings'</span>]:
+    vuln_id = finding[<span class="string">'vulnerabilityId'</span>]  <span class="comment"># CVE-2024-XXXX</span>
+    severity = finding[<span class="string">'severity'</span>]
+    resource = finding[<span class="string">'resources'</span>][<span class="number">0</span>][<span class="string">'id'</span>]
+    <span class="key">print</span>(f<span class="string">"{vuln_id} ({severity}): {resource}"</span>)
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当タスクへの影響</h2>
+            
+            <table>
+                <tr>
+                    <th>担当</th>
+                    <th>タスク</th>
+                    <th>AWS環境 + テレワークPC対応の内容</th>
+                </tr>
+                <tr>
+                    <td><strong>担当A</strong></td>
+                    <td>データ収集</td>
+                    <td>AWS Inspector API連携を追加</td>
+                </tr>
+                <tr>
+                    <td><strong>担当B</strong></td>
+                    <td>資産収集</td>
+                    <td>・boto3でのAWSリソース情報取得<br>・SSM Inventory連携<br>・<span style="color: #cf222e; font-weight: bold;">PowerShellスクリプト開発（180台PC対応）</span></td>
+                </tr>
+                <tr>
+                    <td><strong>担当C</strong></td>
+                    <td>マッチング</td>
+                    <td>Inspector結果 + PC資産情報との統合マッチング</td>
+                </tr>
+                <tr>
+                    <td><strong>担当D</strong></td>
+                    <td>レポート</td>
+                    <td>・監査用レポートテンプレート追加<br>・<span style="color: #cf222e; font-weight: bold;">PC資産一覧レポート</span></td>
+                </tr>
+                <tr>
+                    <td><strong>担当E</strong></td>
+                    <td>UI・統合</td>
+                    <td>AWS + PC の統合ダッシュボード</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>分担表への反映（追加タスク）</h4>
+                <ul>
+                    <li><strong>B-新規</strong>：PowerShell収集スクリプト開発（Sprint 2）</li>
+                    <li><strong>B-新規</strong>：GPO配布設定・テスト（Sprint 2-3）</li>
+                    <li><strong>B-新規</strong>：ファイルサーバー→DB取り込み処理（Sprint 3）</li>
+                    <li><strong>D-新規</strong>：PC資産一覧・未収集PC検知レポート（Sprint 4）</li>
+                    <li><strong>E-新規</strong>：AWS + PC 統合ダッシュボード（Sprint 4-5）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <h4 style="margin-bottom: 12px;">AWS環境</h4>
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>方針</th>
+                </tr>
+                <tr>
+                    <td><strong>EC2（SSMあり）</strong></td>
+                    <td>SSM Inventory で情報収集 + Inspector でスキャン</td>
+                </tr>
+                <tr>
+                    <td><strong>EC2（SSMなし）</strong></td>
+                    <td>SSM Agent を追加導入（推奨）</td>
+                </tr>
+                <tr>
+                    <td><strong>RDS</strong></td>
+                    <td>AWS API でエンジン・バージョンを取得し、脆弱性チェック</td>
+                </tr>
+                <tr>
+                    <td><strong>Lambda</strong></td>
+                    <td>AWS API + Inspector でランタイム・依存関係をチェック</td>
+                </tr>
+                <tr>
+                    <td><strong>ECS</strong></td>
+                    <td>ECRスキャン / Inspector でコンテナイメージをチェック</td>
+                </tr>
+                <tr>
+                    <td><strong>Inspector</strong></td>
+                    <td>新規導入推奨（社内監査にも活用）</td>
+                </tr>
+            </table>
+            
+            <h4 style="margin: 24px 0 12px;">テレワークPC（Windows 約180台）</h4>
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>方針</th>
+                </tr>
+                <tr>
+                    <td><strong>収集方法</strong></td>
+                    <td>PowerShellスクリプトをGPOで配布・定期実行</td>
+                </tr>
+                <tr>
+                    <td><strong>データ送信</strong></td>
+                    <td>VPN経由でファイルサーバーにJSON出力</td>
+                </tr>
+                <tr>
+                    <td><strong>収集情報</strong></td>
+                    <td>OS、インストール済みソフトウェア、パッチ状況、Defender状態</td>
+                </tr>
+                <tr>
+                    <td><strong>未収集検知</strong></td>
+                    <td>ADとの突合で漏れを検知</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box" style="margin-top: 20px;">
+                <h4>✅ 統合管理のメリット</h4>
+                <ul>
+                    <li><strong>AWS環境 + テレワークPC</strong> を一元的に管理</li>
+                    <li>全資産の脆弱性を <strong>ダッシュボードで可視化</strong></li>
+                    <li><strong>社内監査</strong> にも対応できるレポート出力</li>
+                    <li>JVN/NVDの <strong>日本語対策情報</strong> を統合</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

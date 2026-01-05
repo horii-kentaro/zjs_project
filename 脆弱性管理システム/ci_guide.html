@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI（継続的インテグレーション）図解ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2da44e;
+        }
+        
+        /* フロー図 */
+        .flow-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+        }
+        .flow-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .flow-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .flow-content {
+            flex: 1;
+            padding: 12px 16px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .flow-content h4 {
+            margin-bottom: 4px;
+        }
+        .flow-content p {
+            font-size: 14px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #8c959f;
+            margin: 4px 0;
+        }
+        
+        .step-1 .flow-icon { background: #ddf4ff; }
+        .step-1 .flow-content { border-color: #0969da; }
+        .step-2 .flow-icon { background: #fff8c5; }
+        .step-2 .flow-content { border-color: #d4a72c; }
+        .step-3 .flow-icon { background: #dafbe1; }
+        .step-3 .flow-content { border-color: #2da44e; }
+        .step-4 .flow-icon { background: #fbefff; }
+        .step-4 .flow-content { border-color: #8250df; }
+        .step-5 .flow-icon { background: #ffebe9; }
+        .step-5 .flow-content { border-color: #cf222e; }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* GitHub風チェック表示 */
+        .checks-container {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .checks-header {
+            background: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+            font-weight: 600;
+        }
+        .checks-header.success {
+            background: #dafbe1;
+            color: #1a7f37;
+        }
+        .checks-header.failure {
+            background: #ffebe9;
+            color: #cf222e;
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+            gap: 12px;
+        }
+        .check-item:last-child {
+            border-bottom: none;
+        }
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+        }
+        .check-icon.success { background: #2da44e; }
+        .check-icon.failure { background: #cf222e; }
+        .check-icon.skipped { background: #8c959f; }
+        .check-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        .check-time {
+            color: #57606a;
+            font-size: 14px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .key {
+            color: #7ee787;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        /* テスト種類のカード */
+        .test-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .test-card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            background: white;
+        }
+        .test-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #24292f;
+        }
+        .test-card p {
+            font-size: 14px;
+            color: #57606a;
+            margin-bottom: 8px;
+        }
+        .test-card .example {
+            background: #f6f8fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: monospace;
+        }
+        
+        /* 比較表 */
+        .compare-table {
+            margin: 20px 0;
+        }
+        .compare-table th:first-child {
+            width: 30%;
+        }
+        .compare-table .problem {
+            background: #ffebe9;
+        }
+        .compare-table .solution {
+            background: #dafbe1;
+        }
+        
+        /* GitHub Actions ファイル */
+        .file-header {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 10px 16px;
+            border-radius: 8px 8px 0 0;
+            font-family: monospace;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .file-header::before {
+            content: "📄";
+        }
+        .file-content {
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* 図解：CIパイプライン */
+        .pipeline-diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .pipeline-svg {
+            width: 100%;
+            min-width: 600px;
+            height: 120px;
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ CI（継続的インテグレーション）図解ガイド</h1>
+        <p class="subtitle">コードをプッシュしたら自動でテストが走る仕組み</p>
+
+        <!-- CIとは -->
+        <div class="section">
+            <h2>📌 CIとは？</h2>
+            <p style="font-size: 18px; margin-bottom: 16px;">
+                <strong>CI = Continuous Integration（継続的インテグレーション）</strong>
+            </p>
+            <p style="font-size: 16px; margin-bottom: 20px;">
+                <span style="color: #2da44e; font-weight: bold;">コードをプッシュしたら、自動でテストが走る仕組み</span>のこと。<br>
+                人間が手動でテストを実行しなくても、GitHubが自動で検証してくれます。
+            </p>
+            
+            <div class="callout">
+                「CI通った？」「CIが落ちてる」などの会話は、「自動テストが成功した/失敗した」という意味
+            </div>
+        </div>
+
+        <!-- CIの流れ -->
+        <div class="section">
+            <h2>🔄 CIが動く流れ</h2>
+            
+            <div class="flow-vertical">
+                <div class="flow-item step-1">
+                    <div class="flow-icon">👨‍💻</div>
+                    <div class="flow-content">
+                        <h4>1. 開発者がコードをpush</h4>
+                        <p>git push origin feature/xxx</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-2">
+                    <div class="flow-icon">🔔</div>
+                    <div class="flow-content">
+                        <h4>2. GitHubが検知</h4>
+                        <p>プッシュを検知し、CIワークフローを起動</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-3">
+                    <div class="flow-icon">🤖</div>
+                    <div class="flow-content">
+                        <h4>3. 自動でテスト実行（CI）</h4>
+                        <p>GitHub Actionsのサーバーでテストが走る</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-4">
+                    <div class="flow-icon">📊</div>
+                    <div class="flow-content">
+                        <h4>4. 結果をPR画面に表示</h4>
+                        <p>テスト結果がGitHub上に表示される</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-5">
+                    <div class="flow-icon">✅❌</div>
+                    <div class="flow-content">
+                        <h4>5. 通過 or 失敗</h4>
+                        <p>全テスト通過でマージ可能に / 失敗なら修正が必要</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- パイプライン図 -->
+        <div class="section">
+            <h2>🔧 CIパイプラインの流れ</h2>
+            
+            <div class="pipeline-diagram">
+                <svg class="pipeline-svg" viewBox="0 0 700 100">
+                    <!-- 矢印の定義 -->
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                    
+                    <!-- Lint -->
+                    <rect x="20" y="25" width="120" height="50" rx="8" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="80" y="45" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">Lint</text>
+                    <text x="80" y="62" text-anchor="middle" font-size="10" fill="#57606a">コード規約チェック</text>
+                    
+                    <!-- 矢印1 -->
+                    <line x1="145" y1="50" x2="175" y2="50" stroke="#8c959f" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    
+                    <!-- Test -->
+                    <rect x="180" y="25" width="120" height="50" rx="8" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="240" y="45" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a7f37">Test</text>
+                    <text x="240" y="62" text-anchor="middle" font-size="10" fill="#57606a">ユニットテスト</text>
+                    
+                    <!-- 矢印2 -->
+                    <line x1="305" y1="50" x2="335" y2="50" stroke="#8c959f" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    
+                    <!-- Type Check -->
+                    <rect x="340" y="25" width="120" height="50" rx="8" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+                    <text x="400" y="45" text-anchor="middle" font-size="12" font-weight="bold" fill="#9a6700">Type Check</text>
+                    <text x="400" y="62" text-anchor="middle" font-size="10" fill="#57606a">型チェック</text>
+                    
+                    <!-- 矢印3 -->
+                    <line x1="465" y1="50" x2="495" y2="50" stroke="#8c959f" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    
+                    <!-- Build -->
+                    <rect x="500" y="25" width="120" height="50" rx="8" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="560" y="45" text-anchor="middle" font-size="12" font-weight="bold" fill="#8250df">Build</text>
+                    <text x="560" y="62" text-anchor="middle" font-size="10" fill="#57606a">ビルド確認</text>
+                    
+                    <!-- 完了 -->
+                    <line x1="625" y1="50" x2="655" y2="50" stroke="#8c959f" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <circle cx="675" cy="50" r="15" fill="#2da44e"/>
+                    <text x="675" y="55" text-anchor="middle" font-size="14" fill="white">✓</text>
+                </svg>
+            </div>
+            
+            <p style="text-align: center; color: #57606a; font-size: 14px;">
+                各ステップが順番に実行され、全て通過するとマージ可能になります
+            </p>
+        </div>
+
+        <!-- どんなテストが走るか -->
+        <div class="section">
+            <h2>🧪 CIで実行するテストの種類</h2>
+            
+            <div class="test-cards">
+                <div class="test-card">
+                    <h4>🔍 Lint（静的解析）</h4>
+                    <p>コードの書き方をチェック。インデントずれ、未使用変数などを検出</p>
+                    <div class="example">flake8, ESLint, Prettier</div>
+                </div>
+                
+                <div class="test-card">
+                    <h4>✅ ユニットテスト</h4>
+                    <p>各関数が正しく動くかテスト。バグの早期発見</p>
+                    <div class="example">pytest, Jest, JUnit</div>
+                </div>
+                
+                <div class="test-card">
+                    <h4>📝 型チェック</h4>
+                    <p>型の整合性を検証。型の不一致によるバグを防止</p>
+                    <div class="example">mypy, TypeScript</div>
+                </div>
+                
+                <div class="test-card">
+                    <h4>🔒 セキュリティチェック</h4>
+                    <p>脆弱なライブラリや安全でないコードパターンを検出</p>
+                    <div class="example">Dependabot, Bandit, npm audit</div>
+                </div>
+                
+                <div class="test-card">
+                    <h4>🏗️ ビルド確認</h4>
+                    <p>アプリが正常にビルド・起動するか確認</p>
+                    <div class="example">docker build, npm build</div>
+                </div>
+                
+                <div class="test-card">
+                    <h4>📊 カバレッジ</h4>
+                    <p>テストがコードの何%をカバーしているか計測</p>
+                    <div class="example">coverage.py, Istanbul</div>
+                </div>
+            </div>
+            
+            <table>
+                <tr>
+                    <th>テスト種類</th>
+                    <th>チェック内容</th>
+                    <th>今回のプロジェクトでの例</th>
+                </tr>
+                <tr>
+                    <td><strong>ユニットテスト</strong></td>
+                    <td>関数の動作が正しいか</td>
+                    <td>JVN APIクライアントが正しくパースするか</td>
+                </tr>
+                <tr>
+                    <td><strong>Lint</strong></td>
+                    <td>コーディング規約準拠</td>
+                    <td>インデント、命名規則、未使用import</td>
+                </tr>
+                <tr>
+                    <td><strong>型チェック</strong></td>
+                    <td>型の整合性</td>
+                    <td>str型に数値を入れようとしていないか</td>
+                </tr>
+                <tr>
+                    <td><strong>セキュリティ</strong></td>
+                    <td>脆弱性のあるライブラリ</td>
+                    <td>古いrequestsライブラリを使っていないか</td>
+                </tr>
+                <tr>
+                    <td><strong>ビルド</strong></td>
+                    <td>起動確認</td>
+                    <td>Dockerイメージのビルドが成功するか</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- GitHub上での見え方 -->
+        <div class="section">
+            <h2>📺 GitHub上での見え方</h2>
+            
+            <h4 style="margin-bottom: 12px;">✅ 全テスト通過時</h4>
+            <div class="checks-container">
+                <div class="checks-header success">
+                    ✓ All checks have passed
+                </div>
+                <div class="check-item">
+                    <div class="check-icon success">✓</div>
+                    <span class="check-name">lint</span>
+                    <span class="check-time">3s</span>
+                </div>
+                <div class="check-item">
+                    <div class="check-icon success">✓</div>
+                    <span class="check-name">test</span>
+                    <span class="check-time">45s</span>
+                </div>
+                <div class="check-item">
+                    <div class="check-icon success">✓</div>
+                    <span class="check-name">type-check</span>
+                    <span class="check-time">12s</span>
+                </div>
+                <div class="check-item">
+                    <div class="check-icon success">✓</div>
+                    <span class="check-name">build</span>
+                    <span class="check-time">1m 20s</span>
+                </div>
+            </div>
+            
+            <h4 style="margin: 24px 0 12px;">❌ テスト失敗時</h4>
+            <div class="checks-container">
+                <div class="checks-header failure">
+                    ✗ Some checks were not successful
+                </div>
+                <div class="check-item">
+                    <div class="check-icon success">✓</div>
+                    <span class="check-name">lint</span>
+                    <span class="check-time">3s</span>
+                </div>
+                <div class="check-item" style="background: #ffebe9;">
+                    <div class="check-icon failure">✗</div>
+                    <span class="check-name">test</span>
+                    <span class="check-time">38s</span>
+                    <span style="color: #cf222e; font-size: 13px;">← クリックで失敗理由を確認</span>
+                </div>
+                <div class="check-item">
+                    <div class="check-icon skipped">⏸</div>
+                    <span class="check-name">build</span>
+                    <span class="check-time">skipped</span>
+                </div>
+            </div>
+            
+            <div class="point-box">
+                <h4>失敗した時は</h4>
+                <ul>
+                    <li>失敗した項目をクリックすると、詳細なログが見れる</li>
+                    <li>どのテストが、どの理由で失敗したか確認</li>
+                    <li>コードを修正して再度プッシュ → CIが再実行される</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- なぜCIが必要か -->
+        <div class="section">
+            <h2>🎯 なぜCIが必要か</h2>
+            
+            <table class="compare-table">
+                <tr>
+                    <th>CIがない場合の問題</th>
+                    <th>CIで解決</th>
+                </tr>
+                <tr>
+                    <td class="problem">「自分の環境では動いたのに…」</td>
+                    <td class="solution">統一環境でテストするので環境差異を排除</td>
+                </tr>
+                <tr>
+                    <td class="problem">テスト実行を忘れる</td>
+                    <td class="solution">自動で必ず実行される</td>
+                </tr>
+                <tr>
+                    <td class="problem">バグがmainブランチに入ってしまう</td>
+                    <td class="solution">CIが通らないとマージできない設定が可能</td>
+                </tr>
+                <tr>
+                    <td class="problem">レビュアーが基本的なミスも確認する必要</td>
+                    <td class="solution">Lint等はCIが自動検出。レビュアーはロジックに集中</td>
+                </tr>
+                <tr>
+                    <td class="problem">「誰かがテストを壊した」が分からない</td>
+                    <td class="solution">どのコミットで失敗したか明確に分かる</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- GitHub Actions設定例 -->
+        <div class="section">
+            <h2>⚙️ GitHub Actions 設定ファイル例</h2>
+            
+            <p style="margin-bottom: 16px;">
+                CIの設定は <code>.github/workflows/</code> フォルダにYAMLファイルで記述します。
+            </p>
+            
+            <div class="file-header">.github/workflows/ci.yml</div>
+            <div class="code-block file-content">
+<span class="comment"># ワークフロー名</span>
+<span class="key">name:</span> <span class="string">CI</span>
+
+<span class="comment"># いつ実行するか</span>
+<span class="key">on:</span>
+  <span class="key">push:</span>
+    <span class="key">branches:</span> [ develop, main ]
+  <span class="key">pull_request:</span>
+    <span class="key">branches:</span> [ develop, main ]
+
+<span class="comment"># 実行するジョブ</span>
+<span class="key">jobs:</span>
+  <span class="comment"># Lintジョブ</span>
+  <span class="key">lint:</span>
+    <span class="key">runs-on:</span> <span class="string">ubuntu-latest</span>
+    <span class="key">steps:</span>
+      - <span class="key">uses:</span> <span class="string">actions/checkout@v4</span>
+      - <span class="key">name:</span> <span class="string">Set up Python</span>
+        <span class="key">uses:</span> <span class="string">actions/setup-python@v5</span>
+        <span class="key">with:</span>
+          <span class="key">python-version:</span> <span class="string">'3.11'</span>
+      - <span class="key">name:</span> <span class="string">Install dependencies</span>
+        <span class="key">run:</span> <span class="string">pip install flake8</span>
+      - <span class="key">name:</span> <span class="string">Run Lint</span>
+        <span class="key">run:</span> <span class="string">flake8 src/</span>
+
+  <span class="comment"># テストジョブ</span>
+  <span class="key">test:</span>
+    <span class="key">runs-on:</span> <span class="string">ubuntu-latest</span>
+    <span class="key">steps:</span>
+      - <span class="key">uses:</span> <span class="string">actions/checkout@v4</span>
+      - <span class="key">name:</span> <span class="string">Set up Python</span>
+        <span class="key">uses:</span> <span class="string">actions/setup-python@v5</span>
+        <span class="key">with:</span>
+          <span class="key">python-version:</span> <span class="string">'3.11'</span>
+      - <span class="key">name:</span> <span class="string">Install dependencies</span>
+        <span class="key">run:</span> <span class="string">pip install -r requirements.txt</span>
+      - <span class="key">name:</span> <span class="string">Run Tests</span>
+        <span class="key">run:</span> <span class="string">pytest tests/ -v</span>
+
+  <span class="comment"># ビルドジョブ</span>
+  <span class="key">build:</span>
+    <span class="key">runs-on:</span> <span class="string">ubuntu-latest</span>
+    <span class="key">needs:</span> [lint, test]  <span class="comment"># lint, testが成功後に実行</span>
+    <span class="key">steps:</span>
+      - <span class="key">uses:</span> <span class="string">actions/checkout@v4</span>
+      - <span class="key">name:</span> <span class="string">Build Docker image</span>
+        <span class="key">run:</span> <span class="string">docker build -t vuln-manager .</span>
+            </div>
+            
+            <div class="callout">
+                このファイルをリポジトリに置くだけで、push/PRのたびに自動でテストが走るようになります
+            </div>
+        </div>
+
+        <!-- 今回のプロジェクトでの設定 -->
+        <div class="section">
+            <h2>📋 今回のプロジェクトで設定するCI</h2>
+            
+            <table>
+                <tr>
+                    <th>チェック項目</th>
+                    <th>ツール</th>
+                    <th>目的</th>
+                </tr>
+                <tr>
+                    <td>Pythonコード規約</td>
+                    <td>flake8 / black</td>
+                    <td>コードスタイルの統一</td>
+                </tr>
+                <tr>
+                    <td>型チェック</td>
+                    <td>mypy</td>
+                    <td>型の不整合を検出</td>
+                </tr>
+                <tr>
+                    <td>ユニットテスト</td>
+                    <td>pytest</td>
+                    <td>関数の動作確認</td>
+                </tr>
+                <tr>
+                    <td>セキュリティ</td>
+                    <td>bandit / safety</td>
+                    <td>脆弱なコード・ライブラリの検出</td>
+                </tr>
+                <tr>
+                    <td>Dockerビルド</td>
+                    <td>docker build</td>
+                    <td>コンテナが正常に作れるか</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>担当Eのタスク（CI/CD構築）で設定</h4>
+                <ul>
+                    <li>Sprint 2 で基本的なCI（lint, test）を構築</li>
+                    <li>Sprint 4 で本番デプロイ用のCD（Continuous Delivery）も追加検討</li>
+                    <li>全メンバーがCIの結果を確認できるようにする</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 用語まとめ -->
+        <div class="section">
+            <h2>📚 用語まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">用語</th>
+                    <th>意味</th>
+                </tr>
+                <tr>
+                    <td><strong>CI</strong></td>
+                    <td>Continuous Integration。コードを統合する際に自動でテストを実行する仕組み</td>
+                </tr>
+                <tr>
+                    <td><strong>CD</strong></td>
+                    <td>Continuous Delivery/Deployment。テスト通過後に自動でデプロイする仕組み</td>
+                </tr>
+                <tr>
+                    <td><strong>GitHub Actions</strong></td>
+                    <td>GitHubが提供するCI/CDサービス。無料枠あり</td>
+                </tr>
+                <tr>
+                    <td><strong>ワークフロー</strong></td>
+                    <td>CI/CDで実行する一連の処理。YAMLファイルで定義</td>
+                </tr>
+                <tr>
+                    <td><strong>ジョブ</strong></td>
+                    <td>ワークフロー内の実行単位。lint, test, buildなど</td>
+                </tr>
+                <tr>
+                    <td><strong>パイプライン</strong></td>
+                    <td>ジョブを順番に実行する流れ全体のこと</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

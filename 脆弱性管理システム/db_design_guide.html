@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB設計・スキーマ設計 ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #336791;
+        }
+        
+        /* PostgreSQL カラー */
+        .pg-blue { color: #336791; }
+        .pg-bg { background: #336791; color: white; }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 比較ボックス */
+        .compare-row {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .compare-col {
+            flex: 1;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-header {
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .compare-header.old { background: #ffebe9; color: #cf222e; }
+        .compare-header.new { background: #dafbe1; color: #1a7f37; }
+        .compare-body {
+            padding: 16px;
+            font-size: 14px;
+        }
+        .compare-body ul {
+            margin-left: 20px;
+        }
+        .compare-body li {
+            margin: 6px 0;
+        }
+        
+        /* ER図 */
+        .er-diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .er-svg {
+            width: 100%;
+            min-width: 800px;
+            height: 500px;
+        }
+        
+        /* フェーズ */
+        .phase-timeline {
+            margin: 20px 0;
+        }
+        .phase-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #336791;
+        }
+        .phase-number {
+            width: 40px;
+            height: 40px;
+            background: #336791;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .phase-content h4 {
+            margin-bottom: 4px;
+        }
+        .phase-content p {
+            font-size: 14px;
+            color: #57606a;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .type {
+            color: #79c0ff;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .table-name {
+            color: #7ee787;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        /* テーブル定義カード */
+        .table-card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+        .table-card-header {
+            background: #336791;
+            color: white;
+            padding: 12px 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .table-card-body {
+            padding: 0;
+        }
+        .table-card table {
+            margin: 0;
+        }
+        .table-card th, .table-card td {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        .pk { color: #cf222e; font-weight: bold; }
+        .fk { color: #0969da; font-weight: bold; }
+        .nullable { color: #57606a; }
+        
+        /* フロー図 */
+        .flow-horizontal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+        .flow-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 24px;
+            color: white;
+        }
+        .flow-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .flow-desc {
+            font-size: 11px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #8c959f;
+        }
+        
+        /* コア/拡張の区分け */
+        .core-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #dafbe1;
+            color: #1a7f37;
+        }
+        .extend-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #ddf4ff;
+            color: #0969da;
+        }
+        .future-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #f6f8fa;
+            color: #57606a;
+        }
+
+        @media (max-width: 768px) {
+            .compare-row {
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ DB設計・スキーマ設計 ガイド</h1>
+        <p class="subtitle">並行開発での段階的なDB構築アプローチ</p>
+
+        <!-- 課題認識 -->
+        <div class="section">
+            <h2>❓ よくある疑問</h2>
+            
+            <div class="warning-box">
+                <h4>「全仕様が決まってからでないとDBは作れないのでは？」</h4>
+                <p>従来のウォーターフォール開発ではその通りです。しかし、並行開発では<strong>「段階的に作る」</strong>アプローチを取ります。</p>
+            </div>
+            
+            <div class="compare-row">
+                <div class="compare-col">
+                    <div class="compare-header old">❌ 従来の考え方</div>
+                    <div class="compare-body">
+                        <p style="text-align: center; margin-bottom: 12px;">ウォーターフォール型</p>
+                        <ul>
+                            <li>全仕様を確定</li>
+                            <li>↓</li>
+                            <li>DB設計</li>
+                            <li>↓</li>
+                            <li>実装</li>
+                            <li>↓</li>
+                            <li>テスト</li>
+                        </ul>
+                        <p style="margin-top: 12px; color: #cf222e;">
+                            → 全て決まるまで何も作れない
+                        </p>
+                    </div>
+                </div>
+                <div class="compare-col">
+                    <div class="compare-header new">✅ 並行開発での考え方</div>
+                    <div class="compare-body">
+                        <p style="text-align: center; margin-bottom: 12px;">段階的構築</p>
+                        <ul>
+                            <li>コア部分を先に設計・作成</li>
+                            <li>↓</li>
+                            <li>各機能と連携しながら拡張</li>
+                            <li>↓</li>
+                            <li>マイグレーションで変更管理</li>
+                            <li>↓</li>
+                            <li>継続的に改善</li>
+                        </ul>
+                        <p style="margin-top: 12px; color: #1a7f37;">
+                            → 変わりにくい部分から作り、後から追加・修正
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 基本原則 -->
+        <div class="section">
+            <h2>📐 段階的DB設計の基本原則</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">原則</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>1. コアから作る</strong></td>
+                    <td>システムの本質的なエンティティ（脆弱性、資産、マッチング結果）は最初から設計できる</td>
+                </tr>
+                <tr>
+                    <td><strong>2. 変更を前提とする</strong></td>
+                    <td>マイグレーションツールで変更履歴を管理し、いつでも拡張できる状態を維持</td>
+                </tr>
+                <tr>
+                    <td><strong>3. 担当間で連携する</strong></td>
+                    <td>週次ナレッジ共有会で「何を保存したいか」を共有し、DB設計に反映</td>
+                </tr>
+                <tr>
+                    <td><strong>4. 最適化は後回し</strong></td>
+                    <td>まず動くものを作り、パフォーマンス改善は Sprint 4-5 で行う</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- コアと拡張の分類 -->
+        <div class="section">
+            <h2>🎯 「コア」と「拡張」の分類</h2>
+            
+            <div class="flow-horizontal">
+                <div class="flow-step">
+                    <div class="flow-icon" style="background: #1a7f37;">📋</div>
+                    <div class="flow-title">コア</div>
+                    <div class="flow-desc">Sprint 1で作成<br>変わりにくい</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon" style="background: #0969da;">➕</div>
+                    <div class="flow-title">拡張</div>
+                    <div class="flow-desc">Sprint 2-3で追加<br>要件に合わせて</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon" style="background: #57606a;">🔮</div>
+                    <div class="flow-title">将来</div>
+                    <div class="flow-desc">Sprint 4-5以降<br>必要に応じて</div>
+                </div>
+            </div>
+            
+            <table>
+                <tr>
+                    <th>分類</th>
+                    <th>テーブル</th>
+                    <th>理由</th>
+                </tr>
+                <tr>
+                    <td><span class="core-badge">コア</span></td>
+                    <td>vulnerabilities（脆弱性）</td>
+                    <td>システムの根幹。CVE情報を保存</td>
+                </tr>
+                <tr>
+                    <td><span class="core-badge">コア</span></td>
+                    <td>assets（資産）</td>
+                    <td>システムの根幹。管理対象を保存</td>
+                </tr>
+                <tr>
+                    <td><span class="core-badge">コア</span></td>
+                    <td>asset_software（資産-ソフトウェア）</td>
+                    <td>資産にインストールされたソフトウェア</td>
+                </tr>
+                <tr>
+                    <td><span class="core-badge">コア</span></td>
+                    <td>vulnerability_matches（マッチング結果）</td>
+                    <td>脆弱性と資産の紐付け</td>
+                </tr>
+                <tr>
+                    <td><span class="extend-badge">拡張</span></td>
+                    <td>notification_settings（通知設定）</td>
+                    <td>Sprint 2で担当Dと相談して設計</td>
+                </tr>
+                <tr>
+                    <td><span class="extend-badge">拡張</span></td>
+                    <td>notification_history（通知履歴）</td>
+                    <td>Sprint 2-3で追加</td>
+                </tr>
+                <tr>
+                    <td><span class="extend-badge">拡張</span></td>
+                    <td>remediation_tasks（対策タスク）</td>
+                    <td>Sprint 3-4で追加</td>
+                </tr>
+                <tr>
+                    <td><span class="future-badge">将来</span></td>
+                    <td>users / roles（ユーザー/権限）</td>
+                    <td>認証が必要になったら</td>
+                </tr>
+                <tr>
+                    <td><span class="future-badge">将来</span></td>
+                    <td>audit_logs（監査ログ）</td>
+                    <td>監査要件に応じて</td>
+                </tr>
+                <tr>
+                    <td><span class="future-badge">将来</span></td>
+                    <td>reports（レポート履歴）</td>
+                    <td>レポート機能の拡張時</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ER図 -->
+        <div class="section">
+            <h2>📊 ER図（コアエンティティ）</h2>
+            
+            <p style="margin-bottom: 16px;">Sprint 1 で作成するコアテーブルの関係図です。</p>
+            
+            <div class="er-diagram">
+                <svg class="er-svg" viewBox="0 0 850 480">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="840" height="470" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="425" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">脆弱性管理システム ER図（コア）</text>
+                    
+                    <!-- vulnerabilities テーブル -->
+                    <rect x="30" y="60" width="240" height="200" rx="6" fill="#f6f8fa" stroke="#336791" stroke-width="2"/>
+                    <rect x="30" y="60" width="240" height="35" rx="6" fill="#336791"/>
+                    <text x="150" y="83" text-anchor="middle" font-size="13" font-weight="bold" fill="white">vulnerabilities</text>
+                    <text x="45" y="115" font-size="11" fill="#cf222e" font-weight="bold">PK</text>
+                    <text x="75" y="115" font-size="11" fill="#24292f">id (SERIAL)</text>
+                    <text x="45" y="135" font-size="11" fill="#24292f">cve_id (VARCHAR)</text>
+                    <text x="45" y="155" font-size="11" fill="#24292f">title (VARCHAR)</text>
+                    <text x="45" y="175" font-size="11" fill="#24292f">description (TEXT)</text>
+                    <text x="45" y="195" font-size="11" fill="#24292f">cvss_score (DECIMAL)</text>
+                    <text x="45" y="215" font-size="11" fill="#24292f">severity (VARCHAR)</text>
+                    <text x="45" y="235" font-size="11" fill="#24292f">published_at (TIMESTAMP)</text>
+                    <text x="45" y="250" font-size="11" fill="#24292f">source (VARCHAR)</text>
+                    
+                    <!-- assets テーブル -->
+                    <rect x="580" y="60" width="240" height="200" rx="6" fill="#f6f8fa" stroke="#336791" stroke-width="2"/>
+                    <rect x="580" y="60" width="240" height="35" rx="6" fill="#336791"/>
+                    <text x="700" y="83" text-anchor="middle" font-size="13" font-weight="bold" fill="white">assets</text>
+                    <text x="595" y="115" font-size="11" fill="#cf222e" font-weight="bold">PK</text>
+                    <text x="625" y="115" font-size="11" fill="#24292f">id (SERIAL)</text>
+                    <text x="595" y="135" font-size="11" fill="#24292f">hostname (VARCHAR)</text>
+                    <text x="595" y="155" font-size="11" fill="#24292f">asset_type (VARCHAR)</text>
+                    <text x="595" y="175" font-size="11" fill="#24292f">os_name (VARCHAR)</text>
+                    <text x="595" y="195" font-size="11" fill="#24292f">os_version (VARCHAR)</text>
+                    <text x="595" y="215" font-size="11" fill="#24292f">ip_address (VARCHAR)</text>
+                    <text x="595" y="235" font-size="11" fill="#24292f">environment (VARCHAR)</text>
+                    <text x="595" y="250" font-size="11" fill="#24292f">last_scanned_at (TIMESTAMP)</text>
+                    
+                    <!-- asset_software テーブル -->
+                    <rect x="580" y="290" width="240" height="150" rx="6" fill="#f6f8fa" stroke="#336791" stroke-width="2"/>
+                    <rect x="580" y="290" width="240" height="35" rx="6" fill="#336791"/>
+                    <text x="700" y="313" text-anchor="middle" font-size="13" font-weight="bold" fill="white">asset_software</text>
+                    <text x="595" y="345" font-size="11" fill="#cf222e" font-weight="bold">PK</text>
+                    <text x="625" y="345" font-size="11" fill="#24292f">id (SERIAL)</text>
+                    <text x="595" y="365" font-size="11" fill="#0969da" font-weight="bold">FK</text>
+                    <text x="625" y="365" font-size="11" fill="#24292f">asset_id (INTEGER)</text>
+                    <text x="595" y="385" font-size="11" fill="#24292f">software_name (VARCHAR)</text>
+                    <text x="595" y="405" font-size="11" fill="#24292f">version (VARCHAR)</text>
+                    <text x="595" y="425" font-size="11" fill="#24292f">cpe (VARCHAR)</text>
+                    
+                    <!-- vulnerability_matches テーブル -->
+                    <rect x="280" y="290" width="260" height="170" rx="6" fill="#f6f8fa" stroke="#336791" stroke-width="2"/>
+                    <rect x="280" y="290" width="260" height="35" rx="6" fill="#336791"/>
+                    <text x="410" y="313" text-anchor="middle" font-size="13" font-weight="bold" fill="white">vulnerability_matches</text>
+                    <text x="295" y="345" font-size="11" fill="#cf222e" font-weight="bold">PK</text>
+                    <text x="325" y="345" font-size="11" fill="#24292f">id (SERIAL)</text>
+                    <text x="295" y="365" font-size="11" fill="#0969da" font-weight="bold">FK</text>
+                    <text x="325" y="365" font-size="11" fill="#24292f">vulnerability_id (INTEGER)</text>
+                    <text x="295" y="385" font-size="11" fill="#0969da" font-weight="bold">FK</text>
+                    <text x="325" y="385" font-size="11" fill="#24292f">asset_id (INTEGER)</text>
+                    <text x="295" y="405" font-size="11" fill="#24292f">detected_at (TIMESTAMP)</text>
+                    <text x="295" y="425" font-size="11" fill="#24292f">status (VARCHAR)</text>
+                    <text x="295" y="445" font-size="11" fill="#24292f">priority (INTEGER)</text>
+                    
+                    <!-- リレーション線 -->
+                    <!-- vulnerabilities → vulnerability_matches -->
+                    <path d="M 150 260 L 150 375 L 280 375" fill="none" stroke="#8c959f" stroke-width="2"/>
+                    <circle cx="150" cy="260" r="4" fill="#336791"/>
+                    <text x="200" y="365" font-size="10" fill="#57606a">1:N</text>
+                    
+                    <!-- assets → vulnerability_matches -->
+                    <path d="M 700 260 L 700 280 L 540 340 L 540 385" fill="none" stroke="#8c959f" stroke-width="2"/>
+                    <circle cx="700" cy="260" r="4" fill="#336791"/>
+                    <text x="555" y="340" font-size="10" fill="#57606a">1:N</text>
+                    
+                    <!-- assets → asset_software -->
+                    <line x1="700" y1="260" x2="700" y2="290" stroke="#8c959f" stroke-width="2"/>
+                    <circle cx="700" cy="260" r="4" fill="#336791"/>
+                    <text x="710" y="280" font-size="10" fill="#57606a">1:N</text>
+                    
+                    <!-- 凡例 -->
+                    <rect x="30" y="410" width="180" height="55" rx="4" fill="#f6f8fa" stroke="#d0d7de"/>
+                    <text x="45" y="430" font-size="11" font-weight="bold" fill="#24292f">凡例</text>
+                    <text x="45" y="448" font-size="10" fill="#cf222e" font-weight="bold">PK</text>
+                    <text x="70" y="448" font-size="10" fill="#24292f">= Primary Key</text>
+                    <text x="45" y="460" font-size="10" fill="#0969da" font-weight="bold">FK</text>
+                    <text x="70" y="460" font-size="10" fill="#24292f">= Foreign Key</text>
+                </svg>
+            </div>
+            
+            <div class="point-box">
+                <h4>コアテーブルの関係</h4>
+                <ul>
+                    <li><strong>vulnerabilities（脆弱性）</strong>：CVE/JVN から取得した脆弱性情報</li>
+                    <li><strong>assets（資産）</strong>：管理対象のサーバー/PC</li>
+                    <li><strong>asset_software（資産ソフトウェア）</strong>：資産にインストールされたソフトウェア一覧</li>
+                    <li><strong>vulnerability_matches（マッチング結果）</strong>：どの資産がどの脆弱性に該当するか</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- コアテーブル定義 -->
+        <div class="section">
+            <h2>📝 コアテーブル定義（Sprint 1）</h2>
+            
+            <div class="table-card">
+                <div class="table-card-header">
+                    🔐 vulnerabilities（脆弱性情報）
+                </div>
+                <div class="table-card-body">
+                    <table>
+                        <tr>
+                            <th style="width: 25%;">カラム名</th>
+                            <th style="width: 20%;">型</th>
+                            <th style="width: 15%;">制約</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><span class="pk">id</span></td>
+                            <td>SERIAL</td>
+                            <td>PK</td>
+                            <td>内部ID</td>
+                        </tr>
+                        <tr>
+                            <td>cve_id</td>
+                            <td>VARCHAR(20)</td>
+                            <td>UNIQUE, NOT NULL</td>
+                            <td>CVE-2024-XXXXX 形式</td>
+                        </tr>
+                        <tr>
+                            <td>title</td>
+                            <td>VARCHAR(500)</td>
+                            <td></td>
+                            <td>脆弱性のタイトル</td>
+                        </tr>
+                        <tr>
+                            <td>description</td>
+                            <td>TEXT</td>
+                            <td></td>
+                            <td>詳細説明</td>
+                        </tr>
+                        <tr>
+                            <td>cvss_score</td>
+                            <td>DECIMAL(3,1)</td>
+                            <td></td>
+                            <td>0.0〜10.0</td>
+                        </tr>
+                        <tr>
+                            <td>severity</td>
+                            <td>VARCHAR(20)</td>
+                            <td></td>
+                            <td>CRITICAL/HIGH/MEDIUM/LOW</td>
+                        </tr>
+                        <tr>
+                            <td>published_at</td>
+                            <td>TIMESTAMP</td>
+                            <td></td>
+                            <td>公開日</td>
+                        </tr>
+                        <tr>
+                            <td>source</td>
+                            <td>VARCHAR(20)</td>
+                            <td></td>
+                            <td>JVN/NVD/INSPECTOR</td>
+                        </tr>
+                        <tr>
+                            <td>affected_cpe</td>
+                            <td>TEXT[]</td>
+                            <td></td>
+                            <td>影響を受けるCPEの配列</td>
+                        </tr>
+                        <tr>
+                            <td>created_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT NOW()</td>
+                            <td>登録日時</td>
+                        </tr>
+                        <tr>
+                            <td>updated_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT NOW()</td>
+                            <td>更新日時</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <div class="table-card-header">
+                    🖥️ assets（資産情報）
+                </div>
+                <div class="table-card-body">
+                    <table>
+                        <tr>
+                            <th style="width: 25%;">カラム名</th>
+                            <th style="width: 20%;">型</th>
+                            <th style="width: 15%;">制約</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><span class="pk">id</span></td>
+                            <td>SERIAL</td>
+                            <td>PK</td>
+                            <td>内部ID</td>
+                        </tr>
+                        <tr>
+                            <td>hostname</td>
+                            <td>VARCHAR(255)</td>
+                            <td>NOT NULL</td>
+                            <td>ホスト名</td>
+                        </tr>
+                        <tr>
+                            <td>asset_type</td>
+                            <td>VARCHAR(50)</td>
+                            <td>NOT NULL</td>
+                            <td>EC2/RDS/LAMBDA/PC など</td>
+                        </tr>
+                        <tr>
+                            <td>os_name</td>
+                            <td>VARCHAR(100)</td>
+                            <td></td>
+                            <td>Windows 11 / Ubuntu 22.04</td>
+                        </tr>
+                        <tr>
+                            <td>os_version</td>
+                            <td>VARCHAR(50)</td>
+                            <td></td>
+                            <td>バージョン詳細</td>
+                        </tr>
+                        <tr>
+                            <td>ip_address</td>
+                            <td>VARCHAR(45)</td>
+                            <td></td>
+                            <td>IPv4/IPv6</td>
+                        </tr>
+                        <tr>
+                            <td>environment</td>
+                            <td>VARCHAR(20)</td>
+                            <td></td>
+                            <td>PROD/STG/DEV</td>
+                        </tr>
+                        <tr>
+                            <td>aws_account_id</td>
+                            <td>VARCHAR(20)</td>
+                            <td></td>
+                            <td>AWSアカウントID（EC2等）</td>
+                        </tr>
+                        <tr>
+                            <td>aws_resource_id</td>
+                            <td>VARCHAR(100)</td>
+                            <td></td>
+                            <td>i-xxxxx / arn:xxx</td>
+                        </tr>
+                        <tr>
+                            <td>last_scanned_at</td>
+                            <td>TIMESTAMP</td>
+                            <td></td>
+                            <td>最終スキャン日時</td>
+                        </tr>
+                        <tr>
+                            <td>created_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT NOW()</td>
+                            <td>登録日時</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <div class="table-card-header">
+                    📦 asset_software（資産ソフトウェア）
+                </div>
+                <div class="table-card-body">
+                    <table>
+                        <tr>
+                            <th style="width: 25%;">カラム名</th>
+                            <th style="width: 20%;">型</th>
+                            <th style="width: 15%;">制約</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><span class="pk">id</span></td>
+                            <td>SERIAL</td>
+                            <td>PK</td>
+                            <td>内部ID</td>
+                        </tr>
+                        <tr>
+                            <td><span class="fk">asset_id</span></td>
+                            <td>INTEGER</td>
+                            <td>FK, NOT NULL</td>
+                            <td>assets.id</td>
+                        </tr>
+                        <tr>
+                            <td>software_name</td>
+                            <td>VARCHAR(255)</td>
+                            <td>NOT NULL</td>
+                            <td>ソフトウェア名</td>
+                        </tr>
+                        <tr>
+                            <td>version</td>
+                            <td>VARCHAR(50)</td>
+                            <td></td>
+                            <td>バージョン</td>
+                        </tr>
+                        <tr>
+                            <td>cpe</td>
+                            <td>VARCHAR(500)</td>
+                            <td></td>
+                            <td>CPE形式（マッチング用）</td>
+                        </tr>
+                        <tr>
+                            <td>install_date</td>
+                            <td>DATE</td>
+                            <td></td>
+                            <td>インストール日</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <div class="table-card-header">
+                    🔗 vulnerability_matches（マッチング結果）
+                </div>
+                <div class="table-card-body">
+                    <table>
+                        <tr>
+                            <th style="width: 25%;">カラム名</th>
+                            <th style="width: 20%;">型</th>
+                            <th style="width: 15%;">制約</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><span class="pk">id</span></td>
+                            <td>SERIAL</td>
+                            <td>PK</td>
+                            <td>内部ID</td>
+                        </tr>
+                        <tr>
+                            <td><span class="fk">vulnerability_id</span></td>
+                            <td>INTEGER</td>
+                            <td>FK, NOT NULL</td>
+                            <td>vulnerabilities.id</td>
+                        </tr>
+                        <tr>
+                            <td><span class="fk">asset_id</span></td>
+                            <td>INTEGER</td>
+                            <td>FK, NOT NULL</td>
+                            <td>assets.id</td>
+                        </tr>
+                        <tr>
+                            <td>detected_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT NOW()</td>
+                            <td>検出日時</td>
+                        </tr>
+                        <tr>
+                            <td>status</td>
+                            <td>VARCHAR(20)</td>
+                            <td>DEFAULT 'OPEN'</td>
+                            <td>OPEN/IN_PROGRESS/RESOLVED/IGNORED</td>
+                        </tr>
+                        <tr>
+                            <td>priority</td>
+                            <td>INTEGER</td>
+                            <td></td>
+                            <td>対応優先度（1が最高）</td>
+                        </tr>
+                        <tr>
+                            <td>resolved_at</td>
+                            <td>TIMESTAMP</td>
+                            <td></td>
+                            <td>解決日時</td>
+                        </tr>
+                        <tr>
+                            <td>notes</td>
+                            <td>TEXT</td>
+                            <td></td>
+                            <td>対応メモ</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sprint別の作業 -->
+        <div class="section">
+            <h2>📅 Sprint別のDB作業</h2>
+            
+            <div class="phase-timeline">
+                <div class="phase-item">
+                    <div class="phase-number">1</div>
+                    <div class="phase-content">
+                        <h4>Sprint 1：コアテーブル作成 <span class="core-badge">コア</span></h4>
+                        <p>
+                            ・全員で「何を保存するか」を議論・ER図の合意<br>
+                            ・vulnerabilities, assets, asset_software, vulnerability_matches の4テーブル作成<br>
+                            ・Alembic（マイグレーションツール）のセットアップ<br>
+                            ・DB接続モジュールの作成（他担当が使えるように）
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">2</div>
+                    <div class="phase-content">
+                        <h4>Sprint 2：API連携・通知系の拡張 <span class="extend-badge">拡張</span></h4>
+                        <p>
+                            ・担当A：「JVN/NVDからこのデータが来る」→ カラム追加<br>
+                            ・担当B：「PCからこの情報を収集する」→ asset_software拡張<br>
+                            ・担当D：「通知設定をDBに保存したい」→ notification_settings追加
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">3</div>
+                    <div class="phase-content">
+                        <h4>Sprint 3：マッチング・レポート系の拡張 <span class="extend-badge">拡張</span></h4>
+                        <p>
+                            ・担当C：「マッチング結果にこの情報も欲しい」→ カラム追加<br>
+                            ・担当D：「通知履歴を保存したい」→ notification_history追加<br>
+                            ・インデックス追加（検索パフォーマンス改善）
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="phase-item">
+                    <div class="phase-number">4</div>
+                    <div class="phase-content">
+                        <h4>Sprint 4-5：最適化・監査対応 <span class="future-badge">将来</span></h4>
+                        <p>
+                            ・パフォーマンス最適化（インデックス調整、クエリ改善）<br>
+                            ・remediation_tasks（対策タスク管理）追加<br>
+                            ・audit_logs（監査ログ）追加（必要に応じて）<br>
+                            ・DB設計書の完成
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- マイグレーション -->
+        <div class="section">
+            <h2>🔄 マイグレーションツール（Alembic）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                「後から変更できる」仕組みが重要です。<strong>Alembic</strong> を使うと、スキーマ変更の履歴を管理でき、チーム全員が同じDB構造を維持できます。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">マイグレーションの流れ</h4>
+            <div class="flow-horizontal">
+                <div class="flow-step">
+                    <div class="flow-icon" style="background: #336791;">📝</div>
+                    <div class="flow-title">変更をコードで記述</div>
+                    <div class="flow-desc">Pythonファイルで<br>差分を定義</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon" style="background: #336791;">🔀</div>
+                    <div class="flow-title">GitでPR</div>
+                    <div class="flow-desc">マイグレーションファイルを<br>PRでレビュー</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon" style="background: #336791;">🚀</div>
+                    <div class="flow-title">適用</div>
+                    <div class="flow-desc">alembic upgrade head<br>で実行</div>
+                </div>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">マイグレーションファイルの例</h4>
+            <div class="code-block">
+<span class="comment"># migrations/versions/001_initial_tables.py</span>
+
+<span class="keyword">from</span> alembic <span class="keyword">import</span> op
+<span class="keyword">import</span> sqlalchemy <span class="keyword">as</span> sa
+
+<span class="comment"># revision identifiers</span>
+revision = <span class="string">'001'</span>
+down_revision = <span class="string">None</span>
+
+<span class="keyword">def</span> <span class="table-name">upgrade</span>():
+    <span class="comment"># vulnerabilities テーブル作成</span>
+    op.create_table(
+        <span class="string">'vulnerabilities'</span>,
+        sa.Column(<span class="string">'id'</span>, sa.Integer(), primary_key=<span class="keyword">True</span>),
+        sa.Column(<span class="string">'cve_id'</span>, sa.String(<span class="type">20</span>), unique=<span class="keyword">True</span>, nullable=<span class="keyword">False</span>),
+        sa.Column(<span class="string">'title'</span>, sa.String(<span class="type">500</span>)),
+        sa.Column(<span class="string">'cvss_score'</span>, sa.Numeric(<span class="type">3</span>, <span class="type">1</span>)),
+        sa.Column(<span class="string">'created_at'</span>, sa.DateTime(), server_default=sa.func.now()),
+    )
+    
+    <span class="comment"># assets テーブル作成</span>
+    op.create_table(
+        <span class="string">'assets'</span>,
+        sa.Column(<span class="string">'id'</span>, sa.Integer(), primary_key=<span class="keyword">True</span>),
+        sa.Column(<span class="string">'hostname'</span>, sa.String(<span class="type">255</span>), nullable=<span class="keyword">False</span>),
+        sa.Column(<span class="string">'asset_type'</span>, sa.String(<span class="type">50</span>), nullable=<span class="keyword">False</span>),
+        <span class="comment"># ... 他のカラム</span>
+    )
+
+<span class="keyword">def</span> <span class="table-name">downgrade</span>():
+    op.drop_table(<span class="string">'assets'</span>)
+    op.drop_table(<span class="string">'vulnerabilities'</span>)
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">Sprint 2 でカラム追加する例</h4>
+            <div class="code-block">
+<span class="comment"># migrations/versions/002_add_notification.py</span>
+
+revision = <span class="string">'002'</span>
+down_revision = <span class="string">'001'</span>
+
+<span class="keyword">def</span> <span class="table-name">upgrade</span>():
+    <span class="comment"># 通知設定テーブル追加</span>
+    op.create_table(
+        <span class="string">'notification_settings'</span>,
+        sa.Column(<span class="string">'id'</span>, sa.Integer(), primary_key=<span class="keyword">True</span>),
+        sa.Column(<span class="string">'channel'</span>, sa.String(<span class="type">20</span>)),  <span class="comment"># email/slack</span>
+        sa.Column(<span class="string">'severity_threshold'</span>, sa.String(<span class="type">20</span>)),
+        sa.Column(<span class="string">'enabled'</span>, sa.Boolean(), default=<span class="keyword">True</span>),
+    )
+    
+    <span class="comment"># 既存テーブルにカラム追加</span>
+    op.add_column(
+        <span class="string">'vulnerabilities'</span>,
+        sa.Column(<span class="string">'jvn_id'</span>, sa.String(<span class="type">20</span>))  <span class="comment"># JVN独自ID</span>
+    )
+            </div>
+            
+            <div class="callout">
+                マイグレーションファイルもGitで管理されるため、「誰が・いつ・どんな変更をしたか」が追跡可能
+            </div>
+        </div>
+
+        <!-- 担当間連携 -->
+        <div class="section">
+            <h2>🤝 担当間の連携方法</h2>
+            
+            <div class="er-diagram" style="height: auto; padding: 20px;">
+                <svg viewBox="0 0 700 250" style="width: 100%; height: 250px;">
+                    <!-- 担当A -->
+                    <rect x="30" y="30" width="120" height="60" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="90" y="55" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">担当A</text>
+                    <text x="90" y="75" text-anchor="middle" font-size="10" fill="#24292f">API連携</text>
+                    
+                    <!-- 担当C -->
+                    <rect x="30" y="160" width="120" height="60" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="90" y="185" text-anchor="middle" font-size="12" font-weight="bold" fill="#8250df">担当C</text>
+                    <text x="90" y="205" text-anchor="middle" font-size="10" fill="#24292f">マッチング</text>
+                    
+                    <!-- 担当B（中央） -->
+                    <rect x="280" y="80" width="140" height="90" rx="6" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="350" y="110" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a7f37">担当B</text>
+                    <text x="350" y="130" text-anchor="middle" font-size="11" fill="#24292f">DB設計</text>
+                    <text x="350" y="150" text-anchor="middle" font-size="10" fill="#57606a">スキーマ管理</text>
+                    
+                    <!-- 担当D -->
+                    <rect x="550" y="30" width="120" height="60" rx="6" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+                    <text x="610" y="55" text-anchor="middle" font-size="12" font-weight="bold" fill="#9a6700">担当D</text>
+                    <text x="610" y="75" text-anchor="middle" font-size="10" fill="#24292f">通知・レポート</text>
+                    
+                    <!-- 担当E -->
+                    <rect x="550" y="160" width="120" height="60" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="2"/>
+                    <text x="610" y="185" text-anchor="middle" font-size="12" font-weight="bold" fill="#cf222e">担当E</text>
+                    <text x="610" y="205" text-anchor="middle" font-size="10" fill="#24292f">UI・統合</text>
+                    
+                    <!-- 矢印と吹き出し -->
+                    <line x1="150" y1="60" x2="280" y2="100" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <text x="180" y="65" font-size="9" fill="#57606a">「このデータを</text>
+                    <text x="180" y="78" font-size="9" fill="#57606a">保存したい」</text>
+                    
+                    <line x1="150" y1="190" x2="280" y2="150" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <text x="170" y="185" font-size="9" fill="#57606a">「この項目が</text>
+                    <text x="170" y="198" font-size="9" fill="#57606a">必要」</text>
+                    
+                    <line x1="420" y1="100" x2="550" y2="60" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <text x="460" y="65" font-size="9" fill="#57606a">「通知設定</text>
+                    <text x="460" y="78" font-size="9" fill="#57606a">テーブル追加」</text>
+                    
+                    <line x1="420" y1="150" x2="550" y2="190" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <text x="455" y="185" font-size="9" fill="#57606a">「APIで使える</text>
+                    <text x="455" y="198" font-size="9" fill="#57606a">クエリ用意」</text>
+                    
+                    <defs>
+                        <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">連携のタイミング</h4>
+            <table>
+                <tr>
+                    <th style="width: 25%;">タイミング</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>週次ナレッジ共有会</strong></td>
+                    <td>各担当が「必要なデータ構造」を共有。担当BがDB設計に反映</td>
+                </tr>
+                <tr>
+                    <td><strong>PR時</strong></td>
+                    <td>マイグレーションファイルをPRでレビュー。影響範囲を確認</td>
+                </tr>
+                <tr>
+                    <td><strong>Slack/Issue</strong></td>
+                    <td>「このテーブルにこのカラム追加してほしい」を随時リクエスト</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 担当Bの役割</h4>
+                <ul>
+                    <li>他担当からの要望を受けて、適切なテーブル/カラム設計を行う</li>
+                    <li>マイグレーションファイルを作成し、PRを出す</li>
+                    <li>DB接続用のリポジトリクラス/関数を提供する</li>
+                    <li>パフォーマンスを考慮したインデックス設計</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DB接続モジュール -->
+        <div class="section">
+            <h2>🔌 DB接続モジュール（他担当向け）</h2>
+            
+            <p style="margin-bottom: 16px;">担当Bは、他の担当がDBを操作しやすいようにモジュールを提供します。</p>
+            
+            <div class="code-block">
+<span class="comment"># db/connection.py - DB接続の基本設定</span>
+
+<span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine
+<span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> sessionmaker
+
+DATABASE_URL = <span class="string">"postgresql://user:password@localhost/vulndb"</span>
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+
+<span class="keyword">def</span> <span class="table-name">get_db</span>():
+    <span class="string">"""DBセッションを取得"""</span>
+    db = SessionLocal()
+    <span class="keyword">try</span>:
+        <span class="keyword">yield</span> db
+    <span class="keyword">finally</span>:
+        db.close()
+            </div>
+            
+            <div class="code-block">
+<span class="comment"># db/repositories/vulnerability_repository.py</span>
+<span class="comment"># 担当A（API連携）が使うリポジトリ</span>
+
+<span class="keyword">class</span> <span class="table-name">VulnerabilityRepository</span>:
+    <span class="keyword">def</span> __init__(self, db):
+        self.db = db
+    
+    <span class="keyword">def</span> <span class="table-name">upsert</span>(self, cve_id: str, data: dict):
+        <span class="string">"""脆弱性情報を登録/更新"""</span>
+        <span class="comment"># 既存レコードがあれば更新、なければ挿入</span>
+        ...
+    
+    <span class="keyword">def</span> <span class="table-name">find_by_cve_id</span>(self, cve_id: str):
+        <span class="string">"""CVE IDで検索"""</span>
+        ...
+    
+    <span class="keyword">def</span> <span class="table-name">find_recent</span>(self, days: int = 7):
+        <span class="string">"""直近N日間の脆弱性を取得"""</span>
+        ...
+            </div>
+            
+            <div class="code-block">
+<span class="comment"># db/repositories/asset_repository.py</span>
+<span class="comment"># 担当B自身 + 担当Eが使うリポジトリ</span>
+
+<span class="keyword">class</span> <span class="table-name">AssetRepository</span>:
+    <span class="keyword">def</span> <span class="table-name">register_from_aws</span>(self, aws_data: dict):
+        <span class="string">"""AWSから取得した資産情報を登録"""</span>
+        ...
+    
+    <span class="keyword">def</span> <span class="table-name">register_from_pc</span>(self, pc_data: dict):
+        <span class="string">"""テレワークPCの情報を登録"""</span>
+        ...
+    
+    <span class="keyword">def</span> <span class="table-name">get_all_with_software</span>(self):
+        <span class="string">"""資産一覧（ソフトウェア情報含む）"""</span>
+        ...
+            </div>
+            
+            <div class="point-box">
+                <h4>他担当はリポジトリを使うだけ</h4>
+                <ul>
+                    <li>担当A：<code>VulnerabilityRepository.upsert()</code> で脆弱性を保存</li>
+                    <li>担当C：<code>VulnerabilityRepository</code> + <code>AssetRepository</code> でマッチング</li>
+                    <li>担当D：<code>NotificationRepository</code> で通知履歴を保存</li>
+                    <li>担当E：各リポジトリの <code>find_*</code> メソッドでダッシュボード表示</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sprint 1 の具体的な作業 -->
+        <div class="section">
+            <h2>🎯 Sprint 1 での具体的な作業</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 15%;">日程</th>
+                    <th style="width: 35%;">作業</th>
+                    <th>成果物</th>
+                </tr>
+                <tr>
+                    <td>Week 1 前半</td>
+                    <td>全員でER図の合意（キックオフミーティング）</td>
+                    <td>ER図（確定版）</td>
+                </tr>
+                <tr>
+                    <td>Week 1 後半</td>
+                    <td>PostgreSQL環境構築、Alembicセットアップ</td>
+                    <td>開発DB環境</td>
+                </tr>
+                <tr>
+                    <td>Week 2 前半</td>
+                    <td>コアテーブル4つの作成（マイグレーション）</td>
+                    <td>001_initial_tables.py</td>
+                </tr>
+                <tr>
+                    <td>Week 2 後半</td>
+                    <td>DB接続モジュール、基本リポジトリ作成</td>
+                    <td>db/connection.py, repositories/</td>
+                </tr>
+            </table>
+            
+            <div class="callout">
+                Sprint 1 終了時点で、他担当が「DBにデータを保存/取得できる」状態を目指す
+            </div>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">ポイント</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>段階的に作る</strong></td>
+                    <td>全仕様を待たず、コア部分（脆弱性・資産・マッチング）から作成</td>
+                </tr>
+                <tr>
+                    <td><strong>マイグレーションで管理</strong></td>
+                    <td>Alembicで変更履歴を管理。後からカラム追加・テーブル追加が容易</td>
+                </tr>
+                <tr>
+                    <td><strong>担当間で連携</strong></td>
+                    <td>週次共有会で要件を収集し、DB設計に反映</td>
+                </tr>
+                <tr>
+                    <td><strong>リポジトリを提供</strong></td>
+                    <td>他担当がDBを直接触らなくて済むよう、使いやすいAPIを提供</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 担当Bの主な成果物</h4>
+                <ul>
+                    <li><strong>Sprint 1</strong>：ER図、コアテーブル、DB接続モジュール</li>
+                    <li><strong>Sprint 2-3</strong>：拡張テーブル（通知、履歴等）、リポジトリ拡充</li>
+                    <li><strong>Sprint 4-5</strong>：インデックス最適化、DB設計書</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

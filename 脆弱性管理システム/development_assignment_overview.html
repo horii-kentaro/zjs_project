@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脆弱性管理システム 開発分担概要資料</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        .meeting-info {
+            text-align: center;
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        .section h2.policy { border-bottom-color: #0969da; }
+        .section h2.features { border-bottom-color: #2da44e; }
+        .section h2.summary { border-bottom-color: #cf222e; }
+        .section h2.knowledge { border-bottom-color: #8250df; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 担当記入欄 */
+        .assignee-input {
+            width: 100%;
+            padding: 8px;
+            border: 2px dashed #d0d7de;
+            border-radius: 4px;
+            background: #fafbfc;
+            font-size: 14px;
+            min-height: 36px;
+        }
+        .assignee-input:focus {
+            outline: none;
+            border-color: #0969da;
+            background: white;
+        }
+        
+        /* ボックス類 */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul, .point-box ol {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .policy-box {
+            background: #f0f7ff;
+            border-left: 4px solid #0969da;
+            border-radius: 0 8px 8px 0;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .policy-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #9a6700;
+            margin-bottom: 8px;
+        }
+        .warning-box h4::before {
+            content: "⚠️ ";
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .note-box {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .note-box h4 {
+            color: #57606a;
+            margin-bottom: 8px;
+        }
+        
+        /* 機能領域カード（統合版） */
+        .feature-item {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .feature-item.core { border-left: 5px solid #cf222e; }
+        .feature-item.support { border-left: 5px solid #0969da; }
+        .feature-item.ui { border-left: 5px solid #2da44e; }
+        .feature-item.infra { border-left: 5px solid #bf8700; }
+        
+        .feature-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .feature-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .feature-title h4 {
+            color: #24292f;
+            font-size: 18px;
+            margin: 0;
+        }
+        .feature-title .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .badge.core { background: #ffebe9; color: #cf222e; }
+        .badge.support { background: #ddf4ff; color: #0969da; }
+        .badge.ui { background: #dafbe1; color: #1a7f37; }
+        .badge.infra { background: #fff8c5; color: #9a6700; }
+        
+        .feature-assignee {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 250px;
+        }
+        .feature-assignee label {
+            font-weight: 600;
+            color: #57606a;
+            white-space: nowrap;
+        }
+        .feature-assignee input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px dashed #d0d7de;
+            border-radius: 4px;
+            background: #fafbfc;
+            font-size: 14px;
+        }
+        .feature-assignee input:focus {
+            outline: none;
+            border-color: #0969da;
+            background: white;
+        }
+        
+        .feature-description {
+            color: #57606a;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .feature-guides {
+            margin-bottom: 12px;
+        }
+        .guide-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #0969da;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 4px 10px;
+            background: #f6f8fa;
+            border-radius: 4px;
+            margin-right: 8px;
+            margin-bottom: 6px;
+        }
+        .guide-link:hover {
+            background: #ddf4ff;
+        }
+        
+        .feature-points {
+            background: #f6f8fa;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+        }
+        .feature-points h5 {
+            color: #57606a;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .feature-points ul {
+            margin-left: 16px;
+        }
+        .feature-points li {
+            margin: 3px 0;
+        }
+        
+        /* カテゴリヘッダー */
+        .category-header {
+            background: #f6f8fa;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 30px 0 10px;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .category-header.core { border-left: 4px solid #cf222e; }
+        .category-header.support { border-left: 4px solid #0969da; }
+        .category-header.ui { border-left: 4px solid #2da44e; }
+        .category-header.infra { border-left: 4px solid #bf8700; }
+        
+        /* 担当者サマリー */
+        .person-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .person-card {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .person-card h4 {
+            color: #24292f;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid;
+        }
+        .person-card.a h4 { border-color: #cf222e; }
+        .person-card.b h4 { border-color: #0969da; }
+        .person-card.c h4 { border-color: #2da44e; }
+        .person-card.d h4 { border-color: #bf8700; }
+        .person-card.e h4 { border-color: #8250df; }
+        .person-card .role {
+            font-size: 13px;
+            color: #57606a;
+            margin-bottom: 8px;
+        }
+        .person-card ul {
+            font-size: 13px;
+            margin-left: 16px;
+        }
+        .person-card li {
+            margin: 4px 0;
+        }
+
+        /* スプリント表 */
+        .sprint-timeline {
+            display: flex;
+            gap: 4px;
+            margin: 20px 0;
+        }
+        .sprint-box {
+            flex: 1;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            min-width: 100px;
+        }
+        .sprint-box h5 {
+            color: #24292f;
+            margin-bottom: 8px;
+        }
+        .sprint-box .period {
+            font-size: 11px;
+            color: #57606a;
+        }
+        
+        /* 週次ミーティングフロー */
+        .meeting-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .meeting-step {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            min-width: 120px;
+        }
+        .meeting-step.highlight {
+            background: #ddf4ff;
+            border-color: #0969da;
+        }
+        .meeting-step strong {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .meeting-step small {
+            color: #57606a;
+            font-size: 12px;
+        }
+        .meeting-arrow {
+            font-size: 20px;
+            color: #57606a;
+        }
+
+        /* 印刷用 */
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            .assignee-input, .feature-assignee input { border: 1px solid #999; }
+            .feature-item { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ 脆弱性管理システム 開発分担概要資料</h1>
+        <p class="subtitle">作業分担ミーティング用資料</p>
+        
+        <div class="meeting-info">
+            <strong>📅 ミーティング日：</strong>_____________　
+            <strong>👥 参加者：</strong>_____________ 
+        </div>
+
+        <!-- 目次 -->
+        <div class="section">
+            <h2>📋 目次</h2>
+            <ol style="margin-left: 20px; line-height: 2;">
+                <li><a href="#requirements">システム要件</a> - 本システムの目的・機能要件・非機能要件</li>
+                <li><a href="#policy">開発方針</a> - 並行開発・週次情報共有の基本ルール</li>
+                <li><a href="#features">機能分解一覧</a> - 機能領域ごとの詳細と担当割り当て</li>
+                <li><a href="#summary">担当者別 担当領域サマリー</a> - 誰が何を担当するか一覧</li>
+                <li><a href="#knowledge">週次情報共有計画</a> - 属人化防止の具体施策</li>
+            </ol>
+        </div>
+
+        <!-- 1. システム要件 -->
+        <div class="section" id="requirements">
+            <h2 class="policy">🎯 1. システム要件</h2>
+            
+            <h3>システムの目的</h3>
+            <div class="policy-box">
+                <h4>脆弱性管理の自動化・効率化</h4>
+                <p>
+                    JVN iPedia等の公開情報から脆弱性情報を自動収集し、<br>
+                    自組織の資産との照合・優先度判定・通知を自動化することで、<br>
+                    <strong>脆弱性対応の迅速化と漏れ防止</strong>を実現する。
+                </p>
+            </div>
+            
+            <h3>機能要件</h3>
+            <table>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 25%;">機能</th>
+                    <th>要件</th>
+                </tr>
+                <tr>
+                    <td>F1</td>
+                    <td><strong>脆弱性情報収集</strong></td>
+                    <td>JVN iPedia APIから脆弱性情報を定期的に自動取得する。NVD/CISA KEVの情報も補完的に取得する。</td>
+                </tr>
+                <tr>
+                    <td>F2</td>
+                    <td><strong>資産管理</strong></td>
+                    <td>自組織の資産（サーバー、ソフトウェア等）を登録・管理する。CPE形式での識別が可能であること。</td>
+                </tr>
+                <tr>
+                    <td>F3</td>
+                    <td><strong>脆弱性マッチング</strong></td>
+                    <td>収集した脆弱性情報と登録資産をCPEベースで自動照合し、影響を受ける資産を特定する。</td>
+                </tr>
+                <tr>
+                    <td>F4</td>
+                    <td><strong>優先度計算</strong></td>
+                    <td>CVSS、KEV登録有無、資産重要度、環境を考慮し、対応優先度（Immediate/Out-of-Cycle/Scheduled/Defer）を自動算出する。</td>
+                </tr>
+                <tr>
+                    <td>F5</td>
+                    <td><strong>通知</strong></td>
+                    <td>優先度に応じてSlack/Teams/メールで担当者に通知する。通知条件はカスタマイズ可能であること。</td>
+                </tr>
+                <tr>
+                    <td>F6</td>
+                    <td><strong>レポート</strong></td>
+                    <td>脆弱性一覧、対応状況サマリーをHTML/CSV/PDF形式で出力する。定期レポート（週次/月次）も対応。</td>
+                </tr>
+                <tr>
+                    <td>F7</td>
+                    <td><strong>ダッシュボード</strong></td>
+                    <td>脆弱性状況をWebUIで可視化する。サマリー、トレンド、一覧表示が可能であること。</td>
+                </tr>
+            </table>
+            
+            <h3>非機能要件</h3>
+            <table>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 25%;">項目</th>
+                    <th>要件</th>
+                </tr>
+                <tr>
+                    <td>N1</td>
+                    <td><strong>可用性</strong></td>
+                    <td>業務時間帯（平日9:00-18:00）に利用可能であること</td>
+                </tr>
+                <tr>
+                    <td>N2</td>
+                    <td><strong>性能</strong></td>
+                    <td>脆弱性情報の日次更新が1時間以内に完了すること。ダッシュボードの応答は3秒以内。</td>
+                </tr>
+                <tr>
+                    <td>N3</td>
+                    <td><strong>拡張性</strong></td>
+                    <td>資産数1,000件、脆弱性10万件程度まで対応可能であること</td>
+                </tr>
+                <tr>
+                    <td>N4</td>
+                    <td><strong>保守性</strong></td>
+                    <td>コードのテストカバレッジ80%以上。ドキュメント（API仕様、運用手順）を整備すること。</td>
+                </tr>
+                <tr>
+                    <td>N5</td>
+                    <td><strong>セキュリティ</strong></td>
+                    <td>認証機能を備えること。APIキー等の機密情報は環境変数で管理すること。</td>
+                </tr>
+            </table>
+            
+            <h3>技術スタック</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">レイヤー</th>
+                    <th>技術</th>
+                </tr>
+                <tr>
+                    <td><strong>バックエンド</strong></td>
+                    <td>Python 3.11+、FastAPI、SQLAlchemy、Alembic</td>
+                </tr>
+                <tr>
+                    <td><strong>フロントエンド</strong></td>
+                    <td>React、TypeScript、Recharts/Chart.js</td>
+                </tr>
+                <tr>
+                    <td><strong>データベース</strong></td>
+                    <td>PostgreSQL 15+</td>
+                </tr>
+                <tr>
+                    <td><strong>インフラ</strong></td>
+                    <td>Docker、Docker Compose、GitHub Actions</td>
+                </tr>
+                <tr>
+                    <td><strong>外部連携</strong></td>
+                    <td>JVN iPedia API、NVD API 2.0、CISA KEV、Slack/Teams Webhook</td>
+                </tr>
+            </table>
+            
+            <div class="warning-box">
+                <h4>スコープ外（本フェーズでは対象外）</h4>
+                <ul>
+                    <li>脆弱性の自動修復・パッチ適用機能</li>
+                    <li>資産の自動検出（手動登録またはCSVインポート）</li>
+                    <li>複数テナント対応</li>
+                    <li>高可用性構成（冗長化、フェイルオーバー）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. 開発方針 -->
+        <div class="section" id="policy">
+            <h2 class="policy">📐 2. 開発方針</h2>
+            
+            <h3>プロジェクト概要</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>システム名</strong></td>
+                    <td>JVN iPedia連携 脆弱性管理システム</td>
+                </tr>
+                <tr>
+                    <td><strong>開発期間</strong></td>
+                    <td>10週間（2週間 × 5スプリント）</td>
+                </tr>
+                <tr>
+                    <td><strong>開発体制</strong></td>
+                    <td>4.5名（担当A〜E）</td>
+                </tr>
+                <tr>
+                    <td><strong>開発手法</strong></td>
+                    <td>スクラム（2週間スプリント）</td>
+                </tr>
+                <tr>
+                    <td><strong>タスク総数</strong></td>
+                    <td>43タスク</td>
+                </tr>
+            </table>
+            
+            <h3>3つの基本方針</h3>
+            
+            <div class="policy-box">
+                <h4>① 並行開発</h4>
+                <p>順次引き渡しではなく、<strong>全員が同時に開発を進める</strong>体制を取ります。</p>
+                <ul style="margin: 8px 0 0 20px;">
+                    <li>各スプリントで全員がタスクを持つ</li>
+                    <li>依存関係を考慮したタスク設計</li>
+                    <li>APIインターフェースを先に定義して並行作業を可能に</li>
+                </ul>
+            </div>
+            
+            <div class="policy-box">
+                <h4>② 週次情報共有（属人化防止）</h4>
+                <p><strong>週1回のミーティング</strong>で全員が進捗・課題・知見を共有し、属人化を防ぎます。</p>
+                <ul style="margin: 8px 0 0 20px;">
+                    <li>各担当者が自分の領域の進捗・課題を報告</li>
+                    <li>技術的な知見やハマりポイントを共有</li>
+                    <li>他メンバーからの質問・フィードバック</li>
+                    <li>全員が全体像を把握できる状態を維持</li>
+                </ul>
+            </div>
+            
+            <div class="policy-box">
+                <h4>③ GitHub中心の開発フロー</h4>
+                <p>コード・ドキュメント・タスク管理をすべてGitHubで行います。</p>
+                <ul style="margin: 8px 0 0 20px;">
+                    <li><strong>Issue</strong>：タスク管理・進捗可視化</li>
+                    <li><strong>Pull Request</strong>：コードレビュー必須</li>
+                    <li><strong>GitHub Actions</strong>：自動テスト・CI/CD</li>
+                    <li><strong>ブランチ戦略</strong>：feature → develop → main</li>
+                </ul>
+            </div>
+            
+            <h3>スプリント計画</h3>
+            <div class="sprint-timeline">
+                <div class="sprint-box">
+                    <h5>Sprint 1</h5>
+                    <div class="period">Week 1-2</div>
+                    <small>環境構築<br>基盤開発</small>
+                </div>
+                <div class="sprint-box">
+                    <h5>Sprint 2</h5>
+                    <div class="period">Week 3-4</div>
+                    <small>API連携<br>DB実装</small>
+                </div>
+                <div class="sprint-box">
+                    <h5>Sprint 3</h5>
+                    <div class="period">Week 5-6</div>
+                    <small>マッチング<br>優先度計算</small>
+                </div>
+                <div class="sprint-box">
+                    <h5>Sprint 4</h5>
+                    <div class="period">Week 7-8</div>
+                    <small>通知・UI<br>レポート</small>
+                </div>
+                <div class="sprint-box">
+                    <h5>Sprint 5</h5>
+                    <div class="period">Week 9-10</div>
+                    <small>統合テスト<br>リリース準備</small>
+                </div>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ 属人化防止のポイント</h4>
+                <ul>
+                    <li><strong>週次ミーティング</strong>：進捗・課題・知見を全員で共有</li>
+                    <li><strong>PRレビュー</strong>：他メンバーがコードを確認</li>
+                    <li><strong>ドキュメント</strong>：設計意図・実装方針を文書化</li>
+                    <li><strong>ガイド資料</strong>：各領域の知識を資料として整備</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 3. 機能分解一覧 -->
+        <div class="section" id="features">
+            <h2 class="features">📝 3. 機能分解一覧</h2>
+            
+            <p style="margin-bottom: 16px;">
+                各機能領域に<strong>1名の担当者</strong>を割り当てます。<br>
+                詳細説明・ガイドリンクを参考に担当を決定してください。
+            </p>
+            
+            <div class="recommend-box">
+                <h4>✅ 担当割り当てのポイント</h4>
+                <ul>
+                    <li><strong>得意分野を活かす</strong>：経験・興味に応じて担当を決定</li>
+                    <li><strong>負荷を分散</strong>：1人に担当が集中しないように調整</li>
+                    <li><strong>依存関係を考慮</strong>：DB担当とAPI担当は密に連携が必要</li>
+                    <li><strong>兼務OK</strong>：関連する領域は同じ人が担当してもよい</li>
+                </ul>
+            </div>
+            
+            <!-- ========== コア機能 ========== -->
+            <div class="category-header core">🔴 コア機能（システムの中核）</div>
+            
+            <!-- 1. JVN API連携 -->
+            <div class="feature-item core">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>1. JVN API連携</h4>
+                        <span class="badge core">コア機能</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    JVN iPedia（IPA提供）から脆弱性情報を自動収集し、データベースに保存する機能。
+                    NVD/CISA KEVとの連携も含む。
+                </p>
+                <div class="feature-guides">
+                    <a href="cve_nvd_guide.html" class="guide-link">📄 CVE/NVDガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>JVN iPedia REST API（HND形式）でCVE情報を取得</li>
+                        <li>NVD API 2.0でCVSS詳細・CPE情報を補完</li>
+                        <li>CISA KEV（悪用確認済み脆弱性）との照合</li>
+                        <li>定期実行（cron/スケジューラー）で自動更新</li>
+                        <li>増分更新（datePublished指定）で効率化</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 2. 資産管理データベース -->
+            <div class="feature-item core">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>2. 資産管理データベース</h4>
+                        <span class="badge core">コア機能</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    PostgreSQLで資産情報を構造化管理。脆弱性との紐付け、履歴管理、検索機能を提供。
+                </p>
+                <div class="feature-guides">
+                    <a href="db_design_guide.html" class="guide-link">📄 DB設計ガイド</a>
+                    <a href="aws_asset_collection_guide.html" class="guide-link">📄 AWS資産収集ガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>主要テーブル：vulnerabilities, assets, vulnerability_assets</li>
+                        <li>CPE情報は別テーブル（vulnerability_cpes）で管理</li>
+                        <li>インデックス設計：CVE ID、重要度、公開日</li>
+                        <li>JSONB型でソフトウェア情報を柔軟に格納</li>
+                        <li>Alembicでマイグレーション管理</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 3. CPEマッチング -->
+            <div class="feature-item core">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>3. CPEマッチング</h4>
+                        <span class="badge core">コア機能</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    CPE（Common Platform Enumeration）を使って脆弱性と資産を紐付けるコア機能。
+                    システムの価値を決める重要な部分。
+                </p>
+                <div class="feature-guides">
+                    <a href="cpe_guide.html" class="guide-link">📄 CPEガイド</a>
+                    <a href="matching_engine_guide.html" class="guide-link">📄 マッチングエンジンガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>CPE 2.3形式の解析・正規化</li>
+                        <li>バージョン比較ロジック（影響範囲判定）</li>
+                        <li>部分一致・ワイルドカード対応</li>
+                        <li>マッチング結果のスコアリング</li>
+                        <li>パフォーマンス最適化（インデックス、キャッシュ）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 4. 優先度計算 -->
+            <div class="feature-item core">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>4. 優先度計算</h4>
+                        <span class="badge core">コア機能</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    CVSS、KEV、資産重要度、環境を組み合わせて対応優先度を自動算出。
+                </p>
+                <div class="feature-guides">
+                    <a href="priority_calculation_guide.html" class="guide-link">📄 優先度計算ガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>4段階優先度：Immediate / Out-of-Cycle / Scheduled / Defer</li>
+                        <li>CVSS × KEV × 環境 × 資産重要度のマトリクス</li>
+                        <li>SSVC（Stakeholder-Specific Vulnerability Categorization）参考</li>
+                        <li>対応期限の自動設定（Immediate: 24時間以内など）</li>
+                        <li>設定ファイルでカスタマイズ可能</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ========== 支援機能 ========== -->
+            <div class="category-header support">🔵 支援機能（運用を支える機能）</div>
+            
+            <!-- 5. 通知システム -->
+            <div class="feature-item support">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>5. 通知システム</h4>
+                        <span class="badge support">支援機能</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    Slack、Microsoft Teams、メールで脆弱性アラートを送信。
+                    優先度・対象に応じた通知制御。
+                </p>
+                <div class="feature-guides">
+                    <a href="notification_system_guide.html" class="guide-link">📄 通知システムガイド（Slack）</a>
+                    <a href="notification_integration_guide.html" class="guide-link">📄 通知連携ガイド（Teams/Discord/メール）</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>Slack/Teams: Incoming Webhook方式</li>
+                        <li>メール: SMTP（sendgrid/SES）</li>
+                        <li>Block Kit/Adaptive Cards でリッチな表示</li>
+                        <li>通知条件フィルター（Critical+KEVのみ等）</li>
+                        <li>レート制限・重複防止</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 6. レポート生成 -->
+            <div class="feature-item support">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>6. レポート生成</h4>
+                        <span class="badge support">支援機能</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    脆弱性サマリー、詳細一覧、対応状況などをHTML/CSV/PDFで出力。
+                </p>
+                <div class="feature-guides">
+                    <a href="report_generation_guide.html" class="guide-link">📄 レポート生成ガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>HTML: Jinja2テンプレートでスタイリング</li>
+                        <li>CSV: pandas DataFrameから出力</li>
+                        <li>PDF: WeasyPrint/ReportLabで生成</li>
+                        <li>グラフ: matplotlib/Plotlyで可視化</li>
+                        <li>定期レポート: 週次/月次の自動生成</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ========== UI ========== -->
+            <div class="category-header ui">🟢 UI/フロントエンド</div>
+            
+            <!-- 7. ダッシュボードUI -->
+            <div class="feature-item ui">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>7. ダッシュボードUI</h4>
+                        <span class="badge ui">UI</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    React + TypeScriptでウィジェット方式のダッシュボードを構築。
+                    柔軟なレイアウト、設定保存機能。
+                </p>
+                <div class="feature-guides">
+                    <a href="dashboard_ui_guide.html" class="guide-link">📄 ダッシュボードUIガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>ウィジェット: サマリーカード、トレンドチャート、一覧テーブル等</li>
+                        <li>ウィジェットレジストリパターンで拡張性確保</li>
+                        <li>設定ファイル（JSON/DB）で表示制御</li>
+                        <li>Recharts/Chart.jsでグラフ描画</li>
+                        <li>将来: ドラッグ&ドロップ（dnd-kit）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ========== インフラ ========== -->
+            <div class="category-header infra">🟡 デプロイ先インフラ/共通基盤</div>
+            
+            <!-- 8. 本番環境構築 -->
+            <div class="feature-item infra">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>8. 本番環境構築</h4>
+                        <span class="badge infra">インフラ</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    本番サーバー、データベース、ネットワークの構築・設定。
+                </p>
+                <div class="feature-guides">
+                    <a href="docker_cicd_guide.html" class="guide-link">📄 Docker/CI-CDガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>サーバー構成（API、DB、フロントエンド）</li>
+                        <li>PostgreSQLの本番設定（バックアップ、レプリケーション）</li>
+                        <li>環境変数・シークレット管理</li>
+                        <li>ログ収集・監視設定</li>
+                        <li>SSL/TLS証明書設定</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 9. CI/CDパイプライン -->
+            <div class="feature-item infra">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>9. CI/CDパイプライン</h4>
+                        <span class="badge infra">インフラ</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    GitHub Actionsで自動テスト・自動デプロイを構築。
+                </p>
+                <div class="feature-guides">
+                    <a href="ci_guide.html" class="guide-link">📄 CIガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>PR時の自動テスト（pytest + カバレッジ）</li>
+                        <li>ブランチ保護ルール設定</li>
+                        <li>mainブランチへのマージで自動デプロイ</li>
+                        <li>ドキュメントサイトの自動更新</li>
+                        <li>Slackへのデプロイ通知</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 10. 統合テスト -->
+            <div class="feature-item infra">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>10. 統合テスト</h4>
+                        <span class="badge infra">インフラ</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    pytest + Factory Boy + pytest-xdistで効率的なテスト戦略を構築。
+                    テストピラミッドに基づく体系的なテスト設計。
+                </p>
+                <div class="feature-guides">
+                    <a href="integration_test_guide.html" class="guide-link">📄 統合テストガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>テストピラミッド: 単体70% / 統合20% / E2E10%</li>
+                        <li>Fixture: DB接続、APIクライアントの共通化</li>
+                        <li>Factory Boy: テストデータ自動生成</li>
+                        <li>並列実行（pytest-xdist）で時間短縮</li>
+                        <li>カバレッジ80%以上を目標（非機能要件N4）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 11. ドキュメント自動化 -->
+            <div class="feature-item infra">
+                <div class="feature-header">
+                    <div class="feature-title">
+                        <h4>11. ドキュメント自動化</h4>
+                        <span class="badge infra">インフラ</span>
+                    </div>
+                    <div class="feature-assignee">
+                        <label>担当者：</label>
+                        <input type="text" placeholder="担当者名を記入">
+                    </div>
+                </div>
+                <p class="feature-description">
+                    FastAPI OpenAPI、MkDocs、Claude APIでドキュメント作成を自動化。
+                    コードを書くだけで仕様書が自動生成される仕組み。
+                </p>
+                <div class="feature-guides">
+                    <a href="document_automation_guide.html" class="guide-link">📄 ドキュメント自動化ガイド</a>
+                </div>
+                <div class="feature-points">
+                    <h5>📌 主要ポイント</h5>
+                    <ul>
+                        <li>FastAPI: コードからSwagger UI自動生成</li>
+                        <li>MkDocs + mkdocstrings: docstringからドキュメント生成</li>
+                        <li>Claude API: PR説明文、README自動生成</li>
+                        <li>Mermaid: アーキテクチャ図をテキストで管理</li>
+                        <li>GitHub Pages: 自動デプロイ</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- GitHub運用ガイド -->
+            <h3 style="margin-top: 30px;">GitHub運用関連ガイド</h3>
+            <table>
+                <tr>
+                    <th>ガイド</th>
+                    <th>内容</th>
+                    <th>リンク</th>
+                </tr>
+                <tr>
+                    <td><strong>GitHub PR ガイド</strong></td>
+                    <td>プルリクエストの作成・レビュー方法</td>
+                    <td><a href="github_pr_guide.html">📄 開く</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Issue ガイド</strong></td>
+                    <td>タスク管理・Issue作成ルール</td>
+                    <td><a href="issue_guide.html">📄 開く</a></td>
+                </tr>
+                <tr>
+                    <td><strong>CI ガイド</strong></td>
+                    <td>GitHub Actionsの設定・運用</td>
+                    <td><a href="ci_guide.html">📄 開く</a></td>
+                </tr>
+            </table>
+            
+            <div class="note-box">
+                <h4>📌 ローカル開発環境セットアップ（各自実施）</h4>
+                <p>以下のガイドを参照して、各自でローカル環境を構築してください：</p>
+                <ul style="margin: 8px 0 0 20px;">
+                    <li><a href="docker_cicd_guide.html">Docker/CI-CDガイド</a> - Docker Composeによる環境構築手順</li>
+                </ul>
+                <p style="margin-top: 8px; color: #57606a;">
+                    セットアップで困った場合は週次ミーティングで相談してください。
+                </p>
+            </div>
+        </div>
+
+        <!-- 4. 担当者別 担当領域サマリー -->
+        <div class="section" id="summary">
+            <h2 class="summary">👥 4. 担当者別 担当領域サマリー</h2>
+            
+            <p style="margin-bottom: 20px;">
+                担当割り当て後、以下の表を埋めてください。<br>
+                各メンバーが<strong>どの領域を担当するか</strong>を可視化し、負荷バランスを確認します。
+            </p>
+            
+            <div class="person-summary">
+                <div class="person-card a">
+                    <h4>担当A: <input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 80px;"></h4>
+                    <div class="role">
+                        <strong>担当領域：</strong>
+                    </div>
+                    <ul>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域①"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域②"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域③"></li>
+                    </ul>
+                </div>
+                
+                <div class="person-card b">
+                    <h4>担当B: <input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 80px;"></h4>
+                    <div class="role">
+                        <strong>担当領域：</strong>
+                    </div>
+                    <ul>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域①"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域②"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域③"></li>
+                    </ul>
+                </div>
+                
+                <div class="person-card c">
+                    <h4>担当C: <input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 80px;"></h4>
+                    <div class="role">
+                        <strong>担当領域：</strong>
+                    </div>
+                    <ul>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域①"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域②"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域③"></li>
+                    </ul>
+                </div>
+                
+                <div class="person-card d">
+                    <h4>担当D: <input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 80px;"></h4>
+                    <div class="role">
+                        <strong>担当領域：</strong>
+                    </div>
+                    <ul>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域①"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域②"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域③"></li>
+                    </ul>
+                </div>
+                
+                <div class="person-card e">
+                    <h4>担当E: <input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 80px;"></h4>
+                    <div class="role">
+                        <strong>担当領域：</strong>
+                    </div>
+                    <ul>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域①"></li>
+                        <li><input type="text" style="border: none; width: 150px;" placeholder="担当領域②"></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3>推奨担当パターン（参考）</h3>
+            <table>
+                <tr>
+                    <th>担当</th>
+                    <th>担当領域</th>
+                    <th>備考</th>
+                </tr>
+                <tr>
+                    <td><strong>担当A</strong></td>
+                    <td>JVN API連携、ドキュメント自動化</td>
+                    <td>データ収集・ドキュメント基盤を担当</td>
+                </tr>
+                <tr>
+                    <td><strong>担当B</strong></td>
+                    <td>資産管理DB、本番環境構築</td>
+                    <td>DB・インフラを担当</td>
+                </tr>
+                <tr>
+                    <td><strong>担当C</strong></td>
+                    <td>CPEマッチング、優先度計算、統合テスト</td>
+                    <td>コア分析ロジック・品質保証を担当</td>
+                </tr>
+                <tr>
+                    <td><strong>担当D</strong></td>
+                    <td>通知システム、レポート生成、CI/CD</td>
+                    <td>出力系機能・自動化を担当</td>
+                </tr>
+                <tr>
+                    <td><strong>担当E（0.5）</strong></td>
+                    <td>ダッシュボードUI</td>
+                    <td>フロントエンドを担当</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>💡 兼務のポイント</h4>
+                <ul>
+                    <li>関連する領域（例：API連携とDB）は同じ人が担当すると連携がスムーズ</li>
+                    <li>ただし1人に負荷が集中しないよう注意</li>
+                    <li>インフラ系（本番環境、CI/CD）は知見のある人に集約してもOK</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 5. 週次情報共有計画 -->
+        <div class="section" id="knowledge">
+            <h2 class="knowledge">🔄 5. 週次情報共有計画</h2>
+            
+            <p style="margin-bottom: 20px;">
+                <strong>週1回のミーティング</strong>で進捗・課題・知見を共有し、属人化を防ぎます。
+            </p>
+            
+            <h3>週次ミーティングの流れ</h3>
+            <div class="meeting-flow">
+                <div class="meeting-step">
+                    <strong>進捗報告</strong>
+                    <small>各自5分</small>
+                </div>
+                <div class="meeting-arrow">→</div>
+                <div class="meeting-step highlight">
+                    <strong>知見共有</strong>
+                    <small>技術Tips等</small>
+                </div>
+                <div class="meeting-arrow">→</div>
+                <div class="meeting-step">
+                    <strong>課題相談</strong>
+                    <small>ハマり事項</small>
+                </div>
+                <div class="meeting-arrow">→</div>
+                <div class="meeting-step">
+                    <strong>次週計画</strong>
+                    <small>タスク確認</small>
+                </div>
+            </div>
+            
+            <h3>ミーティングアジェンダ</h3>
+            <table>
+                <tr>
+                    <th style="width: 15%;">時間</th>
+                    <th style="width: 25%;">内容</th>
+                    <th>詳細</th>
+                </tr>
+                <tr>
+                    <td>5分 × 5人</td>
+                    <td><strong>進捗報告</strong></td>
+                    <td>
+                        ・今週やったこと<br>
+                        ・完了したタスク/PR<br>
+                        ・進捗率（予定vs実績）
+                    </td>
+                </tr>
+                <tr>
+                    <td>10分</td>
+                    <td><strong>知見共有</strong></td>
+                    <td>
+                        ・技術的な発見・Tips<br>
+                        ・使ったライブラリの紹介<br>
+                        ・設計判断の理由
+                    </td>
+                </tr>
+                <tr>
+                    <td>10分</td>
+                    <td><strong>課題相談</strong></td>
+                    <td>
+                        ・ハマっていること<br>
+                        ・他メンバーへの質問<br>
+                        ・ブロッカーの解消
+                    </td>
+                </tr>
+                <tr>
+                    <td>10分</td>
+                    <td><strong>次週計画</strong></td>
+                    <td>
+                        ・来週のタスク確認<br>
+                        ・依存関係の調整<br>
+                        ・スプリントゴール確認
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 効果的な情報共有のコツ</h4>
+                <ul>
+                    <li><strong>画面共有</strong>：コードや動作を見せながら説明</li>
+                    <li><strong>ドキュメント化</strong>：共有した内容はメモに残す</li>
+                    <li><strong>PRを活用</strong>：PRのdescriptionに設計意図を書く</li>
+                    <li><strong>質問歓迎</strong>：分からないことは遠慮なく聞く</li>
+                </ul>
+            </div>
+            
+            <h3>PRレビューによる知識共有</h3>
+            <div class="policy-box">
+                <h4>クロスレビューのルール</h4>
+                <p>PRレビューは<strong>別領域の担当者</strong>が行い、コードを通じて知識を共有します。</p>
+                <table style="margin-top: 12px;">
+                    <tr>
+                        <th>PR作成者の領域</th>
+                        <th>レビュー担当候補</th>
+                    </tr>
+                    <tr>
+                        <td>JVN API連携</td>
+                        <td>DB担当 or マッチング担当</td>
+                    </tr>
+                    <tr>
+                        <td>DB・資産管理</td>
+                        <td>マッチング担当 or API担当</td>
+                    </tr>
+                    <tr>
+                        <td>マッチング・優先度</td>
+                        <td>通知担当 or DB担当</td>
+                    </tr>
+                    <tr>
+                        <td>通知・レポート</td>
+                        <td>UI担当 or マッチング担当</td>
+                    </tr>
+                    <tr>
+                        <td>UI</td>
+                        <td>通知担当 or API担当</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h3>ドキュメント作成</h3>
+            <table>
+                <tr>
+                    <th>ドキュメント種類</th>
+                    <th>担当ルール</th>
+                </tr>
+                <tr>
+                    <td>設計ドキュメント</td>
+                    <td>各機能の担当者が作成</td>
+                </tr>
+                <tr>
+                    <td>API仕様書</td>
+                    <td>FastAPI OpenAPIで自動生成（追加作業なし）</td>
+                </tr>
+                <tr>
+                    <td>運用手順書</td>
+                    <td>全員で分担作成（Sprint 5）</td>
+                </tr>
+                <tr>
+                    <td>README</td>
+                    <td>リード担当が作成、全員がレビュー</td>
+                </tr>
+            </table>
+            
+            <h3>チェックリスト：属人化防止</h3>
+            <table>
+                <tr>
+                    <th style="width: 5%;">✓</th>
+                    <th>確認項目</th>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>週次ミーティングの曜日・時間が決まっている</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>PRレビューは別領域の担当者が行うルールが明確</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>設計意図・実装方針をPRやドキュメントに残すルール</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>各ガイド資料が全員に共有されている</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>困ったときに相談できる場がある（Slack等）</td>
+                </tr>
+            </table>
+            
+            <h3>週次ミーティング設定</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>曜日・時間</strong></td>
+                    <td><input type="text" class="assignee-input" placeholder="例：毎週水曜 10:00〜11:00"></td>
+                </tr>
+                <tr>
+                    <td><strong>場所/ツール</strong></td>
+                    <td><input type="text" class="assignee-input" placeholder="例：会議室A / Google Meet"></td>
+                </tr>
+                <tr>
+                    <td><strong>ファシリテーター</strong></td>
+                    <td><input type="text" class="assignee-input" placeholder="例：持ち回り / 固定"></td>
+                </tr>
+                <tr>
+                    <td><strong>議事録担当</strong></td>
+                    <td><input type="text" class="assignee-input" placeholder="例：持ち回り / 固定"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 決定事項メモ -->
+        <div class="section">
+            <h2>📝 ミーティング決定事項メモ</h2>
+            
+            <h3>担当割り当て決定</h3>
+            <table>
+                <tr>
+                    <th style="width: 15%;">担当</th>
+                    <th style="width: 25%;">氏名</th>
+                    <th style="width: 60%;">担当領域</th>
+                </tr>
+                <tr>
+                    <td>担当A</td>
+                    <td><input type="text" class="assignee-input"></td>
+                    <td><input type="text" class="assignee-input"></td>
+                </tr>
+                <tr>
+                    <td>担当B</td>
+                    <td><input type="text" class="assignee-input"></td>
+                    <td><input type="text" class="assignee-input"></td>
+                </tr>
+                <tr>
+                    <td>担当C</td>
+                    <td><input type="text" class="assignee-input"></td>
+                    <td><input type="text" class="assignee-input"></td>
+                </tr>
+                <tr>
+                    <td>担当D</td>
+                    <td><input type="text" class="assignee-input"></td>
+                    <td><input type="text" class="assignee-input"></td>
+                </tr>
+                <tr>
+                    <td>担当E</td>
+                    <td><input type="text" class="assignee-input"></td>
+                    <td><input type="text" class="assignee-input"></td>
+                </tr>
+            </table>
+            
+            <h3>その他決定事項・TODO</h3>
+            <textarea style="width: 100%; height: 150px; padding: 12px; border: 1px solid #d0d7de; border-radius: 8px; font-family: inherit; font-size: 14px;" placeholder="ミーティングでの決定事項、宿題、次回までのアクションなどを記入..."></textarea>
+            
+            <h3>次回ミーティング</h3>
+            <p>
+                <strong>日時：</strong><input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 200px;" placeholder="例：2024/12/18 10:00">　
+                <strong>議題：</strong><input type="text" style="border: none; border-bottom: 1px solid #ccc; width: 300px;" placeholder="例：Sprint 1 キックオフ">
+            </p>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト</p>
+            <p style="font-size: 12px;">本資料は印刷して記入、またはPDF保存後に記入することができます</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker / CI・CD 入門ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2496ed;
+        }
+        .section h2.cicd { border-bottom-color: #2da44e; }
+        .section h2.setup { border-bottom-color: #8250df; }
+        .section h2.trouble { border-bottom-color: #bf8700; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* ボックス類 */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        .beginner-box {
+            background: #f0f7ff;
+            border: 2px solid #2496ed;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .beginner-box h4 {
+            color: #2496ed;
+            margin-bottom: 8px;
+        }
+        .beginner-box h4::before {
+            content: "🔰 ";
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        
+        .command-block {
+            background: #1e1e2e;
+            border-left: 4px solid #2496ed;
+            color: #cdd6f4;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+        .command-block .prompt {
+            color: #a6e3a1;
+        }
+        .command-block .output {
+            color: #6c7086;
+            margin-top: 8px;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .diagram-title {
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #24292f;
+        }
+        
+        .compare-diagram {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .compare-side {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .compare-side.bad {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+        }
+        .compare-side.good {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+        }
+        .compare-side h4 {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .env-box {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        .env-box.different {
+            border-color: #cf222e;
+        }
+        .env-box.same {
+            border-color: #2da44e;
+            background: #dafbe1;
+        }
+        .env-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        /* フロー図 */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .flow-step {
+            background: white;
+            border: 2px solid #2496ed;
+            border-radius: 8px;
+            padding: 12px 20px;
+            text-align: center;
+            min-width: 120px;
+        }
+        .flow-step.docker {
+            background: #2496ed;
+            color: white;
+        }
+        .flow-step.github {
+            background: #24292f;
+            color: white;
+        }
+        .flow-step.server {
+            background: #2da44e;
+            color: white;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #57606a;
+        }
+        
+        /* ステップ */
+        .step-list {
+            counter-reset: step;
+        }
+        .step-item {
+            display: flex;
+            gap: 16px;
+            margin: 16px 0;
+            padding: 16px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .step-number {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background: #2496ed;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content h4 {
+            margin-bottom: 8px;
+        }
+        
+        /* Docker概念図 */
+        .docker-concept {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .concept-card {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .concept-card h4 {
+            margin-bottom: 8px;
+        }
+        .concept-card .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .concept-card.image { border-color: #2496ed; }
+        .concept-card.container { border-color: #2da44e; }
+        .concept-card.compose { border-color: #8250df; }
+
+        /* CI/CDパイプライン */
+        .pipeline {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .pipeline-stage {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+        .pipeline-stage::after {
+            content: "→";
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #57606a;
+        }
+        .pipeline-stage:last-child::after {
+            display: none;
+        }
+        .pipeline-stage.push { background: #f6f8fa; }
+        .pipeline-stage.test { background: #ddf4ff; }
+        .pipeline-stage.build { background: #fff8c5; }
+        .pipeline-stage.deploy { background: #dafbe1; }
+        .pipeline-stage h5 {
+            margin-bottom: 8px;
+        }
+        .pipeline-stage .icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .compare-diagram {
+                grid-template-columns: 1fr;
+            }
+            .docker-concept {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐳 Docker / CI・CD 入門ガイド</h1>
+        <p class="subtitle">未経験者でも安心！チーム開発のための環境構築入門</p>
+
+        <!-- 目次 -->
+        <div class="section">
+            <h2>📑 目次</h2>
+            <table>
+                <tr>
+                    <th style="width: 40%;">セクション</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td>1. Dockerとは？</td>
+                    <td>なぜ必要か、何を解決するか</td>
+                </tr>
+                <tr>
+                    <td>2. バージョンズレ問題の解決</td>
+                    <td>Dockerがどう解決するか</td>
+                </tr>
+                <tr>
+                    <td>3. Docker用語の理解</td>
+                    <td>Image、Container、Compose</td>
+                </tr>
+                <tr>
+                    <td>4. 環境構築手順</td>
+                    <td>Docker Desktopのインストールから起動まで</td>
+                </tr>
+                <tr>
+                    <td>5. 本プロジェクトのDocker構成</td>
+                    <td>docker-compose.yml、Dockerfile</td>
+                </tr>
+                <tr>
+                    <td>6. 日常の操作</td>
+                    <td>起動・停止・確認コマンド</td>
+                </tr>
+                <tr>
+                    <td>7. CI/CDとは？</td>
+                    <td>自動テスト・自動デプロイ</td>
+                </tr>
+                <tr>
+                    <td>8. GitHub Actions</td>
+                    <td>設定ファイルの解説</td>
+                </tr>
+                <tr>
+                    <td>9. よくあるトラブルと対処法</td>
+                    <td>エラー対応集</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Dockerとは -->
+        <div class="section">
+            <h2>🐳 1. Dockerとは？</h2>
+            
+            <p style="margin-bottom: 20px;">
+                Dockerは<strong>「どのPCでも同じ環境を再現できる」</strong>ツールです。<br>
+                開発環境の構築を劇的に簡単にし、「私のPCでは動くのに...」問題を解消します。
+            </p>
+            
+            <h3>Dockerがない場合の問題</h3>
+            <div class="compare-diagram">
+                <div class="compare-side bad">
+                    <h4>❌ Dockerなし（従来）</h4>
+                    <div class="env-box different">
+                        <div class="env-label">👤 Aさんの環境</div>
+                        Python 3.9 / Node 16 / PostgreSQL 13
+                    </div>
+                    <div class="env-box different">
+                        <div class="env-label">👤 Bさんの環境</div>
+                        Python 3.11 / Node 18 / PostgreSQL 15
+                    </div>
+                    <div class="env-box different">
+                        <div class="env-label">👤 Cさんの環境</div>
+                        Python 3.10 / Node 20 / MySQL 8 ←間違い
+                    </div>
+                    <p style="margin-top: 12px; color: #cf222e; font-weight: 600;">
+                        → 環境の違いでエラー頻発
+                    </p>
+                </div>
+                
+                <div class="compare-side good">
+                    <h4>✅ Dockerあり</h4>
+                    <div class="env-box same">
+                        <div class="env-label">👤 Aさん・Bさん・Cさん</div>
+                        <strong>全員同じコンテナ</strong><br>
+                        Python 3.11 / Node 18 / PostgreSQL 15
+                    </div>
+                    <div style="text-align: center; margin: 16px 0;">
+                        <code>docker compose up</code>
+                    </div>
+                    <p style="margin-top: 12px; color: #1a7f37; font-weight: 600;">
+                        → 環境の違いによる問題ゼロ
+                    </p>
+                </div>
+            </div>
+            
+            <div class="beginner-box">
+                <h4>未経験者でも大丈夫な理由</h4>
+                <table>
+                    <tr>
+                        <th>作業</th>
+                        <th>難易度</th>
+                        <th>説明</th>
+                    </tr>
+                    <tr>
+                        <td><strong>環境を起動する</strong></td>
+                        <td>⭐ 超簡単</td>
+                        <td><code>docker compose up</code> コマンド1つ</td>
+                    </tr>
+                    <tr>
+                        <td>Dockerfile作成</td>
+                        <td>⭐⭐⭐ 難しい</td>
+                        <td>最初に1人が作れば全員使える</td>
+                    </tr>
+                    <tr>
+                        <td>CI/CD設定</td>
+                        <td>⭐⭐⭐ 難しい</td>
+                        <td>最初に1人が設定すれば自動で動く</td>
+                    </tr>
+                </table>
+                <p style="margin-top: 12px;">
+                    <strong>難しい部分は最初に1回だけ。その後は全員が簡単に使えます。</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- バージョンズレ問題 -->
+        <div class="section">
+            <h2>🔧 2. バージョンズレ問題の解決</h2>
+            
+            <h3>よくある問題シナリオ</h3>
+            <table>
+                <tr>
+                    <th>問題</th>
+                    <th>Dockerなし</th>
+                    <th>Dockerあり</th>
+                </tr>
+                <tr>
+                    <td>Pythonのバージョン違い</td>
+                    <td>❌ 各自でインストール、バラバラ</td>
+                    <td>✅ コンテナ内で統一</td>
+                </tr>
+                <tr>
+                    <td>ライブラリのバージョン違い</td>
+                    <td>❌ pip installのタイミングで差異</td>
+                    <td>✅ requirements.txtで固定</td>
+                </tr>
+                <tr>
+                    <td>DBのバージョン違い</td>
+                    <td>❌ 既存インストールと競合</td>
+                    <td>✅ コンテナで独立</td>
+                </tr>
+                <tr>
+                    <td>一部だけ構築済み</td>
+                    <td>❌ 古いバージョンが残る</td>
+                    <td>✅ 既存環境と干渉しない</td>
+                </tr>
+                <tr>
+                    <td>OS間の違い（Win/Mac/Linux）</td>
+                    <td>❌ パスや改行コードの問題</td>
+                    <td>✅ コンテナ内はLinux統一</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ Dockerの解決方法</h4>
+                <ul>
+                    <li><strong>隔離</strong>：コンテナはPCの既存環境と完全に分離</li>
+                    <li><strong>再現性</strong>：同じDockerfileから同じ環境が作られる</li>
+                    <li><strong>バージョン固定</strong>：Dockerfile内でバージョンを明記</li>
+                    <li><strong>使い捨て可能</strong>：おかしくなったら削除して再作成</li>
+                </ul>
+            </div>
+            
+            <h3>「一部だけ構築済み」でも問題なし</h3>
+            <div class="diagram">
+                <div class="diagram-title">PCに既にPostgreSQLがインストールされていても...</div>
+                <div style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap;">
+                    <div class="env-box" style="width: 200px;">
+                        <div class="env-label">💻 PCの環境</div>
+                        PostgreSQL 13（既存）<br>
+                        ポート: 5432
+                    </div>
+                    <div style="font-size: 24px;">＋</div>
+                    <div class="env-box same" style="width: 200px;">
+                        <div class="env-label">🐳 Dockerコンテナ</div>
+                        PostgreSQL 15（新規）<br>
+                        ポート: 5433（別ポート）
+                    </div>
+                </div>
+                <p style="margin-top: 16px;">
+                    <strong>→ 別々に動作、干渉しない</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- Docker用語 -->
+        <div class="section">
+            <h2>📚 3. Docker用語の理解</h2>
+            
+            <div class="docker-concept">
+                <div class="concept-card image">
+                    <div class="icon">📦</div>
+                    <h4>Image（イメージ）</h4>
+                    <p style="font-size: 13px;">
+                        環境の「設計図」<br>
+                        <small>料理のレシピのようなもの</small>
+                    </p>
+                </div>
+                <div class="concept-card container">
+                    <div class="icon">🏃</div>
+                    <h4>Container（コンテナ）</h4>
+                    <p style="font-size: 13px;">
+                        Imageから作られた「実体」<br>
+                        <small>レシピから作った料理</small>
+                    </p>
+                </div>
+                <div class="concept-card compose">
+                    <div class="icon">🎼</div>
+                    <h4>Compose（コンポーズ）</h4>
+                    <p style="font-size: 13px;">
+                        複数コンテナの「指揮者」<br>
+                        <small>複数の料理をまとめて調理</small>
+                    </p>
+                </div>
+            </div>
+            
+            <h3>わかりやすい例え</h3>
+            <table>
+                <tr>
+                    <th>Docker用語</th>
+                    <th>例え</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>Dockerfile</strong></td>
+                    <td>料理のレシピ</td>
+                    <td>環境の作り方が書かれたテキストファイル</td>
+                </tr>
+                <tr>
+                    <td><strong>Image</strong></td>
+                    <td>冷凍食品</td>
+                    <td>レシピから作られた、すぐ使える状態のもの</td>
+                </tr>
+                <tr>
+                    <td><strong>Container</strong></td>
+                    <td>解凍した料理</td>
+                    <td>Imageを起動して動いている状態</td>
+                </tr>
+                <tr>
+                    <td><strong>docker-compose.yml</strong></td>
+                    <td>コース料理の献立</td>
+                    <td>複数のコンテナをまとめて定義</td>
+                </tr>
+                <tr>
+                    <td><strong>Volume</strong></td>
+                    <td>保存容器</td>
+                    <td>データを永続化（コンテナ削除でも消えない）</td>
+                </tr>
+            </table>
+            
+            <div class="diagram">
+                <div class="diagram-title">Dockerの流れ</div>
+                <div class="flow-container">
+                    <div class="flow-step">
+                        📄 Dockerfile<br>
+                        <small>レシピ作成</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step docker">
+                        📦 Image<br>
+                        <small>docker build</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step docker">
+                        🏃 Container<br>
+                        <small>docker run</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step server">
+                        🌐 アプリ稼働<br>
+                        <small>http://localhost</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 環境構築手順 -->
+        <div class="section">
+            <h2 class="setup">🛠️ 4. 環境構築手順</h2>
+            
+            <div class="beginner-box">
+                <h4>やることは3ステップだけ</h4>
+                <ol style="margin-left: 20px;">
+                    <li>Docker Desktopをインストール</li>
+                    <li>リポジトリをクローン</li>
+                    <li><code>docker compose up</code> を実行</li>
+                </ol>
+            </div>
+            
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Docker Desktopをインストール</h4>
+                        <p>公式サイトからダウンロード：<a href="https://www.docker.com/products/docker-desktop/" target="_blank">https://www.docker.com/products/docker-desktop/</a></p>
+                        <table style="margin-top: 12px;">
+                            <tr>
+                                <th>OS</th>
+                                <th>ダウンロード</th>
+                                <th>備考</th>
+                            </tr>
+                            <tr>
+                                <td>Windows</td>
+                                <td>Docker Desktop for Windows</td>
+                                <td>WSL2が必要（インストーラーが案内）</td>
+                            </tr>
+                            <tr>
+                                <td>Mac（Intel）</td>
+                                <td>Docker Desktop for Mac (Intel)</td>
+                                <td>そのままインストール</td>
+                            </tr>
+                            <tr>
+                                <td>Mac（Apple Silicon）</td>
+                                <td>Docker Desktop for Mac (Apple)</td>
+                                <td>M1/M2/M3チップ用</td>
+                            </tr>
+                        </table>
+                        <div class="callout">
+                            インストール後、Docker Desktopを起動しておく必要があります（タスクトレイにクジラアイコン🐳）
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>リポジトリをクローン</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> git clone https://github.com/your-org/vuln-management.git<br>
+                            <span class="prompt">$</span> cd vuln-management
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>環境変数ファイルを作成</h4>
+                        <p><code>.env.example</code>をコピーして<code>.env</code>を作成</p>
+                        <div class="command-block">
+                            <span class="prompt">$</span> cp .env.example .env<br>
+                            <span class="output"># 必要に応じて.envを編集</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Docker Composeで起動</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> docker compose up -d<br>
+                            <span class="output">
+[+] Running 4/4<br>
+ ✔ Network vuln-management_default  Created<br>
+ ✔ Container postgres               Started<br>
+ ✔ Container api                    Started<br>
+ ✔ Container frontend               Started
+                            </span>
+                        </div>
+                        <p style="margin-top: 12px;">これで環境構築完了！ブラウザで <code>http://localhost:3000</code> にアクセス</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ たったこれだけで</h4>
+                <ul>
+                    <li>Python環境が構築される</li>
+                    <li>PostgreSQLが起動する</li>
+                    <li>必要なライブラリがインストールされる</li>
+                    <li>アプリケーションが起動する</li>
+                </ul>
+                <p style="margin-top: 8px;">
+                    手動でPythonやPostgreSQLをインストールする必要は<strong>一切ありません</strong>。
+                </p>
+            </div>
+        </div>
+
+        <!-- 本プロジェクトのDocker構成 -->
+        <div class="section">
+            <h2>📁 5. 本プロジェクトのDocker構成</h2>
+            
+            <h3>ファイル構成</h3>
+            <div class="code-block">
+vuln-management/
+├── docker-compose.yml    <span class="comment"># 複数コンテナの定義</span>
+├── Dockerfile            <span class="comment"># APIサーバーのイメージ定義</span>
+├── frontend/
+│   └── Dockerfile        <span class="comment"># フロントエンドのイメージ定義</span>
+├── .env.example          <span class="comment"># 環境変数のサンプル</span>
+├── .env                  <span class="comment"># 環境変数（.gitignore対象）</span>
+└── ...
+            </div>
+            
+            <h3>docker-compose.yml（全体構成）</h3>
+            <div class="code-block">
+<span class="comment"># docker-compose.yml</span>
+<span class="keyword">version</span>: <span class="string">'3.8'</span>
+
+<span class="keyword">services</span>:
+  <span class="comment"># PostgreSQLデータベース</span>
+  <span class="keyword">db</span>:
+    <span class="keyword">image</span>: postgres:<span class="number">15</span>          <span class="comment"># バージョン固定</span>
+    <span class="keyword">container_name</span>: postgres
+    <span class="keyword">environment</span>:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    <span class="keyword">ports</span>:
+      - <span class="string">"5433:5432"</span>              <span class="comment"># 5433で公開（既存と競合回避）</span>
+    <span class="keyword">volumes</span>:
+      - postgres_data:/var/lib/postgresql/data  <span class="comment"># データ永続化</span>
+    <span class="keyword">healthcheck</span>:
+      test: [<span class="string">"CMD-SHELL"</span>, <span class="string">"pg_isready -U ${DB_USER}"</span>]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  <span class="comment"># バックエンドAPI</span>
+  <span class="keyword">api</span>:
+    <span class="keyword">build</span>:
+      context: .
+      dockerfile: Dockerfile
+    <span class="keyword">container_name</span>: api
+    <span class="keyword">environment</span>:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      ENVIRONMENT: development
+    <span class="keyword">ports</span>:
+      - <span class="string">"8000:8000"</span>
+    <span class="keyword">volumes</span>:
+      - .:/app                     <span class="comment"># ソースコードをマウント（開発用）</span>
+    <span class="keyword">depends_on</span>:
+      db:
+        condition: service_healthy <span class="comment"># DBが起動してから開始</span>
+    <span class="keyword">command</span>: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  <span class="comment"># フロントエンド</span>
+  <span class="keyword">frontend</span>:
+    <span class="keyword">build</span>:
+      context: ./frontend
+      dockerfile: Dockerfile
+    <span class="keyword">container_name</span>: frontend
+    <span class="keyword">ports</span>:
+      - <span class="string">"3000:3000"</span>
+    <span class="keyword">volumes</span>:
+      - ./frontend:/app
+      - /app/node_modules          <span class="comment"># node_modulesは除外</span>
+    <span class="keyword">environment</span>:
+      - VITE_API_URL=http://localhost:8000
+
+<span class="keyword">volumes</span>:
+  postgres_data:                   <span class="comment"># 名前付きボリューム</span>
+            </div>
+            
+            <h3>Dockerfile（APIサーバー）</h3>
+            <div class="code-block">
+<span class="comment"># Dockerfile</span>
+FROM python:<span class="number">3.11</span>-slim            <span class="comment"># ベースイメージ（バージョン固定）</span>
+
+<span class="comment"># 作業ディレクトリ</span>
+WORKDIR /app
+
+<span class="comment"># システム依存パッケージ</span>
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+<span class="comment"># Pythonパッケージのインストール</span>
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+<span class="comment"># ソースコードをコピー</span>
+COPY . .
+
+<span class="comment"># ポート公開</span>
+EXPOSE 8000
+
+<span class="comment"># 起動コマンド</span>
+CMD [<span class="string">"uvicorn"</span>, <span class="string">"main:app"</span>, <span class="string">"--host"</span>, <span class="string">"0.0.0.0"</span>, <span class="string">"--port"</span>, <span class="string">"8000"</span>]
+            </div>
+            
+            <h3>requirements.txt（Pythonパッケージ）</h3>
+            <div class="code-block">
+<span class="comment"># requirements.txt - バージョンを固定</span>
+fastapi==<span class="number">0.109.0</span>
+uvicorn==<span class="number">0.27.0</span>
+sqlalchemy==<span class="number">2.0.25</span>
+psycopg2-binary==<span class="number">2.9.9</span>
+alembic==<span class="number">1.13.1</span>
+pydantic==<span class="number">2.5.3</span>
+httpx==<span class="number">0.26.0</span>
+python-dotenv==<span class="number">1.0.0</span>
+            </div>
+            
+            <div class="callout">
+                バージョンを <code>==</code> で固定することで、誰がいつビルドしても同じ環境になります。
+            </div>
+            
+            <h3>.env.example（環境変数サンプル）</h3>
+            <div class="code-block">
+<span class="comment"># .env.example - これをコピーして.envを作成</span>
+
+<span class="comment"># データベース設定</span>
+DB_USER=vuln_user
+DB_PASSWORD=your_secure_password
+DB_NAME=vuln_management
+
+<span class="comment"># API設定</span>
+API_SECRET_KEY=your-secret-key-here
+ENVIRONMENT=development
+
+<span class="comment"># 外部サービス（必要に応じて）</span>
+SLACK_WEBHOOK_URL=
+TEAMS_WEBHOOK_URL=
+            </div>
+            
+            <div class="warning-box">
+                <h4>⚠️ セキュリティ注意</h4>
+                <ul>
+                    <li><code>.env</code>ファイルは<strong>絶対にGitにコミットしない</strong></li>
+                    <li><code>.gitignore</code>に<code>.env</code>が含まれていることを確認</li>
+                    <li>本番環境のパスワードは別途安全に管理</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 日常の操作 -->
+        <div class="section">
+            <h2>🎮 6. 日常の操作コマンド</h2>
+            
+            <h3>基本コマンド</h3>
+            <table>
+                <tr>
+                    <th style="width: 40%;">コマンド</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><code>docker compose up -d</code></td>
+                    <td>全コンテナをバックグラウンドで起動</td>
+                </tr>
+                <tr>
+                    <td><code>docker compose down</code></td>
+                    <td>全コンテナを停止・削除</td>
+                </tr>
+                <tr>
+                    <td><code>docker compose ps</code></td>
+                    <td>コンテナの状態を確認</td>
+                </tr>
+                <tr>
+                    <td><code>docker compose logs -f</code></td>
+                    <td>ログをリアルタイム表示</td>
+                </tr>
+                <tr>
+                    <td><code>docker compose logs api</code></td>
+                    <td>特定コンテナのログを表示</td>
+                </tr>
+                <tr>
+                    <td><code>docker compose restart api</code></td>
+                    <td>特定コンテナを再起動</td>
+                </tr>
+                <tr>
+                    <td><code>docker compose build --no-cache</code></td>
+                    <td>イメージを再ビルド（キャッシュなし）</td>
+                </tr>
+            </table>
+            
+            <h3>よく使う操作</h3>
+            
+            <h4>朝の作業開始時</h4>
+            <div class="command-block">
+                <span class="prompt">$</span> docker compose up -d<br>
+                <span class="output">✔ Container postgres Started<br>✔ Container api Started<br>✔ Container frontend Started</span>
+            </div>
+            
+            <h4>作業終了時</h4>
+            <div class="command-block">
+                <span class="prompt">$</span> docker compose down<br>
+                <span class="output">✔ Container frontend Removed<br>✔ Container api Removed<br>✔ Container postgres Removed</span>
+            </div>
+            
+            <h4>エラーが出たとき（ログ確認）</h4>
+            <div class="command-block">
+                <span class="prompt">$</span> docker compose logs api --tail=50<br>
+                <span class="output">[直近50行のログが表示される]</span>
+            </div>
+            
+            <h4>コンテナ内でコマンド実行</h4>
+            <div class="command-block">
+                <span class="prompt">$</span> docker compose exec api bash<br>
+                <span class="output">root@container:/app#</span> python -c "print('Hello')"<br>
+                <span class="output">Hello</span><br>
+                <span class="output">root@container:/app#</span> exit
+            </div>
+            
+            <h4>DBに接続</h4>
+            <div class="command-block">
+                <span class="prompt">$</span> docker compose exec db psql -U vuln_user -d vuln_management<br>
+                <span class="output">psql (15.x)</span><br>
+                <span class="output">vuln_management=#</span> \dt<br>
+                <span class="output">[テーブル一覧が表示される]</span>
+            </div>
+            
+            <div class="beginner-box">
+                <h4>覚えるコマンドは3つだけ</h4>
+                <ol style="margin-left: 20px;">
+                    <li><code>docker compose up -d</code> - 起動</li>
+                    <li><code>docker compose down</code> - 停止</li>
+                    <li><code>docker compose logs</code> - ログ確認</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- CI/CDとは -->
+        <div class="section">
+            <h2 class="cicd">🔄 7. CI/CDとは？</h2>
+            
+            <h3>CI/CDの意味</h3>
+            <table>
+                <tr>
+                    <th style="width: 15%;">略語</th>
+                    <th style="width: 25%;">正式名称</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>CI</strong></td>
+                    <td>Continuous Integration<br>（継続的インテグレーション）</td>
+                    <td>コードをプッシュするたびに<strong>自動でテスト</strong>を実行</td>
+                </tr>
+                <tr>
+                    <td><strong>CD</strong></td>
+                    <td>Continuous Delivery/Deployment<br>（継続的デリバリー/デプロイ）</td>
+                    <td>テストが通ったら<strong>自動でデプロイ</strong></td>
+                </tr>
+            </table>
+            
+            <h3>CI/CDの流れ</h3>
+            <div class="pipeline">
+                <div class="pipeline-stage push">
+                    <div class="icon">📤</div>
+                    <h5>Push</h5>
+                    <small>コードをGitHubにプッシュ</small>
+                </div>
+                <div class="pipeline-stage test">
+                    <div class="icon">🧪</div>
+                    <h5>Test</h5>
+                    <small>自動でテスト実行</small>
+                </div>
+                <div class="pipeline-stage build">
+                    <div class="icon">🔨</div>
+                    <h5>Build</h5>
+                    <small>Dockerイメージ作成</small>
+                </div>
+                <div class="pipeline-stage deploy">
+                    <div class="icon">🚀</div>
+                    <h5>Deploy</h5>
+                    <small>本番環境に反映</small>
+                </div>
+            </div>
+            
+            <h3>CI/CDのメリット</h3>
+            <div class="compare-diagram">
+                <div class="compare-side bad">
+                    <h4>❌ CI/CDなし</h4>
+                    <ul style="margin-left: 16px;">
+                        <li>テストを忘れてバグが本番へ</li>
+                        <li>手動デプロイでミスが発生</li>
+                        <li>誰かがテストしないとわからない</li>
+                        <li>デプロイ手順がバラバラ</li>
+                    </ul>
+                </div>
+                <div class="compare-side good">
+                    <h4>✅ CI/CDあり</h4>
+                    <ul style="margin-left: 16px;">
+                        <li>プッシュ = 自動テスト</li>
+                        <li>テスト失敗 = マージ不可</li>
+                        <li>全員の変更が常にテストされる</li>
+                        <li>デプロイが自動化・標準化</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="beginner-box">
+                <h4>未経験者への影響</h4>
+                <p>
+                    CI/CDが設定されていれば、<strong>開発者は意識する必要がありません</strong>。<br>
+                    普通にコードをプッシュするだけで、自動的にテストが走ります。
+                </p>
+                <ul style="margin-left: 20px; margin-top: 8px;">
+                    <li>テスト結果はGitHubのPRページで確認</li>
+                    <li>❌が出たらログを見てエラーを修正</li>
+                    <li>✅が出たらマージOK</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- GitHub Actions -->
+        <div class="section">
+            <h2 class="cicd">⚙️ 8. GitHub Actions</h2>
+            
+            <p style="margin-bottom: 20px;">
+                GitHub Actionsは、GitHubに組み込まれたCI/CDサービスです。<br>
+                <code>.github/workflows/</code>ディレクトリにYAMLファイルを置くだけで動作します。
+            </p>
+            
+            <h3>ファイル構成</h3>
+            <div class="code-block">
+.github/
+└── workflows/
+    ├── ci.yml          <span class="comment"># テスト用（PR時に実行）</span>
+    └── deploy.yml      <span class="comment"># デプロイ用（mainマージ時に実行）</span>
+            </div>
+            
+            <h3>ci.yml（テスト自動実行）</h3>
+            <div class="code-block">
+<span class="comment"># .github/workflows/ci.yml</span>
+<span class="keyword">name</span>: CI
+
+<span class="comment"># いつ実行するか</span>
+<span class="keyword">on</span>:
+  <span class="keyword">pull_request</span>:
+    <span class="keyword">branches</span>: [main, develop]
+  <span class="keyword">push</span>:
+    <span class="keyword">branches</span>: [main, develop]
+
+<span class="keyword">jobs</span>:
+  <span class="keyword">test</span>:
+    <span class="keyword">runs-on</span>: ubuntu-latest    <span class="comment"># GitHub提供のLinux環境</span>
+    
+    <span class="keyword">services</span>:
+      <span class="comment"># テスト用PostgreSQL</span>
+      <span class="keyword">postgres</span>:
+        <span class="keyword">image</span>: postgres:<span class="number">15</span>
+        <span class="keyword">env</span>:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        <span class="keyword">ports</span>:
+          - <span class="number">5432</span>:<span class="number">5432</span>
+        <span class="keyword">options</span>: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    <span class="keyword">steps</span>:
+      <span class="comment"># リポジトリをチェックアウト</span>
+      - <span class="keyword">uses</span>: actions/checkout@v4
+      
+      <span class="comment"># Pythonをセットアップ</span>
+      - <span class="keyword">name</span>: Set up Python
+        <span class="keyword">uses</span>: actions/setup-python@v5
+        <span class="keyword">with</span>:
+          <span class="keyword">python-version</span>: <span class="string">'3.11'</span>
+          <span class="keyword">cache</span>: <span class="string">'pip'</span>
+      
+      <span class="comment"># 依存パッケージをインストール</span>
+      - <span class="keyword">name</span>: Install dependencies
+        <span class="keyword">run</span>: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      
+      <span class="comment"># Lintチェック</span>
+      - <span class="keyword">name</span>: Run linting
+        <span class="keyword">run</span>: |
+          pip install ruff
+          ruff check .
+      
+      <span class="comment"># テスト実行</span>
+      - <span class="keyword">name</span>: Run tests
+        <span class="keyword">env</span>:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+        <span class="keyword">run</span>: |
+          pytest --cov=./ --cov-report=xml
+      
+      <span class="comment"># カバレッジレポート（オプション）</span>
+      - <span class="keyword">name</span>: Upload coverage
+        <span class="keyword">uses</span>: codecov/codecov-action@v3
+        <span class="keyword">with</span>:
+          <span class="keyword">file</span>: ./coverage.xml
+            </div>
+            
+            <h3>GitHub上での表示</h3>
+            <div class="diagram">
+                <div class="diagram-title">Pull Request画面</div>
+                <div style="background: white; border: 1px solid #d0d7de; border-radius: 8px; padding: 16px; text-align: left; max-width: 500px; margin: 0 auto;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <span style="color: #2da44e;">✅</span>
+                        <strong>All checks have passed</strong>
+                    </div>
+                    <div style="font-size: 13px; color: #57606a; margin-left: 24px;">
+                        <div>✅ CI / test (pull_request) — 2m 34s</div>
+                        <div>✅ CI / lint (pull_request) — 45s</div>
+                    </div>
+                </div>
+                <p style="margin-top: 12px; color: #57606a;">
+                    テストが全て通ると ✅ が表示され、マージ可能になります
+                </p>
+            </div>
+            
+            <h3>deploy.yml（自動デプロイ）- 参考</h3>
+            <div class="code-block">
+<span class="comment"># .github/workflows/deploy.yml（本番デプロイ用・参考）</span>
+<span class="keyword">name</span>: Deploy
+
+<span class="keyword">on</span>:
+  <span class="keyword">push</span>:
+    <span class="keyword">branches</span>: [main]   <span class="comment"># mainにマージされたら実行</span>
+
+<span class="keyword">jobs</span>:
+  <span class="keyword">deploy</span>:
+    <span class="keyword">runs-on</span>: ubuntu-latest
+    
+    <span class="keyword">steps</span>:
+      - <span class="keyword">uses</span>: actions/checkout@v4
+      
+      <span class="comment"># AWSにログイン</span>
+      - <span class="keyword">name</span>: Configure AWS credentials
+        <span class="keyword">uses</span>: aws-actions/configure-aws-credentials@v4
+        <span class="keyword">with</span>:
+          <span class="keyword">aws-access-key-id</span>: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          <span class="keyword">aws-secret-access-key</span>: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          <span class="keyword">aws-region</span>: ap-northeast-1
+      
+      <span class="comment"># ECRにログイン</span>
+      - <span class="keyword">name</span>: Login to Amazon ECR
+        <span class="keyword">id</span>: login-ecr
+        <span class="keyword">uses</span>: aws-actions/amazon-ecr-login@v2
+      
+      <span class="comment"># Dockerイメージをビルド&プッシュ</span>
+      - <span class="keyword">name</span>: Build and push Docker image
+        <span class="keyword">env</span>:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        <span class="keyword">run</span>: |
+          docker build -t $ECR_REGISTRY/vuln-management:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/vuln-management:$IMAGE_TAG
+      
+      <span class="comment"># ECSにデプロイ</span>
+      - <span class="keyword">name</span>: Deploy to ECS
+        <span class="keyword">run</span>: |
+          aws ecs update-service --cluster production --service api --force-new-deployment
+            </div>
+            
+            <div class="callout">
+                デプロイの設定はインフラ環境によって異なります。上記はAWS ECSの例です。
+            </div>
+        </div>
+
+        <!-- よくあるトラブル -->
+        <div class="section">
+            <h2 class="trouble">🔥 9. よくあるトラブルと対処法</h2>
+            
+            <h3>Docker関連</h3>
+            <table>
+                <tr>
+                    <th style="width: 30%;">エラー</th>
+                    <th style="width: 35%;">原因</th>
+                    <th>対処法</th>
+                </tr>
+                <tr>
+                    <td><code>Cannot connect to the Docker daemon</code></td>
+                    <td>Docker Desktopが起動していない</td>
+                    <td>Docker Desktopを起動する（クジラアイコン🐳を確認）</td>
+                </tr>
+                <tr>
+                    <td><code>port is already allocated</code></td>
+                    <td>ポートが他のプロセスで使用中</td>
+                    <td>使用中のプロセスを停止、またはdocker-compose.ymlでポート変更</td>
+                </tr>
+                <tr>
+                    <td><code>no space left on device</code></td>
+                    <td>Dockerのディスク使用量が上限</td>
+                    <td><code>docker system prune -a</code>で不要データ削除</td>
+                </tr>
+                <tr>
+                    <td>コンテナがすぐ終了する</td>
+                    <td>起動コマンドのエラー</td>
+                    <td><code>docker compose logs [サービス名]</code>でログ確認</td>
+                </tr>
+                <tr>
+                    <td>ファイル変更が反映されない</td>
+                    <td>ボリュームマウントの問題</td>
+                    <td><code>docker compose restart</code>または<code>down</code>→<code>up</code></td>
+                </tr>
+            </table>
+            
+            <h3>ポート競合の確認と解決</h3>
+            <div class="command-block">
+                <span class="comment"># ポート5432を使っているプロセスを確認（Windows）</span><br>
+                <span class="prompt">$</span> netstat -ano | findstr :5432<br>
+                <br>
+                <span class="comment"># ポート5432を使っているプロセスを確認（Mac/Linux）</span><br>
+                <span class="prompt">$</span> lsof -i :5432
+            </div>
+            
+            <h3>Dockerのクリーンアップ</h3>
+            <div class="command-block">
+                <span class="comment"># 停止中のコンテナ、未使用イメージ、ネットワークを削除</span><br>
+                <span class="prompt">$</span> docker system prune<br>
+                <br>
+                <span class="comment"># さらに全ての未使用イメージも削除（容量不足時）</span><br>
+                <span class="prompt">$</span> docker system prune -a<br>
+                <br>
+                <span class="comment"># ボリュームも含めて完全クリーンアップ（データも消える！）</span><br>
+                <span class="prompt">$</span> docker system prune -a --volumes
+            </div>
+            
+            <div class="warning-box">
+                <h4>⚠️ 注意</h4>
+                <p><code>--volumes</code>オプションを付けるとデータベースのデータも消えます。必要なデータはバックアップしてから実行してください。</p>
+            </div>
+            
+            <h3>CI/CD関連</h3>
+            <table>
+                <tr>
+                    <th style="width: 30%;">問題</th>
+                    <th style="width: 35%;">原因</th>
+                    <th>対処法</th>
+                </tr>
+                <tr>
+                    <td>CIがずっと実行中</td>
+                    <td>テストが無限ループ、タイムアウト</td>
+                    <td>Actionsタブからキャンセル、テストコードを確認</td>
+                </tr>
+                <tr>
+                    <td>テストがローカルでは通るのにCIで失敗</td>
+                    <td>環境の違い（環境変数、DB接続など）</td>
+                    <td>ci.ymlの環境変数を確認、ログで詳細確認</td>
+                </tr>
+                <tr>
+                    <td>Permission denied</td>
+                    <td>シークレットが設定されていない</td>
+                    <td>リポジトリのSettings → Secrets → Actions secrets を確認</td>
+                </tr>
+            </table>
+            
+            <h3>困ったときの確認手順</h3>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>コンテナの状態を確認</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> docker compose ps
+                        </div>
+                        <p>STATUSがrunningか確認。exitedならログを見る。</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>ログを確認</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> docker compose logs api --tail=100
+                        </div>
+                        <p>エラーメッセージを探す。</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>再起動してみる</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> docker compose down<br>
+                            <span class="prompt">$</span> docker compose up -d
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>イメージから再ビルド</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> docker compose build --no-cache<br>
+                            <span class="prompt">$</span> docker compose up -d
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>それでもダメなら完全リセット</h4>
+                        <div class="command-block">
+                            <span class="prompt">$</span> docker compose down -v  <span class="comment"># ボリュームも削除</span><br>
+                            <span class="prompt">$</span> docker system prune -a<br>
+                            <span class="prompt">$</span> docker compose up -d --build
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 Docker/CI・CD 担当タスク</h2>
+            
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>担当</th>
+                    <th>タスク</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 1</strong></td>
+                    <td>リード（三縄さん）</td>
+                    <td>
+                        ・docker-compose.yml作成<br>
+                        ・Dockerfile作成<br>
+                        ・.env.example作成<br>
+                        ・セットアップ手順書作成
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 1</strong></td>
+                    <td>全員</td>
+                    <td>
+                        ・Docker Desktopインストール<br>
+                        ・ローカル環境セットアップ<br>
+                        ・動作確認
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 2</strong></td>
+                    <td>リード</td>
+                    <td>
+                        ・GitHub Actions CI設定<br>
+                        ・テスト自動実行設定<br>
+                        ・ブランチ保護ルール設定
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>将来</strong></td>
+                    <td>インフラ担当</td>
+                    <td>
+                        ・本番環境構築<br>
+                        ・CD（自動デプロイ）設定
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 開発メンバーがやること</h4>
+                <ul>
+                    <li>Docker Desktopをインストール</li>
+                    <li><code>docker compose up -d</code>で環境起動</li>
+                    <li>普通にコード開発（Dockerを意識する必要なし）</li>
+                    <li>PRを出すと自動でテストが走る</li>
+                    <li>✅が出たらマージ</li>
+                </ul>
+                <p style="margin-top: 8px;">
+                    <strong>Dockerfileやci.ymlを触る必要は基本的にありません。</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>ポイント</th>
+                </tr>
+                <tr>
+                    <td><strong>Dockerの役割</strong></td>
+                    <td>環境の統一。誰のPCでも同じ環境が再現される</td>
+                </tr>
+                <tr>
+                    <td><strong>バージョンズレ</strong></td>
+                    <td>Dockerで解決。既存インストールとも干渉しない</td>
+                </tr>
+                <tr>
+                    <td><strong>未経験者</strong></td>
+                    <td><code>docker compose up</code>だけ覚えればOK</td>
+                </tr>
+                <tr>
+                    <td><strong>CI/CDの役割</strong></td>
+                    <td>自動テスト・自動デプロイ。品質を保証</td>
+                </tr>
+                <tr>
+                    <td><strong>日常の影響</strong></td>
+                    <td>普通にコード書いてPRを出すだけ</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>🎯 覚えておくこと</h4>
+                <ol style="margin-left: 20px;">
+                    <li><strong>Docker Desktop</strong>を起動しておく（クジラアイコン🐳）</li>
+                    <li><strong><code>docker compose up -d</code></strong>で環境起動</li>
+                    <li><strong><code>docker compose down</code></strong>で環境停止</li>
+                    <li><strong><code>docker compose logs</code></strong>でエラー確認</li>
+                    <li>PRを出すと<strong>自動でテスト</strong>が走る</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>Docker公式ドキュメント</strong></td>
+                    <td><a href="https://docs.docker.com/" target="_blank">https://docs.docker.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Docker Desktop</strong></td>
+                    <td><a href="https://www.docker.com/products/docker-desktop/" target="_blank">https://www.docker.com/products/docker-desktop/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>GitHub Actions</strong></td>
+                    <td><a href="https://docs.github.com/ja/actions" target="_blank">https://docs.github.com/ja/actions</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Docker入門（日本語）</strong></td>
+                    <td><a href="https://zenn.dev/topics/docker" target="_blank">https://zenn.dev/topics/docker</a></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドキュメント自動化ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        .section h2.fastapi { border-bottom-color: #009688; }
+        .section h2.mkdocs { border-bottom-color: #2196f3; }
+        .section h2.ai { border-bottom-color: #d97706; }
+        .section h2.cicd { border-bottom-color: #2da44e; }
+        .section h2.mermaid { border-bottom-color: #ff6b6b; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* ボックス類 */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul, .point-box ol {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        .ai-box {
+            background: #fef3c7;
+            border: 2px solid #d97706;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .ai-box h4 {
+            color: #d97706;
+            margin-bottom: 8px;
+        }
+        .ai-box h4::before {
+            content: "🤖 ";
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .decorator {
+            color: #ffa657;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        .code-block .builtin {
+            color: #79c0ff;
+        }
+        
+        .command-block {
+            background: #1e1e2e;
+            border-left: 4px solid #8250df;
+            color: #cdd6f4;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+        .command-block .prompt {
+            color: #a6e3a1;
+        }
+        .command-block .output {
+            color: #6c7086;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* フロー図 */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .flow-step {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            min-width: 100px;
+        }
+        .flow-step.code { background: #f6f8fa; border-color: #57606a; }
+        .flow-step.auto { background: #ddf4ff; border-color: #0969da; }
+        .flow-step.ai { background: #fef3c7; border-color: #d97706; }
+        .flow-step.output { background: #dafbe1; border-color: #2da44e; }
+        .flow-arrow {
+            font-size: 20px;
+            color: #57606a;
+        }
+        
+        /* アーキテクチャ図 */
+        .architecture {
+            background: #f6f8fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .arch-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .arch-box {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .arch-box.source { border-color: #57606a; }
+        .arch-box.tool { border-color: #0969da; background: #ddf4ff; }
+        .arch-box.ai { border-color: #d97706; background: #fef3c7; }
+        .arch-box.output { border-color: #2da44e; background: #dafbe1; }
+        .arch-box h5 {
+            margin-bottom: 8px;
+        }
+        .arch-arrow {
+            text-align: center;
+            font-size: 24px;
+            color: #57606a;
+        }
+        
+        /* プレビュー */
+        .preview-container {
+            background: #1e1e2e;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .preview-header {
+            background: #313244;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .preview-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .preview-dot.red { background: #f38ba8; }
+        .preview-dot.yellow { background: #f9e2af; }
+        .preview-dot.green { background: #a6e3a1; }
+        .preview-title {
+            color: #cdd6f4;
+            margin-left: 8px;
+            font-size: 13px;
+        }
+        .preview-body {
+            padding: 20px;
+            color: #cdd6f4;
+        }
+        
+        /* Swagger UI風プレビュー */
+        .swagger-preview {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .swagger-header {
+            background: #1b1b1b;
+            color: white;
+            padding: 16px;
+        }
+        .swagger-header h3 {
+            color: #89bf04;
+            margin: 0;
+        }
+        .swagger-body {
+            padding: 16px;
+        }
+        .swagger-endpoint {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .swagger-method {
+            padding: 4px 12px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .swagger-method.get { background: #61affe; }
+        .swagger-method.post { background: #49cc90; }
+        .swagger-method.put { background: #fca130; }
+        .swagger-method.delete { background: #f93e3e; }
+        .swagger-path {
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .swagger-desc {
+            color: #57606a;
+            font-size: 13px;
+            margin-left: auto;
+        }
+        
+        /* ファイルツリー */
+        .file-tree {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .file-tree .folder { color: #0969da; }
+        .file-tree .file { color: #24292f; }
+        .file-tree .comment { color: #57606a; }
+        .file-tree .new { color: #2da44e; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .arch-row {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 ドキュメント自動化ガイド</h1>
+        <p class="subtitle">無料ツール + Claude APIで実現する効率的なドキュメント管理</p>
+
+        <!-- コスト概要 -->
+        <div class="section">
+            <h2>💰 コストと必要な契約</h2>
+            
+            <p style="margin-bottom: 20px;">
+                本プロジェクトのドキュメント自動化は、<strong>無料ツール + Claude API</strong>で実現できます。<br>
+                OpenAI APIやGitHub Copilotは不要です。
+            </p>
+            
+            <h3>ツール別コスト一覧</h3>
+            <table>
+                <tr>
+                    <th>ツール</th>
+                    <th>費用</th>
+                    <th>本プロジェクトでの利用</th>
+                </tr>
+                <tr>
+                    <td><strong>FastAPI OpenAPI</strong></td>
+                    <td style="color: #1a7f37;">✅ 無料</td>
+                    <td>FastAPIの標準機能</td>
+                </tr>
+                <tr>
+                    <td><strong>MkDocs / mkdocstrings</strong></td>
+                    <td style="color: #1a7f37;">✅ 無料</td>
+                    <td>オープンソース</td>
+                </tr>
+                <tr>
+                    <td><strong>Mermaid</strong></td>
+                    <td style="color: #1a7f37;">✅ 無料</td>
+                    <td>オープンソース</td>
+                </tr>
+                <tr>
+                    <td><strong>GitHub Actions</strong></td>
+                    <td style="color: #1a7f37;">✅ 無料枠あり</td>
+                    <td>プライベート：月2,000分無料</td>
+                </tr>
+                <tr>
+                    <td><strong>GitHub Pages</strong></td>
+                    <td style="color: #1a7f37;">✅ 無料</td>
+                    <td>ドキュメントサイト公開</td>
+                </tr>
+                <tr>
+                    <td><strong>Conventional Commits</strong></td>
+                    <td style="color: #1a7f37;">✅ 無料</td>
+                    <td>コミットルールに従うだけ</td>
+                </tr>
+                <tr>
+                    <td><strong>Claude API</strong></td>
+                    <td style="color: #0969da;">✅ 契約済み</td>
+                    <td>PR説明文・README・docstring生成</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #57606a;">OpenAI API</span></td>
+                    <td style="color: #57606a;">－</td>
+                    <td style="color: #57606a;">不要（Claude APIで代替）</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #57606a;">GitHub Copilot</span></td>
+                    <td style="color: #57606a;">－</td>
+                    <td style="color: #57606a;">不要（Claude.aiで対応可能）</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 本プロジェクトの構成</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <strong>無料ツール（80%カバー）</strong>
+                        <ul style="margin: 8px 0 0 20px;">
+                            <li>FastAPI OpenAPI</li>
+                            <li>MkDocs + mkdocstrings</li>
+                            <li>Mermaid</li>
+                            <li>Conventional Commits</li>
+                            <li>GitHub Actions / Pages</li>
+                        </ul>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <strong>Claude API（契約済み）</strong>
+                        <ul style="margin: 8px 0 0 20px;">
+                            <li>PR説明文自動生成</li>
+                            <li>README自動生成</li>
+                            <li>docstring自動生成</li>
+                            <li>コード補完（Claude.ai）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                AI生成機能はすべて<strong>Claude API</strong>で実装します。OpenAI APIやGitHub Copilotの契約は不要です。
+            </div>
+        </div>
+
+        <!-- 概要 -->
+        <div class="section">
+            <h2>📋 ドキュメント自動化の全体像</h2>
+            
+            <p style="margin-bottom: 20px;">
+                本プロジェクトでは、<strong>無料ツール + Claude API</strong>を組み合わせてドキュメント作成の負担を最小化します。
+            </p>
+            
+            <div class="architecture">
+                <div class="arch-row">
+                    <div class="arch-box source">
+                        <h5>📝 ソースコード</h5>
+                        <small>Python / TypeScript</small>
+                    </div>
+                    <div class="arch-box source">
+                        <h5>💬 Docstring</h5>
+                        <small>関数・クラスの説明</small>
+                    </div>
+                    <div class="arch-box source">
+                        <h5>📊 Git履歴</h5>
+                        <small>コミット・PR</small>
+                    </div>
+                </div>
+                
+                <div class="arch-arrow">↓</div>
+                
+                <div class="arch-row">
+                    <div class="arch-box tool">
+                        <h5>🔧 FastAPI</h5>
+                        <small>OpenAPI自動生成</small>
+                    </div>
+                    <div class="arch-box tool">
+                        <h5>📚 MkDocs</h5>
+                        <small>ドキュメントサイト</small>
+                    </div>
+                    <div class="arch-box ai">
+                        <h5>🤖 Claude API</h5>
+                        <small>AI説明文生成</small>
+                    </div>
+                </div>
+                
+                <div class="arch-arrow">↓</div>
+                
+                <div class="arch-row">
+                    <div class="arch-box output">
+                        <h5>📄 API仕様書</h5>
+                        <small>Swagger UI</small>
+                    </div>
+                    <div class="arch-box output">
+                        <h5>🌐 ドキュメントサイト</h5>
+                        <small>GitHub Pages</small>
+                    </div>
+                    <div class="arch-box output">
+                        <h5>📋 PR説明・README</h5>
+                        <small>自動生成</small>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>自動化できるもの</h3>
+            <table>
+                <tr>
+                    <th>ドキュメント</th>
+                    <th>自動化方法</th>
+                    <th>ツール</th>
+                    <th>効果</th>
+                </tr>
+                <tr>
+                    <td><strong>API仕様書</strong></td>
+                    <td>コードから自動生成</td>
+                    <td>FastAPI OpenAPI</td>
+                    <td>⭐⭐⭐ 即座に最新の仕様書</td>
+                </tr>
+                <tr>
+                    <td><strong>関数・クラス説明</strong></td>
+                    <td>docstringから生成</td>
+                    <td>MkDocs + mkdocstrings</td>
+                    <td>⭐⭐⭐ 常にコードと同期</td>
+                </tr>
+                <tr>
+                    <td><strong>PR説明文</strong></td>
+                    <td>差分からAI生成</td>
+                    <td>Claude API + GitHub Actions</td>
+                    <td>⭐⭐ レビュー効率UP</td>
+                </tr>
+                <tr>
+                    <td><strong>README</strong></td>
+                    <td>AIで自動生成</td>
+                    <td>Claude API</td>
+                    <td>⭐⭐ 初期作成の効率化</td>
+                </tr>
+                <tr>
+                    <td><strong>変更履歴</strong></td>
+                    <td>コミットから生成</td>
+                    <td>Conventional Commits</td>
+                    <td>⭐⭐ リリース作業軽減</td>
+                </tr>
+                <tr>
+                    <td><strong>アーキテクチャ図</strong></td>
+                    <td>コードで記述</td>
+                    <td>Mermaid</td>
+                    <td>⭐⭐ 図の更新が簡単</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- FastAPI OpenAPI -->
+        <div class="section">
+            <h2 class="fastapi">🚀 1. FastAPI OpenAPI（API仕様書自動生成）</h2>
+            
+            <p style="margin-bottom: 20px;">
+                FastAPIは<strong>コードを書くだけでAPI仕様書が自動生成</strong>されます。<br>
+                追加作業なしで、常に最新の仕様書が利用可能です。
+            </p>
+            
+            <h3>仕組み</h3>
+            <div class="flow-container">
+                <div class="flow-step code">
+                    📝 FastAPIコード<br>
+                    <small>型ヒント + docstring</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step auto">
+                    ⚙️ 自動解析<br>
+                    <small>OpenAPI生成</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step output">
+                    📄 Swagger UI<br>
+                    <small>/docs でアクセス</small>
+                </div>
+            </div>
+            
+            <h3>実装例（脆弱性API）</h3>
+            <div class="code-block">
+<span class="comment"># app/routers/vulnerabilities.py</span>
+<span class="keyword">from</span> fastapi <span class="keyword">import</span> APIRouter, Query, Path, HTTPException
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Optional
+<span class="keyword">from</span> app.schemas <span class="keyword">import</span> VulnerabilityResponse, VulnerabilityCreate
+
+router = APIRouter(
+    prefix=<span class="string">"/api/vulnerabilities"</span>,
+    tags=[<span class="string">"脆弱性管理"</span>]  <span class="comment"># Swagger UIでグループ化</span>
+)
+
+
+<span class="decorator">@router.get</span>(
+    <span class="string">"/"</span>,
+    response_model=List[VulnerabilityResponse],
+    summary=<span class="string">"脆弱性一覧を取得"</span>,
+    description=<span class="string">"""
+    脆弱性の一覧を取得します。
+    
+    - **severity**: 重要度でフィルター（Critical, High, Medium, Low）
+    - **status**: ステータスでフィルター（open, in_progress, resolved）
+    - **is_kev**: KEV（悪用確認済み）のみ取得
+    """</span>
+)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_vulnerabilities</span>(
+    severity: Optional[<span class="builtin">str</span>] = Query(
+        <span class="keyword">None</span>,
+        description=<span class="string">"重要度フィルター"</span>,
+        example=<span class="string">"Critical"</span>
+    ),
+    status: Optional[<span class="builtin">str</span>] = Query(
+        <span class="keyword">None</span>,
+        description=<span class="string">"ステータスフィルター"</span>,
+        example=<span class="string">"open"</span>
+    ),
+    is_kev: Optional[<span class="builtin">bool</span>] = Query(
+        <span class="keyword">None</span>,
+        description=<span class="string">"KEVのみ取得"</span>
+    ),
+    page: <span class="builtin">int</span> = Query(<span class="number">1</span>, ge=<span class="number">1</span>, description=<span class="string">"ページ番号"</span>),
+    per_page: <span class="builtin">int</span> = Query(<span class="number">20</span>, ge=<span class="number">1</span>, le=<span class="number">100</span>, description=<span class="string">"1ページあたりの件数"</span>)
+):
+    <span class="string">"""脆弱性一覧を取得"""</span>
+    ...
+
+
+<span class="decorator">@router.get</span>(
+    <span class="string">"/{cve_id}"</span>,
+    response_model=VulnerabilityResponse,
+    summary=<span class="string">"脆弱性詳細を取得"</span>,
+    responses={
+        <span class="number">404</span>: {<span class="string">"description"</span>: <span class="string">"脆弱性が見つかりません"</span>}
+    }
+)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">get_vulnerability</span>(
+    cve_id: <span class="builtin">str</span> = Path(
+        ...,
+        description=<span class="string">"CVE ID"</span>,
+        example=<span class="string">"CVE-2024-1234"</span>
+    )
+):
+    <span class="string">"""指定したCVE IDの脆弱性詳細を取得"""</span>
+    ...
+
+
+<span class="decorator">@router.post</span>(
+    <span class="string">"/"</span>,
+    response_model=VulnerabilityResponse,
+    status_code=<span class="number">201</span>,
+    summary=<span class="string">"脆弱性を新規登録"</span>
+)
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">create_vulnerability</span>(
+    vulnerability: VulnerabilityCreate
+):
+    <span class="string">"""脆弱性を新規登録（手動登録用）"""</span>
+    ...
+            </div>
+            
+            <h3>Pydanticスキーマでレスポンス形式も自動ドキュメント化</h3>
+            <div class="code-block">
+<span class="comment"># app/schemas/vulnerability.py</span>
+<span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel, Field
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">from</span> typing <span class="keyword">import</span> Optional, List
+
+
+<span class="keyword">class</span> <span class="class">VulnerabilityResponse</span>(BaseModel):
+    <span class="string">"""脆弱性レスポンス"""</span>
+    
+    id: <span class="builtin">int</span> = Field(..., description=<span class="string">"脆弱性ID"</span>)
+    cve_id: <span class="builtin">str</span> = Field(..., description=<span class="string">"CVE ID"</span>, example=<span class="string">"CVE-2024-1234"</span>)
+    title: <span class="builtin">str</span> = Field(..., description=<span class="string">"脆弱性タイトル"</span>)
+    description: Optional[<span class="builtin">str</span>] = Field(<span class="keyword">None</span>, description=<span class="string">"詳細説明"</span>)
+    cvss_score: <span class="builtin">float</span> = Field(..., ge=<span class="number">0</span>, le=<span class="number">10</span>, description=<span class="string">"CVSSスコア"</span>, example=<span class="number">9.8</span>)
+    severity: <span class="builtin">str</span> = Field(..., description=<span class="string">"重要度"</span>, example=<span class="string">"Critical"</span>)
+    is_kev: <span class="builtin">bool</span> = Field(<span class="keyword">False</span>, description=<span class="string">"KEV登録フラグ"</span>)
+    published_date: datetime = Field(..., description=<span class="string">"公開日"</span>)
+    affected_assets_count: <span class="builtin">int</span> = Field(<span class="number">0</span>, description=<span class="string">"影響を受ける資産数"</span>)
+    
+    <span class="keyword">class</span> <span class="class">Config</span>:
+        json_schema_extra = {
+            <span class="string">"example"</span>: {
+                <span class="string">"id"</span>: <span class="number">1</span>,
+                <span class="string">"cve_id"</span>: <span class="string">"CVE-2024-1234"</span>,
+                <span class="string">"title"</span>: <span class="string">"Apache HTTP Server の重大な脆弱性"</span>,
+                <span class="string">"cvss_score"</span>: <span class="number">9.8</span>,
+                <span class="string">"severity"</span>: <span class="string">"Critical"</span>,
+                <span class="string">"is_kev"</span>: <span class="keyword">True</span>,
+                <span class="string">"affected_assets_count"</span>: <span class="number">5</span>
+            }
+        }
+            </div>
+            
+            <h3>Swagger UI プレビュー</h3>
+            <div class="swagger-preview">
+                <div class="swagger-header">
+                    <h3>🛡️ 脆弱性管理システム API</h3>
+                    <p style="color: #ccc; margin-top: 8px;">バージョン: 1.0.0 | <a href="#" style="color: #89bf04;">/openapi.json</a></p>
+                </div>
+                <div class="swagger-body">
+                    <h4 style="margin-bottom: 12px;">脆弱性管理</h4>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method get">GET</span>
+                        <span class="swagger-path">/api/vulnerabilities</span>
+                        <span class="swagger-desc">脆弱性一覧を取得</span>
+                    </div>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method get">GET</span>
+                        <span class="swagger-path">/api/vulnerabilities/{cve_id}</span>
+                        <span class="swagger-desc">脆弱性詳細を取得</span>
+                    </div>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method post">POST</span>
+                        <span class="swagger-path">/api/vulnerabilities</span>
+                        <span class="swagger-desc">脆弱性を新規登録</span>
+                    </div>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method put">PUT</span>
+                        <span class="swagger-path">/api/vulnerabilities/{cve_id}</span>
+                        <span class="swagger-desc">脆弱性を更新</span>
+                    </div>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method delete">DELETE</span>
+                        <span class="swagger-path">/api/vulnerabilities/{cve_id}</span>
+                        <span class="swagger-desc">脆弱性を削除</span>
+                    </div>
+                    
+                    <h4 style="margin: 20px 0 12px;">資産管理</h4>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method get">GET</span>
+                        <span class="swagger-path">/api/assets</span>
+                        <span class="swagger-desc">資産一覧を取得</span>
+                    </div>
+                    <div class="swagger-endpoint">
+                        <span class="swagger-method get">GET</span>
+                        <span class="swagger-path">/api/assets/{id}/vulnerabilities</span>
+                        <span class="swagger-desc">資産の脆弱性一覧</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ FastAPI OpenAPIのメリット</h4>
+                <ul>
+                    <li><strong>追加作業なし</strong>：コードを書くだけで仕様書が完成</li>
+                    <li><strong>常に最新</strong>：コードと仕様書が常に同期</li>
+                    <li><strong>テスト可能</strong>：Swagger UIから直接APIをテスト</li>
+                    <li><strong>クライアント生成</strong>：OpenAPI仕様からSDKを自動生成可能</li>
+                </ul>
+            </div>
+            
+            <h3>アクセス方法</h3>
+            <table>
+                <tr>
+                    <th>URL</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><code>http://localhost:8000/docs</code></td>
+                    <td>Swagger UI（インタラクティブなAPI仕様書）</td>
+                </tr>
+                <tr>
+                    <td><code>http://localhost:8000/redoc</code></td>
+                    <td>ReDoc（読みやすいAPI仕様書）</td>
+                </tr>
+                <tr>
+                    <td><code>http://localhost:8000/openapi.json</code></td>
+                    <td>OpenAPI仕様（JSON形式）</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- MkDocs -->
+        <div class="section">
+            <h2 class="mkdocs">📚 2. MkDocs（ドキュメントサイト自動生成）</h2>
+            
+            <p style="margin-bottom: 20px;">
+                <strong>MkDocs</strong>はMarkdownからドキュメントサイトを生成するツールです。<br>
+                <strong>mkdocstrings</strong>プラグインを使うと、Pythonコードのdocstringから自動でドキュメントを生成できます。
+            </p>
+            
+            <h3>インストール</h3>
+            <div class="command-block">
+                <span class="prompt">$</span> pip install mkdocs mkdocs-material mkdocstrings[python]
+            </div>
+            
+            <h3>プロジェクト構成</h3>
+            <div class="file-tree">
+<span class="folder">vuln-management/</span>
+├── <span class="file">mkdocs.yml</span>              <span class="comment"># MkDocs設定</span>
+├── <span class="folder">docs/</span>                    <span class="comment"># ドキュメントソース</span>
+│   ├── <span class="file">index.md</span>             <span class="comment"># トップページ</span>
+│   ├── <span class="file">getting-started.md</span>   <span class="comment"># はじめに</span>
+│   ├── <span class="folder">api/</span>                 <span class="comment"># API リファレンス</span>
+│   │   ├── <span class="file">vulnerabilities.md</span>
+│   │   ├── <span class="file">assets.md</span>
+│   │   └── <span class="file">matching.md</span>
+│   ├── <span class="folder">guides/</span>              <span class="comment"># ガイド</span>
+│   │   ├── <span class="file">installation.md</span>
+│   │   └── <span class="file">configuration.md</span>
+│   └── <span class="folder">reference/</span>           <span class="comment"># コードリファレンス（自動生成）</span>
+│       ├── <span class="file new">services.md</span>       <span class="comment"># ← docstringから自動生成</span>
+│       └── <span class="file new">models.md</span>         <span class="comment"># ← docstringから自動生成</span>
+└── <span class="folder">app/</span>                     <span class="comment"># アプリケーションコード</span>
+            </div>
+            
+            <h3>mkdocs.yml（設定ファイル）</h3>
+            <div class="code-block">
+<span class="comment"># mkdocs.yml</span>
+<span class="keyword">site_name</span>: 脆弱性管理システム ドキュメント
+<span class="keyword">site_description</span>: JVN iPedia連携 脆弱性管理システムの技術ドキュメント
+<span class="keyword">site_url</span>: https://your-org.github.io/vuln-management/
+
+<span class="keyword">theme</span>:
+  <span class="keyword">name</span>: material
+  <span class="keyword">language</span>: ja
+  <span class="keyword">palette</span>:
+    - <span class="keyword">scheme</span>: default
+      <span class="keyword">primary</span>: indigo
+      <span class="keyword">accent</span>: indigo
+  <span class="keyword">features</span>:
+    - navigation.tabs
+    - navigation.sections
+    - search.highlight
+    - content.code.copy
+
+<span class="keyword">plugins</span>:
+  - search
+  - mkdocstrings:
+      <span class="keyword">handlers</span>:
+        <span class="keyword">python</span>:
+          <span class="keyword">options</span>:
+            show_source: true
+            show_root_heading: true
+            docstring_style: google
+
+<span class="keyword">nav</span>:
+  - ホーム: index.md
+  - はじめに:
+    - インストール: guides/installation.md
+    - 設定: guides/configuration.md
+  - API リファレンス:
+    - 脆弱性API: api/vulnerabilities.md
+    - 資産API: api/assets.md
+    - マッチングAPI: api/matching.md
+  - コードリファレンス:
+    - サービス: reference/services.md
+    - モデル: reference/models.md
+
+<span class="keyword">markdown_extensions</span>:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+            </div>
+            
+            <h3>docstringからドキュメント自動生成</h3>
+            <div class="code-block">
+<span class="comment"># app/services/matching_engine.py</span>
+<span class="keyword">class</span> <span class="class">MatchingEngine</span>:
+    <span class="string">"""脆弱性と資産のマッチングエンジン
+    
+    CPE（Common Platform Enumeration）を使用して、
+    脆弱性が影響する資産を特定します。
+    
+    Attributes:
+        db_session: データベースセッション
+        
+    Example:
+        ```python
+        engine = MatchingEngine(db_session)
+        matches = engine.find_matches(vulnerability)
+        for match in matches:
+            print(f"{match.asset.hostname}: {match.priority}")
+        ```
+    """</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, db_session: Session):
+        <span class="string">"""マッチングエンジンを初期化
+        
+        Args:
+            db_session: SQLAlchemyデータベースセッション
+        """</span>
+        self.db_session = db_session
+    
+    <span class="keyword">def</span> <span class="function">find_matches</span>(
+        self,
+        vulnerability: Vulnerability
+    ) -> List[VulnerabilityAsset]:
+        <span class="string">"""脆弱性に該当する資産を検索
+        
+        CPEマッチングを行い、脆弱性の影響を受ける資産を特定します。
+        
+        Args:
+            vulnerability: 検索対象の脆弱性
+            
+        Returns:
+            マッチした脆弱性-資産の関連リスト
+            
+        Raises:
+            ValueError: 脆弱性にCPEが設定されていない場合
+            
+        Example:
+            ```python
+            vuln = db.query(Vulnerability).filter_by(cve_id="CVE-2024-1234").first()
+            matches = engine.find_matches(vuln)
+            ```
+        """</span>
+        ...
+    
+    <span class="keyword">def</span> <span class="function">calculate_priority</span>(
+        self,
+        vulnerability: Vulnerability,
+        asset: Asset
+    ) -> <span class="builtin">str</span>:
+        <span class="string">"""対応優先度を計算
+        
+        脆弱性の重要度と資産の重要度から、対応優先度を算出します。
+        
+        Args:
+            vulnerability: 脆弱性オブジェクト
+            asset: 資産オブジェクト
+            
+        Returns:
+            優先度文字列（"Immediate", "Out-of-Cycle", "Scheduled", "Defer"）
+        """</span>
+        ...
+            </div>
+            
+            <h3>reference/services.md（自動生成を指示）</h3>
+            <div class="code-block">
+<span class="comment"># docs/reference/services.md</span>
+# サービス リファレンス
+
+## マッチングエンジン
+
+::: app.services.matching_engine.MatchingEngine
+    options:
+      show_root_heading: true
+      members:
+        - find_matches
+        - calculate_priority
+
+## 通知サービス
+
+::: app.services.notification_service.NotificationService
+            </div>
+            
+            <h3>ビルドとプレビュー</h3>
+            <div class="command-block">
+                <span class="comment"># ローカルプレビュー（ファイル変更を自動検知）</span><br>
+                <span class="prompt">$</span> mkdocs serve<br>
+                <span class="output">INFO - Serving on http://127.0.0.1:8000/</span><br>
+                <br>
+                <span class="comment"># 静的サイトをビルド</span><br>
+                <span class="prompt">$</span> mkdocs build<br>
+                <span class="output">INFO - Building documentation to directory: site</span>
+            </div>
+            
+            <div class="callout">
+                <code>mkdocs serve</code>中は、Markdownやコードを変更すると自動でリロードされます。
+            </div>
+        </div>
+
+        <!-- Claude API -->
+        <div class="section">
+            <h2 class="ai">🤖 3. Claude APIでドキュメント自動生成（契約済み）</h2>
+            
+            <p style="margin-bottom: 20px;">
+                本プロジェクトでは<strong>Claude API</strong>を活用して、<strong>PR説明文</strong>、<strong>README</strong>、<strong>docstring</strong>を自動生成します。<br>
+                OpenAI APIやGitHub Copilotは不要です。
+            </p>
+            
+            <div class="recommend-box">
+                <h4>✅ Claude APIでできること</h4>
+                <table style="margin-top: 8px;">
+                    <tr>
+                        <th>機能</th>
+                        <th>他のAI</th>
+                        <th>Claude API</th>
+                    </tr>
+                    <tr>
+                        <td>PR説明文自動生成</td>
+                        <td style="color: #57606a;">OpenAI API</td>
+                        <td style="color: #1a7f37;">✅ 代替可能</td>
+                    </tr>
+                    <tr>
+                        <td>README生成</td>
+                        <td style="color: #57606a;">OpenAI API</td>
+                        <td style="color: #1a7f37;">✅ 代替可能</td>
+                    </tr>
+                    <tr>
+                        <td>docstring生成</td>
+                        <td style="color: #57606a;">GitHub Copilot</td>
+                        <td style="color: #1a7f37;">✅ 代替可能</td>
+                    </tr>
+                    <tr>
+                        <td>コード補完</td>
+                        <td style="color: #57606a;">GitHub Copilot</td>
+                        <td style="color: #1a7f37;">✅ Claude.aiで対応</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h3>① PR説明文の自動生成</h3>
+            
+            <div class="ai-box">
+                <h4>仕組み</h4>
+                <ol style="margin-left: 20px;">
+                    <li>PRが作成されるとGitHub Actionsが起動</li>
+                    <li>変更差分（diff）を取得</li>
+                    <li>Claude APIに差分を送信して説明文を生成</li>
+                    <li>PRのdescriptionに自動で追記</li>
+                </ol>
+            </div>
+            
+            <h4>GitHub Actions設定</h4>
+            <div class="code-block">
+<span class="comment"># .github/workflows/pr-description.yml</span>
+<span class="keyword">name</span>: Generate PR Description
+
+<span class="keyword">on</span>:
+  <span class="keyword">pull_request</span>:
+    <span class="keyword">types</span>: [opened]
+
+<span class="keyword">jobs</span>:
+  <span class="keyword">generate-description</span>:
+    <span class="keyword">runs-on</span>: ubuntu-latest
+    <span class="keyword">permissions</span>:
+      pull-requests: write
+      contents: read
+    
+    <span class="keyword">steps</span>:
+      - <span class="keyword">uses</span>: actions/checkout@v4
+        <span class="keyword">with</span>:
+          <span class="keyword">fetch-depth</span>: 0
+      
+      - <span class="keyword">name</span>: Get diff
+        <span class="keyword">id</span>: diff
+        <span class="keyword">run</span>: |
+          git diff origin/${{ github.base_ref }}..HEAD > diff.txt
+          echo "diff=$(cat diff.txt | head -c 10000)" >> $GITHUB_OUTPUT
+      
+      - <span class="keyword">name</span>: Generate description with Claude
+        <span class="keyword">id</span>: claude
+        <span class="keyword">run</span>: |
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
+            -H "anthropic-version: 2023-06-01" \
+            -d '{
+              "model": "claude-sonnet-4-20250514",
+              "max_tokens": 1024,
+              "messages": [{
+                "role": "user",
+                "content": "以下のgit diffから、このPRの変更内容を日本語で簡潔に説明してください。\n\n## 概要\n（1-2文で変更の目的）\n\n## 変更内容\n（箇条書きで主な変更点）\n\n## 影響範囲\n（影響を受ける機能）\n\ndiff:\n${{ steps.diff.outputs.diff }}"
+              }]
+            }')
+          
+          DESCRIPTION=$(echo $RESPONSE | jq -r '.content[0].text')
+          echo "description<<EOF" >> $GITHUB_OUTPUT
+          echo "$DESCRIPTION" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - <span class="keyword">name</span>: Update PR description
+        <span class="keyword">uses</span>: actions/github-script@v7
+        <span class="keyword">with</span>:
+          <span class="keyword">script</span>: |
+            const description = `${{ steps.claude.outputs.description }}`;
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: description
+            });
+            </div>
+            
+            <h3>② README自動生成スクリプト</h3>
+            <div class="code-block">
+<span class="comment"># scripts/generate_readme.py</span>
+<span class="keyword">import</span> anthropic
+<span class="keyword">import</span> os
+<span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+
+
+<span class="keyword">def</span> <span class="function">generate_readme</span>():
+    <span class="string">"""プロジェクト構造からREADMEを生成"""</span>
+    
+    client = anthropic.Anthropic()
+    
+    <span class="comment"># プロジェクト情報を収集</span>
+    project_info = {
+        <span class="string">"structure"</span>: get_project_structure(),
+        <span class="string">"requirements"</span>: Path(<span class="string">"requirements.txt"</span>).read_text(),
+        <span class="string">"docker_compose"</span>: Path(<span class="string">"docker-compose.yml"</span>).read_text(),
+    }
+    
+    prompt = <span class="string">f"""
+以下のプロジェクト情報から、READMEを生成してください。
+
+## プロジェクト構造
+{project_info["structure"]}
+
+## 依存パッケージ
+{project_info["requirements"]}
+
+## Docker構成
+{project_info["docker_compose"]}
+
+以下の形式で出力してください：
+- プロジェクト概要
+- 機能一覧
+- 必要要件
+- インストール手順
+- 使い方
+- API概要
+- 開発者向け情報
+"""</span>
+    
+    message = client.messages.create(
+        model=<span class="string">"claude-sonnet-4-20250514"</span>,
+        max_tokens=<span class="number">4096</span>,
+        messages=[{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: prompt}]
+    )
+    
+    readme_content = message.content[<span class="number">0</span>].text
+    
+    <span class="comment"># README.mdに書き込み</span>
+    Path(<span class="string">"README.md"</span>).write_text(readme_content)
+    <span class="builtin">print</span>(<span class="string">"README.md を生成しました"</span>)
+
+
+<span class="keyword">def</span> <span class="function">get_project_structure</span>() -> <span class="builtin">str</span>:
+    <span class="string">"""プロジェクトのディレクトリ構造を取得"""</span>
+    structure = []
+    <span class="keyword">for</span> path <span class="keyword">in</span> Path(<span class="string">"."</span>).rglob(<span class="string">"*"</span>):
+        <span class="keyword">if</span> <span class="string">".git"</span> <span class="keyword">in</span> <span class="builtin">str</span>(path) <span class="keyword">or</span> <span class="string">"__pycache__"</span> <span class="keyword">in</span> <span class="builtin">str</span>(path):
+            <span class="keyword">continue</span>
+        <span class="keyword">if</span> path.is_file():
+            structure.append(<span class="builtin">str</span>(path))
+    <span class="keyword">return</span> <span class="string">"\n"</span>.join(structure[:<span class="number">50</span>])  <span class="comment"># 最初の50ファイル</span>
+
+
+<span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
+    generate_readme()
+            </div>
+            
+            <h3>③ docstring自動生成</h3>
+            <div class="code-block">
+<span class="comment"># scripts/generate_docstrings.py</span>
+<span class="keyword">import</span> anthropic
+<span class="keyword">import</span> ast
+<span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+
+
+<span class="keyword">def</span> <span class="function">generate_docstring</span>(code: <span class="builtin">str</span>) -> <span class="builtin">str</span>:
+    <span class="string">"""関数コードからdocstringを生成"""</span>
+    
+    client = anthropic.Anthropic()
+    
+    prompt = <span class="string">f"""
+以下のPython関数にGoogle形式のdocstringを追加してください。
+
+```python
+{code}
+```
+
+docstringには以下を含めてください：
+- 関数の説明（1-2文）
+- Args: 引数の説明
+- Returns: 戻り値の説明
+- Raises: 発生する可能性のある例外（あれば）
+- Example: 使用例（シンプルなもの）
+
+関数全体（docstring付き）を出力してください。
+"""</span>
+    
+    message = client.messages.create(
+        model=<span class="string">"claude-sonnet-4-20250514"</span>,
+        max_tokens=<span class="number">2048</span>,
+        messages=[{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: prompt}]
+    )
+    
+    <span class="keyword">return</span> message.content[<span class="number">0</span>].text
+
+
+<span class="comment"># 使用例</span>
+code = <span class="string">"""
+def calculate_priority(cvss_score, is_kev, environment, asset_criticality):
+    if cvss_score >= 9.0 and is_kev:
+        return "Immediate"
+    elif cvss_score >= 7.0 or (is_kev and environment == "production"):
+        return "Out-of-Cycle"
+    elif cvss_score >= 4.0:
+        return "Scheduled"
+    else:
+        return "Defer"
+"""</span>
+
+result = generate_docstring(code)
+<span class="builtin">print</span>(result)
+            </div>
+            
+            <h3>④ コード補完（GitHub Copilotの代替）</h3>
+            <p style="margin-bottom: 12px;">
+                GitHub Copilotがなくても、以下の方法でコード補完が可能です。
+            </p>
+            
+            <table>
+                <tr>
+                    <th>方法</th>
+                    <th>説明</th>
+                    <th>おすすめ度</th>
+                </tr>
+                <tr>
+                    <td><strong>Claude.ai</strong></td>
+                    <td>コードを貼り付けて補完を依頼</td>
+                    <td>⭐⭐⭐（契約済み）</td>
+                </tr>
+                <tr>
+                    <td><strong>Claude Code</strong></td>
+                    <td>CLIでコード生成・編集</td>
+                    <td>⭐⭐⭐（契約済み）</td>
+                </tr>
+                <tr>
+                    <td><strong>Continue（VSCode拡張）</strong></td>
+                    <td>エディタ内でClaude APIを使用</td>
+                    <td>⭐⭐（設定が必要）</td>
+                </tr>
+                <tr>
+                    <td><strong>Cursor</strong></td>
+                    <td>Claude対応のエディタ</td>
+                    <td>⭐⭐（別途インストール）</td>
+                </tr>
+            </table>
+            
+            <div class="callout">
+                日常的な開発では<strong>Claude.ai</strong>で十分対応可能です。コードを貼り付けて「この関数を完成させて」「エラーを修正して」と依頼するだけです。
+            </div>
+            
+            <div class="point-box">
+                <h4>🔑 Claude APIの設定</h4>
+                <ol style="margin-left: 20px;">
+                    <li><a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a>でAPIキーを取得</li>
+                    <li>GitHubリポジトリの Settings → Secrets and variables → Actions</li>
+                    <li><code>ANTHROPIC_API_KEY</code> として登録</li>
+                </ol>
+            </div>
+            
+            <div class="warning-box">
+                <h4>⚠️ API利用時の注意</h4>
+                <ul>
+                    <li><strong>APIキーの管理</strong>：GitHub Secretsで管理、コードにハードコードしない</li>
+                    <li><strong>レビュー必須</strong>：AI生成内容は必ず人間がレビュー</li>
+                    <li><strong>差分サイズ</strong>：大きなPRは差分を制限（トークン制限対策）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 変更履歴自動生成 -->
+        <div class="section">
+            <h2>📋 4. 変更履歴（CHANGELOG）自動生成</h2>
+            
+            <p style="margin-bottom: 20px;">
+                <strong>Conventional Commits</strong>形式でコミットすると、CHANGELOGを自動生成できます。
+            </p>
+            
+            <h3>Conventional Commits形式</h3>
+            <div class="code-block">
+<span class="comment"># コミットメッセージの形式</span>
+&lt;type&gt;(&lt;scope&gt;): &lt;description&gt;
+
+<span class="comment"># 例</span>
+feat(api): 脆弱性フィルター機能を追加
+fix(matching): CPEバージョン比較のバグを修正
+docs(readme): インストール手順を更新
+refactor(services): 通知サービスをリファクタリング
+test(api): 脆弱性APIのテストを追加
+            </div>
+            
+            <h3>typeの種類</h3>
+            <table>
+                <tr>
+                    <th>type</th>
+                    <th>説明</th>
+                    <th>CHANGELOGでの表示</th>
+                </tr>
+                <tr>
+                    <td><code>feat</code></td>
+                    <td>新機能</td>
+                    <td>✨ Features</td>
+                </tr>
+                <tr>
+                    <td><code>fix</code></td>
+                    <td>バグ修正</td>
+                    <td>🐛 Bug Fixes</td>
+                </tr>
+                <tr>
+                    <td><code>docs</code></td>
+                    <td>ドキュメント</td>
+                    <td>📝 Documentation</td>
+                </tr>
+                <tr>
+                    <td><code>refactor</code></td>
+                    <td>リファクタリング</td>
+                    <td>♻️ Refactoring</td>
+                </tr>
+                <tr>
+                    <td><code>test</code></td>
+                    <td>テスト</td>
+                    <td>✅ Tests</td>
+                </tr>
+                <tr>
+                    <td><code>chore</code></td>
+                    <td>その他（ビルド等）</td>
+                    <td>🔧 Chores</td>
+                </tr>
+            </table>
+            
+            <h3>自動生成ツール：standard-version</h3>
+            <div class="command-block">
+                <span class="comment"># インストール</span><br>
+                <span class="prompt">$</span> npm install -g standard-version<br>
+                <br>
+                <span class="comment"># CHANGELOG生成 & バージョンアップ</span><br>
+                <span class="prompt">$</span> standard-version<br>
+                <span class="output">
+✔ bumping version in package.json from 1.0.0 to 1.1.0
+✔ outputting changes to CHANGELOG.md
+✔ committing package.json and CHANGELOG.md
+✔ tagging release v1.1.0
+                </span>
+            </div>
+            
+            <h3>生成されるCHANGELOG.md</h3>
+            <div class="code-block">
+# Changelog
+
+## [1.1.0] - 2024-12-15
+
+### ✨ Features
+
+* **api:** 脆弱性フィルター機能を追加 ([#23](https://github.com/...))
+* **dashboard:** トレンドグラフを追加 ([#25](https://github.com/...))
+
+### 🐛 Bug Fixes
+
+* **matching:** CPEバージョン比較のバグを修正 ([#24](https://github.com/...))
+
+### 📝 Documentation
+
+* **readme:** インストール手順を更新 ([#22](https://github.com/...))
+            </div>
+            
+            <div class="callout">
+                PRマージ時にsquash mergeを使い、マージコミットをConventional Commits形式にすると、
+                各PRが1つのエントリとしてCHANGELOGに記録されます。
+            </div>
+        </div>
+
+        <!-- Mermaid -->
+        <div class="section">
+            <h2 class="mermaid">📊 5. Mermaid（図の自動生成）</h2>
+            
+            <p style="margin-bottom: 20px;">
+                <strong>Mermaid</strong>はテキストから図を生成するツールです。<br>
+                コードとして管理できるため、変更履歴の追跡やレビューが容易です。
+            </p>
+            
+            <h3>MkDocsでMermaidを使う</h3>
+            <div class="code-block">
+<span class="comment"># docs/architecture.md</span>
+
+# システムアーキテクチャ
+
+```mermaid
+graph TB
+    subgraph External["外部サービス"]
+        JVN[JVN iPedia API]
+        NVD[NVD API]
+        KEV[CISA KEV]
+    end
+    
+    subgraph Backend["バックエンド"]
+        API[FastAPI]
+        Scheduler[スケジューラー]
+        Matching[マッチングエンジン]
+        Notify[通知サービス]
+    end
+    
+    subgraph Data["データ層"]
+        DB[(PostgreSQL)]
+    end
+    
+    subgraph Frontend["フロントエンド"]
+        Dashboard[ダッシュボード]
+    end
+    
+    JVN --> Scheduler
+    NVD --> Scheduler
+    KEV --> Scheduler
+    Scheduler --> DB
+    API --> DB
+    API --> Matching
+    Matching --> DB
+    Matching --> Notify
+    Dashboard --> API
+```
+            </div>
+            
+            <h3>ER図の例</h3>
+            <div class="code-block">
+<span class="comment"># docs/database.md</span>
+
+# データベース設計
+
+```mermaid
+erDiagram
+    vulnerabilities ||--o{ vulnerability_assets : "affects"
+    assets ||--o{ vulnerability_assets : "has"
+    vulnerabilities ||--o{ vulnerability_cpes : "has"
+    
+    vulnerabilities {
+        int id PK
+        string cve_id UK
+        string title
+        float cvss_score
+        string severity
+        boolean is_kev
+        datetime published_date
+    }
+    
+    assets {
+        int id PK
+        string hostname
+        string ip_address
+        string environment
+        string criticality
+    }
+    
+    vulnerability_assets {
+        int id PK
+        int vulnerability_id FK
+        int asset_id FK
+        string priority
+        string status
+    }
+```
+            </div>
+            
+            <h3>シーケンス図の例</h3>
+            <div class="code-block">
+<span class="comment"># docs/flows/vulnerability-detection.md</span>
+
+# 脆弱性検出フロー
+
+```mermaid
+sequenceDiagram
+    participant Scheduler as スケジューラー
+    participant JVN as JVN API
+    participant DB as PostgreSQL
+    participant Matching as マッチングエンジン
+    participant Notify as 通知サービス
+    
+    Scheduler->>JVN: 新規脆弱性を取得
+    JVN-->>Scheduler: 脆弱性データ
+    Scheduler->>DB: 脆弱性を保存
+    Scheduler->>Matching: マッチング実行
+    Matching->>DB: 資産情報を取得
+    Matching->>Matching: CPEマッチング
+    Matching->>DB: 結果を保存
+    Matching->>Notify: Critical検出を通知
+    Notify->>Notify: Slack/Teams送信
+```
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ Mermaidのメリット</h4>
+                <ul>
+                    <li><strong>テキストベース</strong>：Gitで差分管理可能</li>
+                    <li><strong>レビュー可能</strong>：PRで図の変更もレビュー</li>
+                    <li><strong>自動レンダリング</strong>：GitHub、MkDocs、Notionで自動表示</li>
+                    <li><strong>更新が簡単</strong>：テキスト修正だけで図を更新</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CI/CD連携 -->
+        <div class="section">
+            <h2 class="cicd">🚀 6. CI/CDでドキュメント自動デプロイ</h2>
+            
+            <p style="margin-bottom: 20px;">
+                GitHub Pagesにドキュメントサイトを自動デプロイします。<br>
+                mainブランチにマージされると自動で更新されます。
+            </p>
+            
+            <h3>GitHub Actions設定</h3>
+            <div class="code-block">
+<span class="comment"># .github/workflows/docs.yml</span>
+<span class="keyword">name</span>: Deploy Documentation
+
+<span class="keyword">on</span>:
+  <span class="keyword">push</span>:
+    <span class="keyword">branches</span>: [main]
+    <span class="keyword">paths</span>:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'app/**/*.py'  <span class="comment"># コード変更時もdocstringが変わる可能性</span>
+
+<span class="keyword">permissions</span>:
+  contents: write
+
+<span class="keyword">jobs</span>:
+  <span class="keyword">deploy</span>:
+    <span class="keyword">runs-on</span>: ubuntu-latest
+    
+    <span class="keyword">steps</span>:
+      - <span class="keyword">uses</span>: actions/checkout@v4
+      
+      - <span class="keyword">name</span>: Set up Python
+        <span class="keyword">uses</span>: actions/setup-python@v5
+        <span class="keyword">with</span>:
+          <span class="keyword">python-version</span>: '3.11'
+      
+      - <span class="keyword">name</span>: Install dependencies
+        <span class="keyword">run</span>: |
+          pip install mkdocs mkdocs-material mkdocstrings[python]
+          pip install -r requirements.txt  <span class="comment"># アプリの依存関係（docstring解析用）</span>
+      
+      - <span class="keyword">name</span>: Build and deploy
+        <span class="keyword">run</span>: mkdocs gh-deploy --force
+            </div>
+            
+            <h3>デプロイの流れ</h3>
+            <div class="flow-container">
+                <div class="flow-step code">
+                    📝 docs/ を更新<br>
+                    <small>または app/*.py</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    🔀 mainにマージ
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step auto">
+                    ⚙️ GitHub Actions<br>
+                    <small>mkdocs build</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step output">
+                    🌐 GitHub Pages<br>
+                    <small>自動デプロイ</small>
+                </div>
+            </div>
+            
+            <h3>GitHub Pagesの設定</h3>
+            <ol style="margin-left: 20px;">
+                <li>リポジトリの Settings → Pages</li>
+                <li>Source: <code>Deploy from a branch</code></li>
+                <li>Branch: <code>gh-pages</code> / <code>/ (root)</code></li>
+                <li>Save</li>
+            </ol>
+            
+            <div class="callout">
+                <code>mkdocs gh-deploy</code>は自動で<code>gh-pages</code>ブランチを作成・更新します。
+            </div>
+        </div>
+
+        <!-- 本プロジェクトへの適用 -->
+        <div class="section">
+            <h2>📁 7. 本プロジェクトへの適用</h2>
+            
+            <h3>導入スケジュール</h3>
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>導入項目</th>
+                    <th>担当</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 1</strong></td>
+                    <td>
+                        ・FastAPI OpenAPI（自動・設定不要）<br>
+                        ・Conventional Commits導入<br>
+                        ・MkDocs初期設定
+                    </td>
+                    <td>リード</td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 2</strong></td>
+                    <td>
+                        ・mkdocstrings設定<br>
+                        ・GitHub Pages自動デプロイ<br>
+                        ・PR説明文自動生成（オプション）
+                    </td>
+                    <td>リード</td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 2-5</strong></td>
+                    <td>
+                        ・各機能のdocstring記述<br>
+                        ・Mermaid図の追加<br>
+                        ・ガイドドキュメント追加
+                    </td>
+                    <td>各担当</td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>
+                        ・CHANGELOG生成<br>
+                        ・ドキュメント最終整備
+                    </td>
+                    <td>全員</td>
+                </tr>
+            </table>
+            
+            <h3>必要なパッケージ</h3>
+            <div class="code-block">
+<span class="comment"># requirements-docs.txt</span>
+mkdocs==<span class="number">1.5.3</span>
+mkdocs-material==<span class="number">9.5.3</span>
+mkdocstrings[python]==<span class="number">0.24.0</span>
+
+<span class="comment"># AI生成用（オプション）</span>
+anthropic==<span class="number">0.18.0</span>
+            </div>
+            
+            <h3>開発者のルーチン</h3>
+            <table>
+                <tr>
+                    <th>場面</th>
+                    <th>やること</th>
+                </tr>
+                <tr>
+                    <td>関数・クラスを作成</td>
+                    <td>Google形式のdocstringを記述</td>
+                </tr>
+                <tr>
+                    <td>APIエンドポイント作成</td>
+                    <td>Query/Path/Bodyにdescription追加</td>
+                </tr>
+                <tr>
+                    <td>コミット</td>
+                    <td>Conventional Commits形式で記述</td>
+                </tr>
+                <tr>
+                    <td>アーキテクチャ変更</td>
+                    <td>Mermaid図を更新</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 最小限の労力で最大の効果</h4>
+                <ol style="margin-left: 20px;">
+                    <li><strong>docstringを書く習慣</strong>：これだけでAPIリファレンスが自動生成</li>
+                    <li><strong>Conventional Commits</strong>：これだけでCHANGELOGが自動生成</li>
+                    <li><strong>CIで自動デプロイ</strong>：手動作業ゼロで常に最新</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <h3>コスト</h3>
+            <table>
+                <tr>
+                    <th style="width: 30%;">区分</th>
+                    <th style="width: 30%;">ツール</th>
+                    <th>備考</th>
+                </tr>
+                <tr>
+                    <td><strong>無料（80%）</strong></td>
+                    <td>FastAPI, MkDocs, Mermaid, GitHub Actions</td>
+                    <td>追加契約不要</td>
+                </tr>
+                <tr>
+                    <td><strong>Claude API（20%）</strong></td>
+                    <td>PR説明文, README, docstring生成</td>
+                    <td>✅ 契約済み</td>
+                </tr>
+                <tr>
+                    <td style="color: #57606a;">不要</td>
+                    <td style="color: #57606a;">OpenAI API, GitHub Copilot</td>
+                    <td style="color: #57606a;">Claude APIで代替</td>
+                </tr>
+            </table>
+            
+            <h3>自動化の全体像</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">自動化対象</th>
+                    <th style="width: 25%;">ツール</th>
+                    <th>効果</th>
+                </tr>
+                <tr>
+                    <td><strong>API仕様書</strong></td>
+                    <td>FastAPI OpenAPI</td>
+                    <td>コードと常に同期、テスト可能</td>
+                </tr>
+                <tr>
+                    <td><strong>コードリファレンス</strong></td>
+                    <td>MkDocs + mkdocstrings</td>
+                    <td>docstringから自動生成</td>
+                </tr>
+                <tr>
+                    <td><strong>PR説明文</strong></td>
+                    <td>Claude API + GitHub Actions</td>
+                    <td>レビュー効率向上</td>
+                </tr>
+                <tr>
+                    <td><strong>変更履歴</strong></td>
+                    <td>Conventional Commits</td>
+                    <td>リリース作業軽減</td>
+                </tr>
+                <tr>
+                    <td><strong>アーキテクチャ図</strong></td>
+                    <td>Mermaid</td>
+                    <td>テキストで管理、レビュー可能</td>
+                </tr>
+                <tr>
+                    <td><strong>サイトデプロイ</strong></td>
+                    <td>GitHub Actions + Pages</td>
+                    <td>自動更新、手動作業ゼロ</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>🎯 自動化のポイント</h4>
+                <ul>
+                    <li><strong>コードがドキュメント</strong>：docstring、型ヒント、Pydanticスキーマを書けば自動生成</li>
+                    <li><strong>コミットがCHANGELOG</strong>：Conventional Commits形式で書けば自動生成</li>
+                    <li><strong>CIが全てを繋ぐ</strong>：マージするだけで最新のドキュメントが公開</li>
+                    <li><strong>AIはClaude APIに統一</strong>：OpenAI API、GitHub Copilotは不要</li>
+                    <li><strong>AI生成は補助</strong>：生成した内容は必ず人間がレビュー</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <h3>無料ツール</h3>
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>FastAPI</strong></td>
+                    <td><a href="https://fastapi.tiangolo.com/" target="_blank">https://fastapi.tiangolo.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>MkDocs</strong></td>
+                    <td><a href="https://www.mkdocs.org/" target="_blank">https://www.mkdocs.org/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>MkDocs Material</strong></td>
+                    <td><a href="https://squidfunk.github.io/mkdocs-material/" target="_blank">https://squidfunk.github.io/mkdocs-material/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>mkdocstrings</strong></td>
+                    <td><a href="https://mkdocstrings.github.io/" target="_blank">https://mkdocstrings.github.io/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Mermaid</strong></td>
+                    <td><a href="https://mermaid.js.org/" target="_blank">https://mermaid.js.org/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Conventional Commits</strong></td>
+                    <td><a href="https://www.conventionalcommits.org/ja/" target="_blank">https://www.conventionalcommits.org/ja/</a></td>
+                </tr>
+            </table>
+            
+            <h3>Claude関連</h3>
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>Claude API ドキュメント</strong></td>
+                    <td><a href="https://docs.anthropic.com/" target="_blank">https://docs.anthropic.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Anthropic Console</strong></td>
+                    <td><a href="https://console.anthropic.com/" target="_blank">https://console.anthropic.com/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Claude.ai</strong></td>
+                    <td><a href="https://claude.ai/" target="_blank">https://claude.ai/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Continue（VSCode拡張）</strong></td>
+                    <td><a href="https://continue.dev/" target="_blank">https://continue.dev/</a></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

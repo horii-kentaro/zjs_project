@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知連携ガイド（メール/Teams/Discord）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #5865F2;
+        }
+        .section h2.teams { border-bottom-color: #6264A7; }
+        .section h2.email { border-bottom-color: #0969da; }
+        .section h2.discord { border-bottom-color: #5865F2; }
+        .section h2.design { border-bottom-color: #2da44e; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* 手順リスト */
+        .steps {
+            margin: 20px 0;
+        }
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            border-left: 4px solid #0969da;
+        }
+        .step.teams { border-left-color: #6264A7; }
+        .step.discord { border-left-color: #5865F2; }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: #0969da;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .step.teams .step-number { background: #6264A7; }
+        .step.discord .step-number { background: #5865F2; }
+        .step-content h4 {
+            margin-bottom: 4px;
+        }
+        .step-content p {
+            font-size: 14px;
+            color: #57606a;
+        }
+        
+        /* メッセージプレビュー */
+        .message-preview {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        /* Teams風メッセージ */
+        .teams-message {
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .teams-message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .teams-bot-icon {
+            width: 32px;
+            height: 32px;
+            background: #6264A7;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+        .teams-bot-name {
+            font-weight: 600;
+            color: #242424;
+        }
+        .teams-card {
+            border-left: 4px solid #cf222e;
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+        }
+        .teams-card.warning { border-left-color: #bf8700; }
+        .teams-card.info { border-left-color: #0969da; }
+        .teams-card-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .teams-field {
+            display: inline-block;
+            margin-right: 24px;
+            margin-top: 8px;
+        }
+        .teams-field-title {
+            font-size: 12px;
+            color: #616161;
+            font-weight: 600;
+        }
+        .teams-field-value {
+            font-size: 14px;
+        }
+        
+        /* Discord風メッセージ */
+        .discord-message {
+            background: #313338;
+            color: #dbdee1;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'gg sans', 'Noto Sans', sans-serif;
+        }
+        .discord-message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .discord-bot-icon {
+            width: 40px;
+            height: 40px;
+            background: #5865F2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        .discord-bot-name {
+            font-weight: 600;
+            color: #f2f3f5;
+        }
+        .discord-bot-badge {
+            background: #5865F2;
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-left: 4px;
+        }
+        .discord-timestamp {
+            font-size: 12px;
+            color: #949ba4;
+            margin-left: 8px;
+        }
+        .discord-embed {
+            border-left: 4px solid #ed4245;
+            background: #2b2d31;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+            max-width: 500px;
+        }
+        .discord-embed.warning { border-left-color: #fee75c; }
+        .discord-embed.info { border-left-color: #5865F2; }
+        .discord-embed-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #00aff4;
+            margin-bottom: 8px;
+        }
+        .discord-embed-field {
+            display: inline-block;
+            width: 45%;
+            margin-top: 8px;
+            vertical-align: top;
+        }
+        .discord-embed-field-name {
+            font-size: 12px;
+            color: #949ba4;
+            font-weight: 600;
+        }
+        .discord-embed-field-value {
+            font-size: 14px;
+            color: #dbdee1;
+        }
+        
+        /* メール風 */
+        .email-preview {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .email-header {
+            background: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .email-header-row {
+            display: flex;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+        .email-header-label {
+            width: 60px;
+            color: #57606a;
+        }
+        .email-header-value {
+            font-weight: 500;
+        }
+        .email-body {
+            padding: 20px;
+        }
+        .email-body h2 {
+            border: none;
+            font-size: 18px;
+            margin-bottom: 16px;
+            padding: 0;
+        }
+        
+        /* 比較カード */
+        .compare-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 16px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .compare-card-header.teams { background: #6264A7; }
+        .compare-card-header.discord { background: #5865F2; }
+        .compare-card-header.email { background: #0969da; }
+        .compare-card-body {
+            padding: 16px;
+        }
+        .compare-card-body ul {
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .compare-card-body li {
+            margin: 6px 0;
+        }
+        
+        /* 通知フロー図 */
+        .notification-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .flow-box {
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .flow-box.source { background: #fff8c5; border: 2px solid #d4a72c; }
+        .flow-box.service { background: #fbefff; border: 2px solid #8250df; }
+        .flow-box.teams { background: #6264A7; color: white; }
+        .flow-box.discord { background: #5865F2; color: white; }
+        .flow-box.email { background: #0969da; color: white; }
+        .flow-arrow {
+            font-size: 24px;
+            color: #8c959f;
+        }
+
+        @media (max-width: 768px) {
+            .compare-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+            .discord-message { background: #f0f0f0; color: #333; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 通知連携ガイド</h1>
+        <p class="subtitle">メール / Microsoft Teams / Discord のAPI連携実装</p>
+
+        <!-- 概要・比較 -->
+        <div class="section">
+            <h2>📋 3つの通知チャネルの比較</h2>
+            
+            <div class="compare-cards">
+                <div class="compare-card">
+                    <div class="compare-card-header teams">Microsoft Teams</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ Incoming Webhook対応</li>
+                            <li>✅ 企業利用に適している</li>
+                            <li>✅ Adaptive Cards対応</li>
+                            <li>✅ Microsoft 365連携</li>
+                            <li>⚡ 設定：簡単</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #6264A7; font-weight: 600;">
+                            ビジネス利用に推奨
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="compare-card-header discord">Discord</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ Webhook対応（最もシンプル）</li>
+                            <li>✅ リッチな埋め込み表示</li>
+                            <li>✅ 無料で利用可能</li>
+                            <li>✅ 技術チーム向け</li>
+                            <li>⚡ 設定：非常に簡単</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #5865F2; font-weight: 600;">
+                            開発チーム向けに推奨
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="compare-card-header email">メール</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>✅ 全員に確実に届く</li>
+                            <li>✅ 正式な記録として残る</li>
+                            <li>✅ PDF添付可能</li>
+                            <li>✅ 監査証跡に利用</li>
+                            <li>⚡ SMTP or AWS SES</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #0969da; font-weight: 600;">
+                            公式通知・レポートに推奨
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>通知フロー</h3>
+            <div class="notification-flow">
+                <div class="flow-box source">マッチングエンジン<br><span style="font-size: 12px; font-weight: normal;">新規脆弱性検出</span></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box service">通知サービス<br><span style="font-size: 12px; font-weight: normal;">条件判定・振り分け</span></div>
+                <div class="flow-arrow">→</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="flow-box teams">Teams</div>
+                    <div class="flow-box discord">Discord</div>
+                    <div class="flow-box email">メール</div>
+                </div>
+            </div>
+            
+            <h3>用途別の推奨</h3>
+            <table>
+                <tr>
+                    <th>通知タイプ</th>
+                    <th>推奨チャネル</th>
+                    <th>理由</th>
+                </tr>
+                <tr>
+                    <td><strong>即時アラート（Critical）</strong></td>
+                    <td>Teams + メール</td>
+                    <td>確実に届く、見逃し防止</td>
+                </tr>
+                <tr>
+                    <td><strong>日次サマリー</strong></td>
+                    <td>Teams or Discord</td>
+                    <td>チャットで素早く確認</td>
+                </tr>
+                <tr>
+                    <td><strong>週次レポート</strong></td>
+                    <td>メール（PDF添付）</td>
+                    <td>正式記録、監査対応</td>
+                </tr>
+                <tr>
+                    <td><strong>開発チーム向け</strong></td>
+                    <td>Discord</td>
+                    <td>技術者に馴染みやすい</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Microsoft Teams -->
+        <div class="section">
+            <h2 class="teams">💼 Microsoft Teams 連携</h2>
+            
+            <p style="margin-bottom: 16px;">
+                TeamsはSlackと同様に<strong>Incoming Webhook</strong>でシンプルに連携できます。
+            </p>
+            
+            <h3>Webhook設定手順</h3>
+            <div class="steps">
+                <div class="step teams">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>チャネルを選択</h4>
+                        <p>通知を送信したいチャネルの「…」メニューをクリック</p>
+                    </div>
+                </div>
+                <div class="step teams">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>コネクタを追加</h4>
+                        <p>「コネクタ」→「Incoming Webhook」を検索 →「構成」</p>
+                    </div>
+                </div>
+                <div class="step teams">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Webhookを作成</h4>
+                        <p>名前（例：脆弱性アラート）とアイコンを設定 →「作成」</p>
+                    </div>
+                </div>
+                <div class="step teams">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>URLをコピー</h4>
+                        <p>生成されたWebhook URLをコピーして環境変数に保存</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                Teams管理者がWebhookを無効化している場合があります。設定できない場合はIT部門に確認してください。
+            </div>
+            
+            <h3>基本的な通知コード</h3>
+            <div class="code-block">
+<span class="comment"># teams_notifier.py</span>
+<span class="keyword">import</span> requests
+<span class="keyword">import</span> os
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict, List
+
+<span class="keyword">class</span> <span class="class">TeamsNotifier</span>:
+    <span class="string">"""Microsoft Teams通知クラス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, webhook_url: str = <span class="keyword">None</span>):
+        self.webhook_url = webhook_url <span class="keyword">or</span> os.getenv(<span class="string">"TEAMS_WEBHOOK_URL"</span>)
+    
+    <span class="keyword">def</span> <span class="function">send_message</span>(self, title: str, text: str, color: str = <span class="string">"0078D7"</span>) -> bool:
+        <span class="string">"""シンプルなメッセージを送信"""</span>
+        
+        payload = {
+            <span class="string">"@type"</span>: <span class="string">"MessageCard"</span>,
+            <span class="string">"@context"</span>: <span class="string">"http://schema.org/extensions"</span>,
+            <span class="string">"themeColor"</span>: color,
+            <span class="string">"summary"</span>: title,
+            <span class="string">"sections"</span>: [{
+                <span class="string">"activityTitle"</span>: title,
+                <span class="string">"text"</span>: text
+            }]
+        }
+        
+        response = requests.post(self.webhook_url, json=payload)
+        <span class="keyword">return</span> response.status_code == <span class="number">200</span>
+    
+    <span class="keyword">def</span> <span class="function">send_vulnerability_alert</span>(self, vuln: Dict, asset: Dict, priority: Dict) -> bool:
+        <span class="string">"""脆弱性アラートを送信"""</span>
+        
+        <span class="comment"># 優先度に応じた色</span>
+        colors = {
+            <span class="string">"Immediate"</span>: <span class="string">"FF0000"</span>,    <span class="comment"># 赤</span>
+            <span class="string">"Out-of-Cycle"</span>: <span class="string">"FFA500"</span>, <span class="comment"># オレンジ</span>
+            <span class="string">"Scheduled"</span>: <span class="string">"0078D7"</span>,    <span class="comment"># 青</span>
+            <span class="string">"Defer"</span>: <span class="string">"808080"</span>         <span class="comment"># グレー</span>
+        }
+        color = colors.get(priority[<span class="string">"action"</span>], <span class="string">"0078D7"</span>)
+        
+        payload = {
+            <span class="string">"@type"</span>: <span class="string">"MessageCard"</span>,
+            <span class="string">"@context"</span>: <span class="string">"http://schema.org/extensions"</span>,
+            <span class="string">"themeColor"</span>: color,
+            <span class="string">"summary"</span>: f<span class="string">"🚨 新しい脆弱性: {vuln['cve_id']}"</span>,
+            <span class="string">"sections"</span>: [{
+                <span class="string">"activityTitle"</span>: <span class="string">"🚨 新しい脆弱性が検出されました"</span>,
+                <span class="string">"facts"</span>: [
+                    {<span class="string">"name"</span>: <span class="string">"CVE ID"</span>, <span class="string">"value"</span>: vuln[<span class="string">"cve_id"</span>]},
+                    {<span class="string">"name"</span>: <span class="string">"CVSS"</span>, <span class="string">"value"</span>: f<span class="string">"{vuln['cvss_score']} ({vuln['severity']})"</span>},
+                    {<span class="string">"name"</span>: <span class="string">"対象資産"</span>, <span class="string">"value"</span>: asset[<span class="string">"hostname"</span>]},
+                    {<span class="string">"name"</span>: <span class="string">"環境"</span>, <span class="string">"value"</span>: asset[<span class="string">"environment"</span>]},
+                    {<span class="string">"name"</span>: <span class="string">"優先度"</span>, <span class="string">"value"</span>: priority[<span class="string">"action"</span>]}
+                ],
+                <span class="string">"text"</span>: vuln[<span class="string">"title"</span>]
+            }],
+            <span class="string">"potentialAction"</span>: [{
+                <span class="string">"@type"</span>: <span class="string">"OpenUri"</span>,
+                <span class="string">"name"</span>: <span class="string">"NVDで詳細を見る"</span>,
+                <span class="string">"targets"</span>: [{
+                    <span class="string">"os"</span>: <span class="string">"default"</span>,
+                    <span class="string">"uri"</span>: f<span class="string">"https://nvd.nist.gov/vuln/detail/{vuln['cve_id']}"</span>
+                }]
+            }, {
+                <span class="string">"@type"</span>: <span class="string">"OpenUri"</span>,
+                <span class="string">"name"</span>: <span class="string">"ダッシュボードを開く"</span>,
+                <span class="string">"targets"</span>: [{
+                    <span class="string">"os"</span>: <span class="string">"default"</span>,
+                    <span class="string">"uri"</span>: <span class="string">"https://vuln-dashboard.example.com"</span>
+                }]
+            }]
+        }
+        
+        response = requests.post(self.webhook_url, json=payload)
+        <span class="keyword">return</span> response.status_code == <span class="number">200</span>
+            </div>
+            
+            <h3>Teams通知の表示イメージ</h3>
+            <div class="message-preview teams-message">
+                <div class="teams-message-header">
+                    <div class="teams-bot-icon">🛡️</div>
+                    <span class="teams-bot-name">脆弱性アラート</span>
+                </div>
+                <div class="teams-card">
+                    <div class="teams-card-title">🚨 新しい脆弱性が検出されました</div>
+                    <div class="teams-field">
+                        <div class="teams-field-title">CVE ID</div>
+                        <div class="teams-field-value">CVE-2024-1234</div>
+                    </div>
+                    <div class="teams-field">
+                        <div class="teams-field-title">CVSS</div>
+                        <div class="teams-field-value">9.8 (Critical)</div>
+                    </div>
+                    <div class="teams-field">
+                        <div class="teams-field-title">対象資産</div>
+                        <div class="teams-field-value">web-server-01</div>
+                    </div>
+                    <div class="teams-field">
+                        <div class="teams-field-title">環境</div>
+                        <div class="teams-field-value">本番</div>
+                    </div>
+                    <div class="teams-field">
+                        <div class="teams-field-title">優先度</div>
+                        <div class="teams-field-value" style="color: #cf222e; font-weight: bold;">Immediate</div>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 14px;">
+                        Apache HTTP Server における重大な脆弱性
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <button style="background: #6264A7; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 8px; cursor: pointer;">NVDで詳細を見る</button>
+                    <button style="background: #6264A7; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">ダッシュボードを開く</button>
+                </div>
+            </div>
+            
+            <h3>日次サマリーの送信</h3>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">send_daily_summary</span>(self, summary: Dict) -> bool:
+    <span class="string">"""日次サマリーを送信"""</span>
+    
+    payload = {
+        <span class="string">"@type"</span>: <span class="string">"MessageCard"</span>,
+        <span class="string">"@context"</span>: <span class="string">"http://schema.org/extensions"</span>,
+        <span class="string">"themeColor"</span>: <span class="string">"0078D7"</span>,
+        <span class="string">"summary"</span>: <span class="string">"📊 脆弱性日次レポート"</span>,
+        <span class="string">"sections"</span>: [{
+            <span class="string">"activityTitle"</span>: <span class="string">"📊 脆弱性日次レポート"</span>,
+            <span class="string">"facts"</span>: [
+                {<span class="string">"name"</span>: <span class="string">"🆕 新規検出"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['new_count']}件"</span>},
+                {<span class="string">"name"</span>: <span class="string">"✅ 解消"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['resolved_count']}件"</span>},
+                {<span class="string">"name"</span>: <span class="string">"📋 未対応"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['open_count']}件"</span>},
+                {<span class="string">"name"</span>: <span class="string">"🔴 Critical"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['critical_count']}件"</span>}
+            ]
+        }],
+        <span class="string">"potentialAction"</span>: [{
+            <span class="string">"@type"</span>: <span class="string">"OpenUri"</span>,
+            <span class="string">"name"</span>: <span class="string">"ダッシュボードを開く"</span>,
+            <span class="string">"targets"</span>: [{<span class="string">"os"</span>: <span class="string">"default"</span>, <span class="string">"uri"</span>: <span class="string">"https://vuln-dashboard.example.com"</span>}]
+        }]
+    }
+    
+    response = requests.post(self.webhook_url, json=payload)
+    <span class="keyword">return</span> response.status_code == <span class="number">200</span>
+            </div>
+        </div>
+
+        <!-- Discord -->
+        <div class="section">
+            <h2 class="discord">🎮 Discord 連携</h2>
+            
+            <p style="margin-bottom: 16px;">
+                DiscordのWebhookは<strong>最もシンプル</strong>で、設定も簡単です。
+            </p>
+            
+            <h3>Webhook設定手順</h3>
+            <div class="steps">
+                <div class="step discord">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>サーバー設定を開く</h4>
+                        <p>サーバー名をクリック →「サーバー設定」</p>
+                    </div>
+                </div>
+                <div class="step discord">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>連携サービスを選択</h4>
+                        <p>左メニュー「連携サービス」→「ウェブフック」</p>
+                    </div>
+                </div>
+                <div class="step discord">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>新しいウェブフックを作成</h4>
+                        <p>「新しいウェブフック」→ 名前とチャンネルを設定</p>
+                    </div>
+                </div>
+                <div class="step discord">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>URLをコピー</h4>
+                        <p>「ウェブフックURLをコピー」をクリック</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>基本的な通知コード</h3>
+            <div class="code-block">
+<span class="comment"># discord_notifier.py</span>
+<span class="keyword">import</span> requests
+<span class="keyword">import</span> os
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict, List
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">class</span> <span class="class">DiscordNotifier</span>:
+    <span class="string">"""Discord通知クラス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, webhook_url: str = <span class="keyword">None</span>):
+        self.webhook_url = webhook_url <span class="keyword">or</span> os.getenv(<span class="string">"DISCORD_WEBHOOK_URL"</span>)
+    
+    <span class="keyword">def</span> <span class="function">send_message</span>(self, content: str, embeds: List[Dict] = <span class="keyword">None</span>) -> bool:
+        <span class="string">"""メッセージを送信"""</span>
+        
+        payload = {<span class="string">"content"</span>: content}
+        
+        <span class="keyword">if</span> embeds:
+            payload[<span class="string">"embeds"</span>] = embeds
+        
+        response = requests.post(self.webhook_url, json=payload)
+        <span class="keyword">return</span> response.status_code == <span class="number">204</span>  <span class="comment"># Discordは204を返す</span>
+    
+    <span class="keyword">def</span> <span class="function">send_vulnerability_alert</span>(self, vuln: Dict, asset: Dict, priority: Dict) -> bool:
+        <span class="string">"""脆弱性アラートを送信"""</span>
+        
+        <span class="comment"># 優先度に応じた色（10進数）</span>
+        colors = {
+            <span class="string">"Immediate"</span>: <span class="number">15548997</span>,   <span class="comment"># 赤 (#ED4245)</span>
+            <span class="string">"Out-of-Cycle"</span>: <span class="number">16705372</span>, <span class="comment"># オレンジ (#FEE75C)</span>
+            <span class="string">"Scheduled"</span>: <span class="number">5793266</span>,    <span class="comment"># 青 (#5865F2)</span>
+            <span class="string">"Defer"</span>: <span class="number">9807270</span>          <span class="comment"># グレー (#959B96)</span>
+        }
+        color = colors.get(priority[<span class="string">"action"</span>], <span class="number">5793266</span>)
+        
+        <span class="comment"># 緊急度に応じたメンション</span>
+        mention = <span class="string">"@everyone"</span> <span class="keyword">if</span> priority[<span class="string">"action"</span>] == <span class="string">"Immediate"</span> <span class="keyword">else</span> <span class="string">""</span>
+        
+        embed = {
+            <span class="string">"title"</span>: <span class="string">"🚨 新しい脆弱性が検出されました"</span>,
+            <span class="string">"color"</span>: color,
+            <span class="string">"fields"</span>: [
+                {<span class="string">"name"</span>: <span class="string">"CVE ID"</span>, <span class="string">"value"</span>: vuln[<span class="string">"cve_id"</span>], <span class="string">"inline"</span>: <span class="keyword">True</span>},
+                {<span class="string">"name"</span>: <span class="string">"CVSS"</span>, <span class="string">"value"</span>: f<span class="string">"{vuln['cvss_score']} ({vuln['severity']})"</span>, <span class="string">"inline"</span>: <span class="keyword">True</span>},
+                {<span class="string">"name"</span>: <span class="string">"優先度"</span>, <span class="string">"value"</span>: priority[<span class="string">"action"</span>], <span class="string">"inline"</span>: <span class="keyword">True</span>},
+                {<span class="string">"name"</span>: <span class="string">"対象資産"</span>, <span class="string">"value"</span>: asset[<span class="string">"hostname"</span>], <span class="string">"inline"</span>: <span class="keyword">True</span>},
+                {<span class="string">"name"</span>: <span class="string">"環境"</span>, <span class="string">"value"</span>: asset[<span class="string">"environment"</span>], <span class="string">"inline"</span>: <span class="keyword">True</span>},
+                {<span class="string">"name"</span>: <span class="string">"概要"</span>, <span class="string">"value"</span>: vuln[<span class="string">"title"</span>], <span class="string">"inline"</span>: <span class="keyword">False</span>}
+            ],
+            <span class="string">"timestamp"</span>: datetime.utcnow().isoformat(),
+            <span class="string">"footer"</span>: {
+                <span class="string">"text"</span>: <span class="string">"脆弱性管理システム"</span>
+            },
+            <span class="string">"url"</span>: f<span class="string">"https://nvd.nist.gov/vuln/detail/{vuln['cve_id']}"</span>
+        }
+        
+        <span class="keyword">return</span> self.send_message(content=mention, embeds=[embed])
+            </div>
+            
+            <h3>Discord通知の表示イメージ</h3>
+            <div class="discord-message">
+                <div class="discord-message-header">
+                    <div class="discord-bot-icon">🛡️</div>
+                    <span class="discord-bot-name">脆弱性アラート</span>
+                    <span class="discord-bot-badge">BOT</span>
+                    <span class="discord-timestamp">今日 10:30</span>
+                </div>
+                <div class="discord-embed">
+                    <div class="discord-embed-title">🚨 新しい脆弱性が検出されました</div>
+                    <div class="discord-embed-field">
+                        <div class="discord-embed-field-name">CVE ID</div>
+                        <div class="discord-embed-field-value">CVE-2024-1234</div>
+                    </div>
+                    <div class="discord-embed-field">
+                        <div class="discord-embed-field-name">CVSS</div>
+                        <div class="discord-embed-field-value">9.8 (Critical)</div>
+                    </div>
+                    <div class="discord-embed-field">
+                        <div class="discord-embed-field-name">優先度</div>
+                        <div class="discord-embed-field-value" style="color: #ed4245;">Immediate</div>
+                    </div>
+                    <div class="discord-embed-field">
+                        <div class="discord-embed-field-name">対象資産</div>
+                        <div class="discord-embed-field-value">web-server-01</div>
+                    </div>
+                    <div class="discord-embed-field">
+                        <div class="discord-embed-field-name">環境</div>
+                        <div class="discord-embed-field-value">本番</div>
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <div class="discord-embed-field-name">概要</div>
+                        <div class="discord-embed-field-value">Apache HTTP Server における重大な脆弱性</div>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 11px; color: #949ba4;">
+                        脆弱性管理システム • 今日 10:30
+                    </div>
+                </div>
+            </div>
+            
+            <h3>日次サマリーの送信</h3>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">send_daily_summary</span>(self, summary: Dict) -> bool:
+    <span class="string">"""日次サマリーを送信"""</span>
+    
+    <span class="comment"># 状況に応じた色</span>
+    <span class="keyword">if</span> summary[<span class="string">"critical_count"</span>] > <span class="number">0</span>:
+        color = <span class="number">15548997</span>  <span class="comment"># 赤</span>
+    <span class="keyword">elif</span> summary[<span class="string">"new_count"</span>] > <span class="number">0</span>:
+        color = <span class="number">16705372</span>  <span class="comment"># オレンジ</span>
+    <span class="keyword">else</span>:
+        color = <span class="number">5763719</span>   <span class="comment"># 緑</span>
+    
+    embed = {
+        <span class="string">"title"</span>: <span class="string">"📊 脆弱性日次レポート"</span>,
+        <span class="string">"color"</span>: color,
+        <span class="string">"fields"</span>: [
+            {<span class="string">"name"</span>: <span class="string">"🆕 新規検出"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['new_count']}件"</span>, <span class="string">"inline"</span>: <span class="keyword">True</span>},
+            {<span class="string">"name"</span>: <span class="string">"✅ 解消"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['resolved_count']}件"</span>, <span class="string">"inline"</span>: <span class="keyword">True</span>},
+            {<span class="string">"name"</span>: <span class="string">"📋 未対応"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['open_count']}件"</span>, <span class="string">"inline"</span>: <span class="keyword">True</span>},
+            {<span class="string">"name"</span>: <span class="string">"🔴 Critical"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['critical_count']}件"</span>, <span class="string">"inline"</span>: <span class="keyword">True</span>},
+            {<span class="string">"name"</span>: <span class="string">"🟠 High"</span>, <span class="string">"value"</span>: f<span class="string">"{summary['high_count']}件"</span>, <span class="string">"inline"</span>: <span class="keyword">True</span>}
+        ],
+        <span class="string">"timestamp"</span>: datetime.utcnow().isoformat(),
+        <span class="string">"footer"</span>: {<span class="string">"text"</span>: <span class="string">"脆弱性管理システム"</span>}
+    }
+    
+    <span class="keyword">return</span> self.send_message(content=<span class="string">""</span>, embeds=[embed])
+            </div>
+            
+            <div class="point-box">
+                <h4>Discordの特徴</h4>
+                <ul>
+                    <li><code>@everyone</code> でチャンネル全員にメンション可能</li>
+                    <li><code>@here</code> でオンラインメンバーにメンション</li>
+                    <li>埋め込み（Embed）でリッチな表示が可能</li>
+                    <li>レート制限：5リクエスト/2秒（Webhookあたり）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- メール通知 -->
+        <div class="section">
+            <h2 class="email">📧 メール通知</h2>
+            
+            <p style="margin-bottom: 16px;">
+                メールは最も確実に届く通知方法です。正式なレポートや監査記録にも使用できます。
+            </p>
+            
+            <h3>実装方式の比較</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">方式</th>
+                    <th>メリット</th>
+                    <th>デメリット</th>
+                    <th style="width: 20%;">推奨ケース</th>
+                </tr>
+                <tr>
+                    <td><strong>SMTP</strong></td>
+                    <td>既存インフラ利用、追加コストなし</td>
+                    <td>設定が環境依存、到達率は環境次第</td>
+                    <td>社内メールサーバーがある</td>
+                </tr>
+                <tr>
+                    <td><strong>AWS SES</strong></td>
+                    <td>高到達率、スケーラブル、AWS統合</td>
+                    <td>AWS契約必要、初期設定が必要</td>
+                    <td>AWS環境を使用</td>
+                </tr>
+                <tr>
+                    <td><strong>SendGrid</strong></td>
+                    <td>高機能、分析機能、テンプレート</td>
+                    <td>有料（無料枠あり）</td>
+                    <td>大量配信、マーケティング併用</td>
+                </tr>
+            </table>
+            
+            <h3>SMTP方式の実装</h3>
+            <div class="code-block">
+<span class="comment"># email_notifier.py</span>
+<span class="keyword">import</span> smtplib
+<span class="keyword">from</span> email.mime.text <span class="keyword">import</span> MIMEText
+<span class="keyword">from</span> email.mime.multipart <span class="keyword">import</span> MIMEMultipart
+<span class="keyword">from</span> email.mime.application <span class="keyword">import</span> MIMEApplication
+<span class="keyword">import</span> os
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Dict
+
+<span class="keyword">class</span> <span class="class">EmailNotifier</span>:
+    <span class="string">"""メール通知クラス（SMTP）"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.smtp_host = os.getenv(<span class="string">"SMTP_HOST"</span>, <span class="string">"smtp.example.com"</span>)
+        self.smtp_port = int(os.getenv(<span class="string">"SMTP_PORT"</span>, <span class="string">"587"</span>))
+        self.smtp_user = os.getenv(<span class="string">"SMTP_USER"</span>)
+        self.smtp_password = os.getenv(<span class="string">"SMTP_PASSWORD"</span>)
+        self.from_address = os.getenv(<span class="string">"EMAIL_FROM"</span>, <span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0177746d6f2c606d647375416479606c716d642f626e6c">[email&#160;protected]</a>"</span>)
+    
+    <span class="keyword">def</span> <span class="function">send_email</span>(
+        self,
+        to: List[str],
+        subject: str,
+        body_html: str,
+        attachments: List[str] = <span class="keyword">None</span>
+    ) -> bool:
+        <span class="string">"""メールを送信"""</span>
+        
+        msg = MIMEMultipart(<span class="string">"mixed"</span>)
+        msg[<span class="string">"Subject"</span>] = subject
+        msg[<span class="string">"From"</span>] = self.from_address
+        msg[<span class="string">"To"</span>] = <span class="string">", "</span>.join(to)
+        
+        <span class="comment"># HTML本文</span>
+        html_part = MIMEText(body_html, <span class="string">"html"</span>, <span class="string">"utf-8"</span>)
+        msg.attach(html_part)
+        
+        <span class="comment"># 添付ファイル</span>
+        <span class="keyword">if</span> attachments:
+            <span class="keyword">for</span> filepath <span class="keyword">in</span> attachments:
+                <span class="keyword">with</span> open(filepath, <span class="string">"rb"</span>) <span class="keyword">as</span> f:
+                    part = MIMEApplication(f.read())
+                    filename = os.path.basename(filepath)
+                    part.add_header(
+                        <span class="string">"Content-Disposition"</span>,
+                        <span class="string">"attachment"</span>,
+                        filename=filename
+                    )
+                    msg.attach(part)
+        
+        <span class="comment"># 送信</span>
+        <span class="keyword">try</span>:
+            <span class="keyword">with</span> smtplib.SMTP(self.smtp_host, self.smtp_port) <span class="keyword">as</span> server:
+                server.starttls()
+                <span class="keyword">if</span> self.smtp_user <span class="keyword">and</span> self.smtp_password:
+                    server.login(self.smtp_user, self.smtp_password)
+                server.send_message(msg)
+            <span class="keyword">return</span> <span class="keyword">True</span>
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            print(f<span class="string">"メール送信エラー: {e}"</span>)
+            <span class="keyword">return</span> <span class="keyword">False</span>
+            </div>
+            
+            <h3>AWS SES方式の実装</h3>
+            <div class="code-block">
+<span class="comment"># ses_notifier.py</span>
+<span class="keyword">import</span> boto3
+<span class="keyword">from</span> botocore.exceptions <span class="keyword">import</span> ClientError
+<span class="keyword">from</span> typing <span class="keyword">import</span> List
+
+<span class="keyword">class</span> <span class="class">SESNotifier</span>:
+    <span class="string">"""メール通知クラス（AWS SES）"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, region: str = <span class="string">"ap-northeast-1"</span>):
+        self.client = boto3.client(<span class="string">"ses"</span>, region_name=region)
+        self.from_address = <span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3741425b591a565b52454377524f565a475b521954585a">[email&#160;protected]</a>"</span>
+    
+    <span class="keyword">def</span> <span class="function">send_email</span>(
+        self,
+        to: List[str],
+        subject: str,
+        body_html: str
+    ) -> bool:
+        <span class="string">"""メールを送信"""</span>
+        
+        <span class="keyword">try</span>:
+            response = self.client.send_email(
+                Source=self.from_address,
+                Destination={
+                    <span class="string">"ToAddresses"</span>: to
+                },
+                Message={
+                    <span class="string">"Subject"</span>: {
+                        <span class="string">"Data"</span>: subject,
+                        <span class="string">"Charset"</span>: <span class="string">"UTF-8"</span>
+                    },
+                    <span class="string">"Body"</span>: {
+                        <span class="string">"Html"</span>: {
+                            <span class="string">"Data"</span>: body_html,
+                            <span class="string">"Charset"</span>: <span class="string">"UTF-8"</span>
+                        }
+                    }
+                }
+            )
+            print(f<span class="string">"送信成功: MessageId={response['MessageId']}"</span>)
+            <span class="keyword">return</span> <span class="keyword">True</span>
+        <span class="keyword">except</span> ClientError <span class="keyword">as</span> e:
+            print(f<span class="string">"SESエラー: {e.response['Error']['Message']}"</span>)
+            <span class="keyword">return</span> <span class="keyword">False</span>
+            </div>
+            
+            <h3>脆弱性アラートメールの送信</h3>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">send_vulnerability_alert</span>(
+    self,
+    to: List[str],
+    vuln: Dict,
+    asset: Dict,
+    priority: Dict
+) -> bool:
+    <span class="string">"""脆弱性アラートメールを送信"""</span>
+    
+    <span class="comment"># 優先度に応じた色</span>
+    colors = {
+        <span class="string">"Immediate"</span>: <span class="string">"#cf222e"</span>,
+        <span class="string">"Out-of-Cycle"</span>: <span class="string">"#bf8700"</span>,
+        <span class="string">"Scheduled"</span>: <span class="string">"#0969da"</span>,
+        <span class="string">"Defer"</span>: <span class="string">"#57606a"</span>
+    }
+    color = colors.get(priority[<span class="string">"action"</span>], <span class="string">"#0969da"</span>)
+    
+    html = f<span class="string">"""
+    &lt;html&gt;
+    &lt;body style="font-family: Arial, sans-serif; line-height: 1.6;"&gt;
+        &lt;div style="background: {color}; color: white; padding: 20px;"&gt;
+            &lt;h1 style="margin: 0;"&gt;🚨 新しい脆弱性が検出されました&lt;/h1&gt;
+        &lt;/div&gt;
+        &lt;div style="padding: 20px;"&gt;
+            &lt;table style="width: 100%; border-collapse: collapse;"&gt;
+                &lt;tr&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;"&gt;CVE ID&lt;/td&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd;"&gt;{vuln['cve_id']}&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;"&gt;CVSSスコア&lt;/td&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd;"&gt;{vuln['cvss_score']} ({vuln['severity']})&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;"&gt;対象資産&lt;/td&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd;"&gt;{asset['hostname']} ({asset['environment']})&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;"&gt;推奨アクション&lt;/td&gt;
+                    &lt;td style="padding: 10px; border: 1px solid #ddd; color: {color}; font-weight: bold;"&gt;{priority['action']}&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+            &lt;h3&gt;概要&lt;/h3&gt;
+            &lt;p&gt;{vuln['title']}&lt;/p&gt;
+            &lt;p style="margin-top: 20px;"&gt;
+                &lt;a href="https://nvd.nist.gov/vuln/detail/{vuln['cve_id']}" 
+                   style="background: #0969da; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;"&gt;
+                    NVDで詳細を見る
+                &lt;/a&gt;
+            &lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
+    """</span>
+    
+    subject = f<span class="string">"【{priority['action']}】{vuln['cve_id']} - 脆弱性検出"</span>
+    <span class="keyword">return</span> self.send_email(to, subject, html)
+            </div>
+            
+            <h3>メール通知の表示イメージ</h3>
+            <div class="email-preview">
+                <div class="email-header">
+                    <div class="email-header-row">
+                        <span class="email-header-label">From:</span>
+                        <span class="email-header-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c9bfbca5a7e4a8a5acbbbd89acb1a8a4b9a5ace7aaa6a4">[email&#160;protected]</a></span>
+                    </div>
+                    <div class="email-header-row">
+                        <span class="email-header-label">To:</span>
+                        <span class="email-header-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e19284829493889598cc9584808ca18499808c918d84cf828e8c">[email&#160;protected]</a></span>
+                    </div>
+                    <div class="email-header-row">
+                        <span class="email-header-label">Subject:</span>
+                        <span class="email-header-value">【Immediate】CVE-2024-1234 - 脆弱性検出</span>
+                    </div>
+                </div>
+                <div class="email-body">
+                    <div style="background: #cf222e; color: white; padding: 16px; margin: -20px -20px 20px -20px;">
+                        <h2 style="margin: 0; border: none; padding: 0; color: white;">🚨 新しい脆弱性が検出されました</h2>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold; width: 30%;">CVE ID</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">CVE-2024-1234</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">CVSSスコア</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">9.8 (Critical)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">対象資産</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">web-server-01 (本番環境)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">推奨アクション</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; color: #cf222e; font-weight: bold;">Immediate</td>
+                        </tr>
+                    </table>
+                    <h3 style="border: none; padding: 0; font-size: 16px;">概要</h3>
+                    <p>Apache HTTP Server における重大な脆弱性が発見されました。</p>
+                    <p style="margin-top: 20px;">
+                        <a href="#" style="background: #0969da; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">NVDで詳細を見る</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 統合通知サービス -->
+        <div class="section">
+            <h2 class="design">🏗️ 統合通知サービスの設計</h2>
+            
+            <p style="margin-bottom: 16px;">
+                Teams、Discord、メールを統合して管理する通知サービスクラスです。
+            </p>
+            
+            <div class="code-block">
+<span class="comment"># notification_service.py</span>
+<span class="keyword">from</span> enum <span class="keyword">import</span> Enum
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Dict
+<span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+
+<span class="keyword">class</span> <span class="class">NotificationChannel</span>(Enum):
+    TEAMS = <span class="string">"teams"</span>
+    DISCORD = <span class="string">"discord"</span>
+    EMAIL = <span class="string">"email"</span>
+
+<span class="keyword">class</span> <span class="class">NotificationType</span>(Enum):
+    IMMEDIATE = <span class="string">"immediate"</span>   <span class="comment"># 即時アラート</span>
+    DAILY = <span class="string">"daily"</span>           <span class="comment"># 日次サマリー</span>
+    WEEKLY = <span class="string">"weekly"</span>         <span class="comment"># 週次レポート</span>
+
+@dataclass
+<span class="keyword">class</span> <span class="class">NotificationSetting</span>:
+    name: str
+    channel: NotificationChannel
+    notification_type: NotificationType
+    webhook_url: str = <span class="keyword">None</span>       <span class="comment"># Teams/Discord用</span>
+    recipients: List[str] = <span class="keyword">None</span>  <span class="comment"># メール用</span>
+    min_priority: str = <span class="keyword">None</span>      <span class="comment"># フィルタ条件</span>
+    environments: List[str] = <span class="keyword">None</span>
+    is_active: bool = <span class="keyword">True</span>
+
+
+<span class="keyword">class</span> <span class="class">NotificationService</span>:
+    <span class="string">"""統合通知サービス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(
+        self,
+        teams_notifier: TeamsNotifier = <span class="keyword">None</span>,
+        discord_notifier: DiscordNotifier = <span class="keyword">None</span>,
+        email_notifier: EmailNotifier = <span class="keyword">None</span>,
+        settings_repo = <span class="keyword">None</span>
+    ):
+        self.teams = teams_notifier
+        self.discord = discord_notifier
+        self.email = email_notifier
+        self.settings_repo = settings_repo
+    
+    <span class="keyword">def</span> <span class="function">notify_vulnerability</span>(
+        self,
+        vuln: Dict,
+        asset: Dict,
+        priority: Dict
+    ):
+        <span class="string">"""脆弱性を通知"""</span>
+        
+        <span class="comment"># アクティブな設定を取得</span>
+        settings = self.settings_repo.get_active_settings(
+            notification_type=NotificationType.IMMEDIATE
+        )
+        
+        <span class="keyword">for</span> setting <span class="keyword">in</span> settings:
+            <span class="comment"># 条件チェック</span>
+            <span class="keyword">if not</span> self._matches_condition(setting, vuln, asset, priority):
+                <span class="keyword">continue</span>
+            
+            <span class="comment"># チャネル別に送信</span>
+            <span class="keyword">try</span>:
+                <span class="keyword">if</span> setting.channel == NotificationChannel.TEAMS:
+                    self.teams.webhook_url = setting.webhook_url
+                    self.teams.send_vulnerability_alert(vuln, asset, priority)
+                
+                <span class="keyword">elif</span> setting.channel == NotificationChannel.DISCORD:
+                    self.discord.webhook_url = setting.webhook_url
+                    self.discord.send_vulnerability_alert(vuln, asset, priority)
+                
+                <span class="keyword">elif</span> setting.channel == NotificationChannel.EMAIL:
+                    self.email.send_vulnerability_alert(
+                        to=setting.recipients,
+                        vuln=vuln,
+                        asset=asset,
+                        priority=priority
+                    )
+                
+                <span class="comment"># 送信成功を記録</span>
+                self._log_success(setting, vuln)
+                
+            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+                <span class="comment"># エラーを記録</span>
+                self._log_error(setting, vuln, str(e))
+    
+    <span class="keyword">def</span> <span class="function">_matches_condition</span>(
+        self,
+        setting: NotificationSetting,
+        vuln: Dict,
+        asset: Dict,
+        priority: Dict
+    ) -> bool:
+        <span class="string">"""通知条件に合致するかチェック"""</span>
+        
+        <span class="comment"># 優先度フィルタ</span>
+        <span class="keyword">if</span> setting.min_priority:
+            priority_order = [<span class="string">"Defer"</span>, <span class="string">"Scheduled"</span>, <span class="string">"Out-of-Cycle"</span>, <span class="string">"Immediate"</span>]
+            current_idx = priority_order.index(priority[<span class="string">"action"</span>])
+            min_idx = priority_order.index(setting.min_priority)
+            <span class="keyword">if</span> current_idx < min_idx:
+                <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="comment"># 環境フィルタ</span>
+        <span class="keyword">if</span> setting.environments:
+            <span class="keyword">if</span> asset[<span class="string">"environment"</span>] <span class="keyword">not in</span> setting.environments:
+                <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="keyword">return</span> <span class="keyword">True</span>
+            </div>
+            
+            <h3>使用例</h3>
+            <div class="code-block">
+<span class="comment"># 初期化</span>
+service = NotificationService(
+    teams_notifier=TeamsNotifier(),
+    discord_notifier=DiscordNotifier(),
+    email_notifier=EmailNotifier(),
+    settings_repo=notification_settings_repo
+)
+
+<span class="comment"># 脆弱性検出時に呼び出し</span>
+service.notify_vulnerability(
+    vuln={
+        <span class="string">"cve_id"</span>: <span class="string">"CVE-2024-1234"</span>,
+        <span class="string">"cvss_score"</span>: <span class="number">9.8</span>,
+        <span class="string">"severity"</span>: <span class="string">"Critical"</span>,
+        <span class="string">"title"</span>: <span class="string">"Apache HTTP Server の重大な脆弱性"</span>
+    },
+    asset={
+        <span class="string">"hostname"</span>: <span class="string">"web-server-01"</span>,
+        <span class="string">"environment"</span>: <span class="string">"本番"</span>
+    },
+    priority={
+        <span class="string">"action"</span>: <span class="string">"Immediate"</span>,
+        <span class="string">"score"</span>: <span class="number">73.5</span>
+    }
+)
+            </div>
+        </div>
+
+        <!-- 通知設定DB -->
+        <div class="section">
+            <h2>🗄️ 通知設定のデータベース</h2>
+            
+            <div class="code-block">
+<span class="comment">-- notification_settings テーブル</span>
+CREATE TABLE notification_settings (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    channel VARCHAR(20) NOT NULL,        <span class="comment">-- 'teams', 'discord', 'email'</span>
+    notification_type VARCHAR(20) NOT NULL, <span class="comment">-- 'immediate', 'daily', 'weekly'</span>
+    
+    <span class="comment">-- チャネル別設定</span>
+    webhook_url TEXT,                    <span class="comment">-- Teams/Discord Webhook URL</span>
+    recipients TEXT[],                   <span class="comment">-- メールアドレスの配列</span>
+    
+    <span class="comment">-- フィルタ条件</span>
+    min_priority VARCHAR(20),            <span class="comment">-- 'Immediate', 'Out-of-Cycle', 'Scheduled', 'Defer'</span>
+    environments TEXT[],                 <span class="comment">-- ['本番', 'ステージング'] など</span>
+    kev_only BOOLEAN DEFAULT FALSE,      <span class="comment">-- KEV登録のみ通知</span>
+    
+    <span class="comment">-- スケジュール（日次/週次用）</span>
+    schedule_time TIME,                  <span class="comment">-- 送信時刻（例: '09:00:00'）</span>
+    schedule_day INTEGER,                <span class="comment">-- 曜日（週次の場合、1=月曜）</span>
+    
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+<span class="comment">-- 設定例を挿入</span>
+INSERT INTO notification_settings (name, channel, notification_type, webhook_url, min_priority) VALUES
+(<span class="string">'Teams緊急アラート'</span>, <span class="string">'teams'</span>, <span class="string">'immediate'</span>, <span class="string">'https://outlook.office.com/webhook/xxx'</span>, <span class="string">'Immediate'</span>),
+(<span class="string">'Discord開発チーム'</span>, <span class="string">'discord'</span>, <span class="string">'immediate'</span>, <span class="string">'https://discord.com/api/webhooks/xxx'</span>, <span class="string">'Out-of-Cycle'</span>);
+
+INSERT INTO notification_settings (name, channel, notification_type, recipients, schedule_time) VALUES
+(<span class="string">'日次メールレポート'</span>, <span class="string">'email'</span>, <span class="string">'daily'</span>, ARRAY[<span class="string">'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4d3e282e383f2439340d28352c203d2128632e2220">[email&#160;protected]</a>'</span>], <span class="string">'09:00:00'</span>);
+            </div>
+            
+            <h3>通知設定の例</h3>
+            <table>
+                <tr>
+                    <th>設定名</th>
+                    <th>チャネル</th>
+                    <th>タイプ</th>
+                    <th>条件</th>
+                </tr>
+                <tr>
+                    <td>Teams緊急アラート</td>
+                    <td>Teams</td>
+                    <td>即時</td>
+                    <td>Immediate のみ</td>
+                </tr>
+                <tr>
+                    <td>Discord開発チーム</td>
+                    <td>Discord</td>
+                    <td>即時</td>
+                    <td>Out-of-Cycle 以上</td>
+                </tr>
+                <tr>
+                    <td>メール緊急通知</td>
+                    <td>メール</td>
+                    <td>即時</td>
+                    <td>Immediate + 本番環境</td>
+                </tr>
+                <tr>
+                    <td>日次サマリー（Teams）</td>
+                    <td>Teams</td>
+                    <td>日次</td>
+                    <td>毎日 09:00</td>
+                </tr>
+                <tr>
+                    <td>週次レポート</td>
+                    <td>メール</td>
+                    <td>週次</td>
+                    <td>毎週月曜 09:00</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 環境変数 -->
+        <div class="section">
+            <h2>⚙️ 環境変数の設定</h2>
+            
+            <div class="code-block">
+<span class="comment"># .env ファイル</span>
+
+<span class="comment"># Microsoft Teams</span>
+TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/xxxxxxxx
+
+<span class="comment"># Discord</span>
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxxxxxxx/xxxxxxxx
+
+<span class="comment"># メール（SMTP）</span>
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0b58465f5b545e584e59367d7e6765266a676e797f4b6e736a667b676e25686466">[email&#160;protected]</a>
+SMTP_PASSWORD=xxxxxxxx
+<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9bded6dad2d7c4ddc9d4d6a6edeef7f5b6faf7fee9efdbfee3faf6ebf7feb5f8f4f6">[email&#160;protected]</a>
+
+<span class="comment"># メール（AWS SES）- SMTP の代わりに使用する場合</span>
+AWS_REGION=ap-northeast-1
+AWS_ACCESS_KEY_ID=xxxxxxxx
+AWS_SECRET_ACCESS_KEY=xxxxxxxx
+            </div>
+            
+            <div class="warning-box">
+                <h4>セキュリティ注意</h4>
+                <ul>
+                    <li>Webhook URLや認証情報は<strong>絶対にGitにコミットしない</strong></li>
+                    <li>環境変数または AWS Secrets Manager 等で管理</li>
+                    <li>本番環境では IAM ロールを使用（アクセスキー不要）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当Dのタスク</h2>
+            
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>タスク</th>
+                    <th>詳細</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 2</strong></td>
+                    <td>通知基盤の設計</td>
+                    <td>
+                        ・通知サービスクラスの設計<br>
+                        ・通知設定DBテーブルの作成<br>
+                        ・Teams/Discord Webhook取得
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 3</strong></td>
+                    <td>即時通知の実装</td>
+                    <td>
+                        ・TeamsNotifier実装<br>
+                        ・DiscordNotifier実装<br>
+                        ・EmailNotifier実装<br>
+                        ・マッチングエンジンとの連携
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 4</strong></td>
+                    <td>定期レポートの実装</td>
+                    <td>
+                        ・日次サマリーの実装<br>
+                        ・週次レポートの実装<br>
+                        ・スケジューラー設定
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>テスト・改善</td>
+                    <td>
+                        ・通知設定画面（担当Eと連携）<br>
+                        ・テスト通知機能<br>
+                        ・エラーハンドリング強化
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">チャネル</th>
+                    <th>実装方法</th>
+                    <th>推奨用途</th>
+                </tr>
+                <tr>
+                    <td><strong>Teams</strong></td>
+                    <td>Incoming Webhook + MessageCard</td>
+                    <td>ビジネス利用、即時アラート</td>
+                </tr>
+                <tr>
+                    <td><strong>Discord</strong></td>
+                    <td>Webhook + Embed</td>
+                    <td>開発チーム、技術者向け</td>
+                </tr>
+                <tr>
+                    <td><strong>メール</strong></td>
+                    <td>SMTP or AWS SES</td>
+                    <td>正式通知、週次レポート</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨構成</h4>
+                <ul>
+                    <li><strong>Critical/KEV検出</strong>：Teams + メール（同時送信で見逃し防止）</li>
+                    <li><strong>日次サマリー</strong>：Teams または Discord</li>
+                    <li><strong>週次レポート</strong>：メール（PDF添付）</li>
+                    <li><strong>開発チーム向け</strong>：Discord（技術者に馴染みやすい）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>Teams Webhook</strong></td>
+                    <td><a href="https://learn.microsoft.com/ja-jp/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook" target="_blank">https://learn.microsoft.com/.../add-incoming-webhook</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Teams MessageCard</strong></td>
+                    <td><a href="https://learn.microsoft.com/ja-jp/outlook/actionable-messages/message-card-reference" target="_blank">https://learn.microsoft.com/.../message-card-reference</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Discord Webhook</strong></td>
+                    <td><a href="https://discord.com/developers/docs/reso

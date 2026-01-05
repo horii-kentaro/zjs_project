@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>統合テスト入門ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2da44e;
+        }
+        .section h2.pytest { border-bottom-color: #0a9396; }
+        .section h2.fixture { border-bottom-color: #8250df; }
+        .section h2.factory { border-bottom-color: #bf8700; }
+        .section h2.integration { border-bottom-color: #cf222e; }
+        .section h2.efficiency { border-bottom-color: #0969da; }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* ボックス類 */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul, .point-box ol {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        .beginner-box {
+            background: #f0f7ff;
+            border: 2px solid #0969da;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .beginner-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .beginner-box h4::before {
+            content: "🔰 ";
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .decorator {
+            color: #ffa657;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        .code-block .builtin {
+            color: #79c0ff;
+        }
+        
+        .command-block {
+            background: #1e1e2e;
+            border-left: 4px solid #2da44e;
+            color: #cdd6f4;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+        .command-block .prompt {
+            color: #a6e3a1;
+        }
+        .command-block .output {
+            color: #6c7086;
+        }
+        .command-block .success {
+            color: #a6e3a1;
+        }
+        .command-block .fail {
+            color: #f38ba8;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* ピラミッド図 */
+        .pyramid-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .pyramid {
+            position: relative;
+            width: 400px;
+        }
+        .pyramid-level {
+            text-align: center;
+            padding: 16px;
+            color: white;
+            font-weight: 600;
+            position: relative;
+        }
+        .pyramid-level.e2e {
+            background: #cf222e;
+            width: 40%;
+            margin: 0 auto;
+            border-radius: 4px 4px 0 0;
+        }
+        .pyramid-level.integration {
+            background: #bf8700;
+            width: 70%;
+            margin: 0 auto;
+        }
+        .pyramid-level.unit {
+            background: #2da44e;
+            width: 100%;
+            border-radius: 0 0 4px 4px;
+        }
+        .pyramid-label {
+            position: absolute;
+            right: -180px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #57606a;
+            width: 160px;
+            text-align: left;
+        }
+        .pyramid-label-left {
+            position: absolute;
+            left: -120px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #57606a;
+            width: 100px;
+            text-align: right;
+        }
+        
+        /* 比較図 */
+        .compare-diagram {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .compare-side {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .compare-side.bad {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+        }
+        .compare-side.good {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+        }
+        .compare-side h4 {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        /* フロー図 */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .flow-step {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            min-width: 100px;
+        }
+        .flow-step.highlight {
+            background: #ddf4ff;
+            border-color: #0969da;
+        }
+        .flow-step.success {
+            background: #dafbe1;
+            border-color: #2da44e;
+        }
+        .flow-arrow {
+            font-size: 20px;
+            color: #57606a;
+        }
+        
+        /* ファイル構成 */
+        .file-tree {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .file-tree .folder {
+            color: #0969da;
+        }
+        .file-tree .file {
+            color: #24292f;
+        }
+        .file-tree .comment {
+            color: #57606a;
+        }
+        
+        /* 時間比較 */
+        .time-bar {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .time-bar-label {
+            width: 120px;
+            font-size: 13px;
+        }
+        .time-bar-visual {
+            flex: 1;
+            height: 24px;
+            background: #e6edf3;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .time-bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .time-bar-fill.slow { background: #cf222e; }
+        .time-bar-fill.medium { background: #bf8700; }
+        .time-bar-fill.fast { background: #2da44e; }
+
+        @media (max-width: 768px) {
+            .compare-diagram {
+                grid-template-columns: 1fr;
+            }
+            .pyramid-label, .pyramid-label-left {
+                display: none;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 統合テスト入門ガイド</h1>
+        <p class="subtitle">効率的で汎用性の高いテスト戦略</p>
+
+        <!-- 概要 -->
+        <div class="section">
+            <h2>📋 このガイドで学べること</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 30%;">セクション</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>テストの種類と違い</td>
+                    <td>単体・統合・E2Eテストの役割と使い分け</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>テストピラミッド戦略</td>
+                    <td>効率的なテスト配分の考え方</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>pytest の基本</td>
+                    <td>Pythonテストの標準ツール</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Fixture（フィクスチャ）</td>
+                    <td>テストの前準備を自動化・再利用</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Factory Boy</td>
+                    <td>テストデータを自動生成</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>統合テストの実装</td>
+                    <td>API・DB連携のテスト方法</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>効率化テクニック</td>
+                    <td>並列実行・カバレッジ・CI連携</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>本プロジェクトへの適用</td>
+                    <td>脆弱性管理システムでの具体例</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>🎯 このガイドのゴール</h4>
+                <ul>
+                    <li><strong>効率的</strong>：最小の労力で最大の品質保証</li>
+                    <li><strong>汎用的</strong>：今後のプロジェクトでも使い回せる仕組み</li>
+                    <li><strong>自動化</strong>：手動テストをゼロに近づける</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- テストの種類 -->
+        <div class="section">
+            <h2>🔍 1. テストの種類と違い</h2>
+            
+            <h3>3種類のテスト</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">種類</th>
+                    <th style="width: 25%;">テスト対象</th>
+                    <th style="width: 25%;">例</th>
+                    <th>特徴</th>
+                </tr>
+                <tr>
+                    <td><strong>単体テスト</strong><br>(Unit Test)</td>
+                    <td>1つの関数・クラス</td>
+                    <td>「CVSSスコアから重要度を判定する関数」</td>
+                    <td>⚡ 高速、🎯 範囲が狭い</td>
+                </tr>
+                <tr>
+                    <td><strong>統合テスト</strong><br>(Integration Test)</td>
+                    <td>複数コンポーネントの連携</td>
+                    <td>「APIがDBからデータを取得して返す」</td>
+                    <td>⏱️ 中速、🔗 連携を確認</td>
+                </tr>
+                <tr>
+                    <td><strong>E2Eテスト</strong><br>(End-to-End)</td>
+                    <td>システム全体</td>
+                    <td>「ブラウザで脆弱性を検索して結果表示」</td>
+                    <td>🐢 低速、🌐 現実に近い</td>
+                </tr>
+            </table>
+            
+            <h3>具体例で理解する</h3>
+            <div class="code-block">
+<span class="comment"># 【単体テスト】関数単体をテスト</span>
+<span class="keyword">def</span> <span class="function">test_calculate_severity</span>():
+    <span class="keyword">assert</span> calculate_severity(<span class="number">9.5</span>) == <span class="string">"Critical"</span>
+    <span class="keyword">assert</span> calculate_severity(<span class="number">7.0</span>) == <span class="string">"High"</span>
+    <span class="keyword">assert</span> calculate_severity(<span class="number">4.0</span>) == <span class="string">"Medium"</span>
+
+<span class="comment"># 【統合テスト】API + DB の連携をテスト</span>
+<span class="keyword">def</span> <span class="function">test_get_vulnerabilities_api</span>(client, db_session):
+    <span class="comment"># DBにテストデータを投入</span>
+    vuln = Vulnerability(cve_id=<span class="string">"CVE-2024-1234"</span>, severity=<span class="string">"Critical"</span>)
+    db_session.add(vuln)
+    db_session.commit()
+    
+    <span class="comment"># APIを呼び出し</span>
+    response = client.get(<span class="string">"/api/vulnerabilities"</span>)
+    
+    <span class="comment"># レスポンスを検証</span>
+    <span class="keyword">assert</span> response.status_code == <span class="number">200</span>
+    <span class="keyword">assert</span> response.json()[<span class="number">0</span>][<span class="string">"cve_id"</span>] == <span class="string">"CVE-2024-1234"</span>
+
+<span class="comment"># 【E2Eテスト】ブラウザで実際に操作</span>
+<span class="keyword">def</span> <span class="function">test_search_vulnerability_e2e</span>(browser):
+    browser.goto(<span class="string">"http://localhost:3000"</span>)
+    browser.fill(<span class="string">"input[name='search']"</span>, <span class="string">"CVE-2024-1234"</span>)
+    browser.click(<span class="string">"button[type='submit']"</span>)
+    <span class="keyword">assert</span> browser.text_content(<span class="string">".result"</span>) == <span class="string">"CVE-2024-1234"</span>
+            </div>
+            
+            <div class="beginner-box">
+                <h4>どれを優先すべき？</h4>
+                <p>
+                    <strong>統合テスト</strong>が最も費用対効果が高いです。<br>
+                    単体テストだけでは「連携部分のバグ」を見つけられず、<br>
+                    E2Eテストだけでは「遅すぎて」開発効率が落ちます。
+                </p>
+            </div>
+        </div>
+
+        <!-- テストピラミッド -->
+        <div class="section">
+            <h2>🔺 2. テストピラミッド戦略</h2>
+            
+            <p style="margin-bottom: 20px;">
+                テストは<strong>「ピラミッド型」</strong>の配分が効率的です。
+            </p>
+            
+            <div class="pyramid-container">
+                <div class="pyramid">
+                    <div class="pyramid-level e2e">
+                        E2Eテスト
+                        <span class="pyramid-label">少数（5〜10件）<br>重要シナリオのみ</span>
+                        <span class="pyramid-label-left">🐢 遅い<br>💰 高コスト</span>
+                    </div>
+                    <div class="pyramid-level integration">
+                        統合テスト
+                        <span class="pyramid-label">中程度（50〜100件）<br>API・DB連携</span>
+                        <span class="pyramid-label-left">⏱️ 中速</span>
+                    </div>
+                    <div class="pyramid-level unit">
+                        単体テスト
+                        <span class="pyramid-label">多数（200〜500件）<br>関数・クラス単位</span>
+                        <span class="pyramid-label-left">⚡ 高速<br>💵 低コスト</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>推奨配分</h3>
+            <table>
+                <tr>
+                    <th>テスト種類</th>
+                    <th>割合</th>
+                    <th>本プロジェクト目安</th>
+                    <th>実行時間目安</th>
+                </tr>
+                <tr>
+                    <td>単体テスト</td>
+                    <td>70%</td>
+                    <td>100〜200件</td>
+                    <td>10秒以内</td>
+                </tr>
+                <tr>
+                    <td><strong>統合テスト</strong></td>
+                    <td><strong>20%</strong></td>
+                    <td><strong>30〜50件</strong></td>
+                    <td><strong>1〜2分</strong></td>
+                </tr>
+                <tr>
+                    <td>E2Eテスト</td>
+                    <td>10%</td>
+                    <td>5〜10件</td>
+                    <td>3〜5分</td>
+                </tr>
+            </table>
+            
+            <div class="callout">
+                本プロジェクトでは<strong>統合テスト</strong>に注力します。API・DB連携が多いため、統合テストで大部分のバグを検出できます。
+            </div>
+            
+            <h3>テスト実行時間の比較</h3>
+            <div style="max-width: 500px;">
+                <div class="time-bar">
+                    <div class="time-bar-label">単体テスト</div>
+                    <div class="time-bar-visual">
+                        <div class="time-bar-fill fast" style="width: 10%;">10秒</div>
+                    </div>
+                </div>
+                <div class="time-bar">
+                    <div class="time-bar-label">統合テスト</div>
+                    <div class="time-bar-visual">
+                        <div class="time-bar-fill medium" style="width: 40%;">1〜2分</div>
+                    </div>
+                </div>
+                <div class="time-bar">
+                    <div class="time-bar-label">E2Eテスト</div>
+                    <div class="time-bar-visual">
+                        <div class="time-bar-fill slow" style="width: 100%;">5〜10分</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- pytest基本 -->
+        <div class="section">
+            <h2 class="pytest">🐍 3. pytest の基本</h2>
+            
+            <p style="margin-bottom: 20px;">
+                <strong>pytest</strong>はPythonの標準的なテストフレームワークです。<br>
+                シンプルな書き方で強力なテストが書けます。
+            </p>
+            
+            <h3>インストール</h3>
+            <div class="command-block">
+                <span class="prompt">$</span> pip install pytest pytest-cov pytest-xdist
+            </div>
+            
+            <h3>基本的な書き方</h3>
+            <div class="code-block">
+<span class="comment"># tests/test_example.py</span>
+
+<span class="comment"># テスト関数は test_ で始める</span>
+<span class="keyword">def</span> <span class="function">test_addition</span>():
+    <span class="keyword">assert</span> <span class="number">1</span> + <span class="number">1</span> == <span class="number">2</span>
+
+<span class="keyword">def</span> <span class="function">test_string_contains</span>():
+    <span class="keyword">assert</span> <span class="string">"hello"</span> <span class="keyword">in</span> <span class="string">"hello world"</span>
+
+<span class="keyword">def</span> <span class="function">test_list_length</span>():
+    items = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]
+    <span class="keyword">assert</span> <span class="builtin">len</span>(items) == <span class="number">3</span>
+
+<span class="comment"># 例外が発生することをテスト</span>
+<span class="keyword">import</span> pytest
+
+<span class="keyword">def</span> <span class="function">test_division_by_zero</span>():
+    <span class="keyword">with</span> pytest.raises(ZeroDivisionError):
+        <span class="number">1</span> / <span class="number">0</span>
+            </div>
+            
+            <h3>テストの実行</h3>
+            <div class="command-block">
+                <span class="comment"># 全テスト実行</span><br>
+                <span class="prompt">$</span> pytest<br>
+                <br>
+                <span class="comment"># 特定ファイルのみ</span><br>
+                <span class="prompt">$</span> pytest tests/test_api.py<br>
+                <br>
+                <span class="comment"># 特定テストのみ</span><br>
+                <span class="prompt">$</span> pytest tests/test_api.py::test_get_vulnerabilities<br>
+                <br>
+                <span class="comment"># 詳細表示</span><br>
+                <span class="prompt">$</span> pytest -v<br>
+                <br>
+                <span class="comment"># 失敗したら即停止</span><br>
+                <span class="prompt">$</span> pytest -x
+            </div>
+            
+            <h3>テスト結果の見方</h3>
+            <div class="command-block">
+                <span class="prompt">$</span> pytest -v<br>
+                <span class="output">
+========================= test session starts =========================
+collected 5 items
+
+tests/test_api.py::<span class="success">test_get_vulnerabilities PASSED</span>
+tests/test_api.py::<span class="success">test_create_vulnerability PASSED</span>
+tests/test_api.py::<span class="fail">test_delete_vulnerability FAILED</span>
+tests/test_db.py::<span class="success">test_insert_asset PASSED</span>
+tests/test_db.py::<span class="success">test_query_assets PASSED</span>
+
+========================= FAILURES =========================
+_________________ test_delete_vulnerability _________________
+
+    def test_delete_vulnerability():
+>       assert response.status_code == 204
+E       AssertionError: assert 404 == 204
+
+========================= short test summary info =========================
+<span class="fail">FAILED</span> tests/test_api.py::test_delete_vulnerability
+<span class="success">4 passed</span>, <span class="fail">1 failed</span> in 0.52s
+                </span>
+            </div>
+            
+            <div class="beginner-box">
+                <h4>覚えるポイント</h4>
+                <ul>
+                    <li>テスト関数は <code>test_</code> で始める</li>
+                    <li><code>assert</code> で期待値を検証</li>
+                    <li><code>pytest</code> コマンドで実行</li>
+                    <li>緑（PASSED）が成功、赤（FAILED）が失敗</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fixture -->
+        <div class="section">
+            <h2 class="fixture">🔧 4. Fixture（フィクスチャ）</h2>
+            
+            <p style="margin-bottom: 20px;">
+                Fixtureは<strong>テストの前準備を自動化・再利用</strong>する仕組みです。<br>
+                一度書けば、全テストで使い回せます。
+            </p>
+            
+            <h3>Fixtureがない場合の問題</h3>
+            <div class="compare-diagram">
+                <div class="compare-side bad">
+                    <h4>❌ Fixtureなし</h4>
+                    <div class="code-block" style="font-size: 11px;">
+<span class="keyword">def</span> <span class="function">test_get_vuln</span>():
+    <span class="comment"># 毎回同じ準備コード...</span>
+    engine = create_engine(...)
+    Session = sessionmaker(...)
+    session = Session()
+    <span class="comment"># テスト本体</span>
+    ...
+    session.close()
+
+<span class="keyword">def</span> <span class="function">test_create_vuln</span>():
+    <span class="comment"># また同じ準備コード...</span>
+    engine = create_engine(...)
+    Session = sessionmaker(...)
+    session = Session()
+    <span class="comment"># テスト本体</span>
+    ...
+    session.close()
+                    </div>
+                    <p style="color: #cf222e; font-weight: 600; margin-top: 8px;">
+                        → コードの重複、修正が大変
+                    </p>
+                </div>
+                
+                <div class="compare-side good">
+                    <h4>✅ Fixtureあり</h4>
+                    <div class="code-block" style="font-size: 11px;">
+<span class="decorator">@pytest.fixture</span>
+<span class="keyword">def</span> <span class="function">db_session</span>():
+    <span class="comment"># 準備は1箇所だけ</span>
+    session = create_session()
+    <span class="keyword">yield</span> session
+    session.close()
+
+<span class="keyword">def</span> <span class="function">test_get_vuln</span>(db_session):
+    <span class="comment"># 引数で受け取るだけ！</span>
+    ...
+
+<span class="keyword">def</span> <span class="function">test_create_vuln</span>(db_session):
+    <span class="comment"># 同じく引数で受け取る</span>
+    ...
+                    </div>
+                    <p style="color: #1a7f37; font-weight: 600; margin-top: 8px;">
+                        → 1箇所で管理、再利用可能
+                    </p>
+                </div>
+            </div>
+            
+            <h3>基本的なFixture</h3>
+            <div class="code-block">
+<span class="comment"># tests/conftest.py （全テストで共有されるFixture）</span>
+<span class="keyword">import</span> pytest
+<span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine
+<span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> sessionmaker
+<span class="keyword">from</span> fastapi.testclient <span class="keyword">import</span> TestClient
+<span class="keyword">from</span> app.main <span class="keyword">import</span> app
+<span class="keyword">from</span> app.database <span class="keyword">import</span> Base, get_db
+
+<span class="comment"># テスト用データベースURL</span>
+TEST_DATABASE_URL = <span class="string">"postgresql://test:test@localhost:5433/test_db"</span>
+
+
+<span class="decorator">@pytest.fixture</span>(scope=<span class="string">"session"</span>)
+<span class="keyword">def</span> <span class="function">engine</span>():
+    <span class="string">"""テスト用DBエンジン（テストセッション全体で1回だけ作成）"""</span>
+    engine = create_engine(TEST_DATABASE_URL)
+    Base.metadata.create_all(bind=engine)  <span class="comment"># テーブル作成</span>
+    <span class="keyword">yield</span> engine
+    Base.metadata.drop_all(bind=engine)    <span class="comment"># テスト後にテーブル削除</span>
+
+
+<span class="decorator">@pytest.fixture</span>(scope=<span class="string">"function"</span>)
+<span class="keyword">def</span> <span class="function">db_session</span>(engine):
+    <span class="string">"""各テスト関数ごとにDBセッションを作成（自動ロールバック）"""</span>
+    connection = engine.connect()
+    transaction = connection.begin()
+    
+    Session = sessionmaker(bind=connection)
+    session = Session()
+    
+    <span class="keyword">yield</span> session  <span class="comment"># テストにセッションを渡す</span>
+    
+    <span class="comment"># テスト後にロールバック（データを元に戻す）</span>
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+
+<span class="decorator">@pytest.fixture</span>
+<span class="keyword">def</span> <span class="function">client</span>(db_session):
+    <span class="string">"""APIテスト用クライアント"""</span>
+    <span class="comment"># DBセッションを差し替え</span>
+    <span class="keyword">def</span> <span class="function">override_get_db</span>():
+        <span class="keyword">yield</span> db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    <span class="keyword">with</span> TestClient(app) <span class="keyword">as</span> c:
+        <span class="keyword">yield</span> c
+    
+    app.dependency_overrides.clear()
+            </div>
+            
+            <h3>Fixtureのスコープ</h3>
+            <table>
+                <tr>
+                    <th>スコープ</th>
+                    <th>作成タイミング</th>
+                    <th>用途</th>
+                </tr>
+                <tr>
+                    <td><code>function</code>（デフォルト）</td>
+                    <td>各テスト関数ごと</td>
+                    <td>DBセッション、テストデータ</td>
+                </tr>
+                <tr>
+                    <td><code>class</code></td>
+                    <td>各テストクラスごと</td>
+                    <td>クラス単位で共有するリソース</td>
+                </tr>
+                <tr>
+                    <td><code>module</code></td>
+                    <td>各テストファイルごと</td>
+                    <td>ファイル単位で共有</td>
+                </tr>
+                <tr>
+                    <td><code>session</code></td>
+                    <td>テスト全体で1回</td>
+                    <td>DBエンジン、外部接続</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ Fixtureのメリット</h4>
+                <ul>
+                    <li><strong>DRY</strong>：準備コードを1箇所にまとめる</li>
+                    <li><strong>自動クリーンアップ</strong>：<code>yield</code>後に後処理</li>
+                    <li><strong>依存関係</strong>：Fixture同士を組み合わせ可能</li>
+                    <li><strong>再利用</strong>：<code>conftest.py</code>に書けば全テストで使える</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Factory Boy -->
+        <div class="section">
+            <h2 class="factory">🏭 5. Factory Boy（テストデータ自動生成）</h2>
+            
+            <p style="margin-bottom: 20px;">
+                <strong>Factory Boy</strong>はテストデータを簡単に生成するライブラリです。<br>
+                <strong>Faker</strong>と組み合わせると、リアルなダミーデータを自動生成できます。
+            </p>
+            
+            <h3>インストール</h3>
+            <div class="command-block">
+                <span class="prompt">$</span> pip install factory-boy Faker
+            </div>
+            
+            <h3>Factory Boyがない場合の問題</h3>
+            <div class="compare-diagram">
+                <div class="compare-side bad">
+                    <h4>❌ 手動でデータ作成</h4>
+                    <div class="code-block" style="font-size: 11px;">
+<span class="keyword">def</span> <span class="function">test_vulnerability</span>(db_session):
+    <span class="comment"># 毎回フィールドを全部書く...</span>
+    vuln = Vulnerability(
+        cve_id=<span class="string">"CVE-2024-0001"</span>,
+        title=<span class="string">"Test Vulnerability"</span>,
+        description=<span class="string">"Test desc"</span>,
+        cvss_score=<span class="number">9.8</span>,
+        severity=<span class="string">"Critical"</span>,
+        published_date=datetime.now(),
+        <span class="comment"># まだまだ続く...</span>
+    )
+                    </div>
+                    <p style="color: #cf222e; font-weight: 600; margin-top: 8px;">
+                        → 面倒、データが単調
+                    </p>
+                </div>
+                
+                <div class="compare-side good">
+                    <h4>✅ Factory Boy</h4>
+                    <div class="code-block" style="font-size: 11px;">
+<span class="keyword">def</span> <span class="function">test_vulnerability</span>(db_session):
+    <span class="comment"># 1行で完了！</span>
+    vuln = VulnerabilityFactory()
+    
+    <span class="comment"># 特定の値だけ指定も可能</span>
+    critical_vuln = VulnerabilityFactory(
+        severity=<span class="string">"Critical"</span>
+    )
+    
+    <span class="comment"># 10件まとめて作成</span>
+    vulns = VulnerabilityFactory.create_batch(<span class="number">10</span>)
+                    </div>
+                    <p style="color: #1a7f37; font-weight: 600; margin-top: 8px;">
+                        → 簡潔、多様なデータ
+                    </p>
+                </div>
+            </div>
+            
+            <h3>Factoryの定義</h3>
+            <div class="code-block">
+<span class="comment"># tests/factories.py</span>
+<span class="keyword">import</span> factory
+<span class="keyword">from</span> factory <span class="keyword">import</span> Faker, LazyAttribute, SubFactory
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+<span class="keyword">import</span> random
+
+<span class="keyword">from</span> app.models <span class="keyword">import</span> Vulnerability, Asset, VulnerabilityAsset
+
+
+<span class="keyword">class</span> <span class="class">VulnerabilityFactory</span>(factory.Factory):
+    <span class="string">"""脆弱性のテストデータを生成"""</span>
+    
+    <span class="keyword">class</span> <span class="class">Meta</span>:
+        model = Vulnerability
+    
+    <span class="comment"># Fakerでリアルなダミーデータを生成</span>
+    cve_id = factory.Sequence(<span class="keyword">lambda</span> n: <span class="string">f"CVE-2024-{n:04d}"</span>)
+    title = Faker(<span class="string">"sentence"</span>, nb_words=<span class="number">6</span>)
+    description = Faker(<span class="string">"paragraph"</span>)
+    
+    <span class="comment"># ランダムな数値</span>
+    cvss_score = factory.LazyFunction(
+        <span class="keyword">lambda</span>: round(random.uniform(<span class="number">0.0</span>, <span class="number">10.0</span>), <span class="number">1</span>)
+    )
+    
+    <span class="comment"># CVSSスコアに基づいて自動計算</span>
+    severity = LazyAttribute(
+        <span class="keyword">lambda</span> obj: 
+            <span class="string">"Critical"</span> <span class="keyword">if</span> obj.cvss_score >= <span class="number">9.0</span> <span class="keyword">else</span>
+            <span class="string">"High"</span> <span class="keyword">if</span> obj.cvss_score >= <span class="number">7.0</span> <span class="keyword">else</span>
+            <span class="string">"Medium"</span> <span class="keyword">if</span> obj.cvss_score >= <span class="number">4.0</span> <span class="keyword">else</span>
+            <span class="string">"Low"</span>
+    )
+    
+    <span class="comment"># 過去30日以内のランダムな日時</span>
+    published_date = factory.LazyFunction(
+        <span class="keyword">lambda</span>: datetime.now() - timedelta(days=random.randint(<span class="number">1</span>, <span class="number">30</span>))
+    )
+    
+    is_kev = factory.LazyFunction(<span class="keyword">lambda</span>: random.random() < <span class="number">0.1</span>)  <span class="comment"># 10%の確率でTrue</span>
+
+
+<span class="keyword">class</span> <span class="class">AssetFactory</span>(factory.Factory):
+    <span class="string">"""資産のテストデータを生成"""</span>
+    
+    <span class="keyword">class</span> <span class="class">Meta</span>:
+        model = Asset
+    
+    hostname = factory.Sequence(<span class="keyword">lambda</span> n: <span class="string">f"server-{n:03d}"</span>)
+    ip_address = Faker(<span class="string">"ipv4_private"</span>)
+    os_name = factory.LazyFunction(
+        <span class="keyword">lambda</span>: random.choice([<span class="string">"Ubuntu 22.04"</span>, <span class="string">"Windows Server 2019"</span>, <span class="string">"RHEL 8"</span>])
+    )
+    environment = factory.LazyFunction(
+        <span class="keyword">lambda</span>: random.choice([<span class="string">"production"</span>, <span class="string">"staging"</span>, <span class="string">"development"</span>])
+    )
+    criticality = factory.LazyFunction(
+        <span class="keyword">lambda</span>: random.choice([<span class="string">"high"</span>, <span class="string">"medium"</span>, <span class="string">"low"</span>])
+    )
+
+
+<span class="keyword">class</span> <span class="class">CriticalVulnerabilityFactory</span>(VulnerabilityFactory):
+    <span class="string">"""Critical脆弱性専用（VulnerabilityFactoryを継承）"""</span>
+    cvss_score = factory.LazyFunction(<span class="keyword">lambda</span>: round(random.uniform(<span class="number">9.0</span>, <span class="number">10.0</span>), <span class="number">1</span>))
+    severity = <span class="string">"Critical"</span>
+    is_kev = <span class="keyword">True</span>
+            </div>
+            
+            <h3>Factoryの使い方</h3>
+            <div class="code-block">
+<span class="comment"># テストでの使用例</span>
+<span class="keyword">from</span> tests.factories <span class="keyword">import</span> VulnerabilityFactory, AssetFactory
+
+<span class="keyword">def</span> <span class="function">test_vulnerability_list</span>(db_session, client):
+    <span class="comment"># 1件作成</span>
+    vuln = VulnerabilityFactory()
+    db_session.add(vuln)
+    db_session.commit()
+    
+    <span class="comment"># 特定の値を指定</span>
+    critical_vuln = VulnerabilityFactory(
+        cve_id=<span class="string">"CVE-2024-9999"</span>,
+        severity=<span class="string">"Critical"</span>,
+        cvss_score=<span class="number">9.8</span>
+    )
+    
+    <span class="comment"># 10件まとめて作成</span>
+    vulns = VulnerabilityFactory.create_batch(<span class="number">10</span>)
+    db_session.add_all(vulns)
+    db_session.commit()
+    
+    <span class="comment"># APIをテスト</span>
+    response = client.get(<span class="string">"/api/vulnerabilities"</span>)
+    <span class="keyword">assert</span> <span class="builtin">len</span>(response.json()) == <span class="number">11</span>
+
+
+<span class="keyword">def</span> <span class="function">test_filter_by_severity</span>(db_session, client):
+    <span class="comment"># 各重要度のデータを作成</span>
+    VulnerabilityFactory(severity=<span class="string">"Critical"</span>, cvss_score=<span class="number">9.5</span>)
+    VulnerabilityFactory(severity=<span class="string">"High"</span>, cvss_score=<span class="number">7.5</span>)
+    VulnerabilityFactory(severity=<span class="string">"Medium"</span>, cvss_score=<span class="number">5.0</span>)
+    db_session.commit()
+    
+    <span class="comment"># Criticalのみをフィルター</span>
+    response = client.get(<span class="string">"/api/vulnerabilities?severity=Critical"</span>)
+    <span class="keyword">assert</span> <span class="builtin">len</span>(response.json()) == <span class="number">1</span>
+            </div>
+            
+            <div class="point-box">
+                <h4>🎯 Factory Boyの便利機能</h4>
+                <table>
+                    <tr>
+                        <th>機能</th>
+                        <th>説明</th>
+                        <th>例</th>
+                    </tr>
+                    <tr>
+                        <td><code>Sequence</code></td>
+                        <td>連番を生成</td>
+                        <td><code>CVE-2024-0001</code>, <code>0002</code>...</td>
+                    </tr>
+                    <tr>
+                        <td><code>Faker</code></td>
+                        <td>リアルなダミーデータ</td>
+                        <td>名前、住所、IPアドレス等</td>
+                    </tr>
+                    <tr>
+                        <td><code>LazyAttribute</code></td>
+                        <td>他の値から計算</td>
+                        <td>CVSSから重要度を自動判定</td>
+                    </tr>
+                    <tr>
+                        <td><code>SubFactory</code></td>
+                        <td>関連オブジェクトも生成</td>
+                        <td>脆弱性と資産を同時に</td>
+                    </tr>
+                    <tr>
+                        <td><code>create_batch</code></td>
+                        <td>まとめて生成</td>
+                        <td>100件のテストデータ</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 統合テストの実装 -->
+        <div class="section">
+            <h2 class="integration">🔗 6. 統合テストの実装</h2>
+            
+            <h3>ファイル構成</h3>
+            <div class="file-tree">
+<span class="folder">tests/</span>
+├── <span class="file">conftest.py</span>           <span class="comment"># 共通Fixture</span>
+├── <span class="file">factories.py</span>          <span class="comment"># Factory定義</span>
+├── <span class="folder">unit/</span>                  <span class="comment"># 単体テスト</span>
+│   ├── <span class="file">test_severity.py</span>
+│   └── <span class="file">test_cpe_parser.py</span>
+├── <span class="folder">integration/</span>           <span class="comment"># 統合テスト</span>
+│   ├── <span class="file">test_api_vulnerabilities.py</span>
+│   ├── <span class="file">test_api_assets.py</span>
+│   ├── <span class="file">test_matching.py</span>
+│   └── <span class="file">test_notifications.py</span>
+└── <span class="folder">e2e/</span>                   <span class="comment"># E2Eテスト（将来）</span>
+    └── <span class="file">test_dashboard.py</span>
+            </div>
+            
+            <h3>API統合テストの例</h3>
+            <div class="code-block">
+<span class="comment"># tests/integration/test_api_vulnerabilities.py</span>
+<span class="keyword">import</span> pytest
+<span class="keyword">from</span> tests.factories <span class="keyword">import</span> VulnerabilityFactory, AssetFactory
+
+
+<span class="keyword">class</span> <span class="class">TestVulnerabilityAPI</span>:
+    <span class="string">"""脆弱性APIの統合テスト"""</span>
+    
+    <span class="keyword">def</span> <span class="function">test_get_vulnerabilities_empty</span>(self, client):
+        <span class="string">"""データがない場合は空配列を返す"""</span>
+        response = client.get(<span class="string">"/api/vulnerabilities"</span>)
+        
+        <span class="keyword">assert</span> response.status_code == <span class="number">200</span>
+        <span class="keyword">assert</span> response.json() == []
+    
+    
+    <span class="keyword">def</span> <span class="function">test_get_vulnerabilities_with_data</span>(self, client, db_session):
+        <span class="string">"""脆弱性一覧を取得"""</span>
+        <span class="comment"># テストデータを作成</span>
+        vulns = VulnerabilityFactory.create_batch(<span class="number">5</span>)
+        <span class="keyword">for</span> v <span class="keyword">in</span> vulns:
+            db_session.add(v)
+        db_session.commit()
+        
+        <span class="comment"># API呼び出し</span>
+        response = client.get(<span class="string">"/api/vulnerabilities"</span>)
+        
+        <span class="comment"># 検証</span>
+        <span class="keyword">assert</span> response.status_code == <span class="number">200</span>
+        data = response.json()
+        <span class="keyword">assert</span> <span class="builtin">len</span>(data) == <span class="number">5</span>
+        <span class="keyword">assert</span> <span class="string">"cve_id"</span> <span class="keyword">in</span> data[<span class="number">0</span>]
+    
+    
+    <span class="keyword">def</span> <span class="function">test_filter_by_severity</span>(self, client, db_session):
+        <span class="string">"""重要度でフィルター"""</span>
+        <span class="comment"># 各重要度のデータを作成</span>
+        VulnerabilityFactory(severity=<span class="string">"Critical"</span>, cvss_score=<span class="number">9.5</span>)
+        VulnerabilityFactory(severity=<span class="string">"Critical"</span>, cvss_score=<span class="number">9.8</span>)
+        VulnerabilityFactory(severity=<span class="string">"High"</span>, cvss_score=<span class="number">7.5</span>)
+        VulnerabilityFactory(severity=<span class="string">"Medium"</span>, cvss_score=<span class="number">5.0</span>)
+        db_session.commit()
+        
+        <span class="comment"># Criticalのみを取得</span>
+        response = client.get(<span class="string">"/api/vulnerabilities?severity=Critical"</span>)
+        
+        <span class="keyword">assert</span> response.status_code == <span class="number">200</span>
+        data = response.json()
+        <span class="keyword">assert</span> <span class="builtin">len</span>(data) == <span class="number">2</span>
+        <span class="keyword">assert</span> <span class="builtin">all</span>(v[<span class="string">"severity"</span>] == <span class="string">"Critical"</span> <span class="keyword">for</span> v <span class="keyword">in</span> data)
+    
+    
+    <span class="keyword">def</span> <span class="function">test_create_vulnerability</span>(self, client, db_session):
+        <span class="string">"""脆弱性を新規作成"""</span>
+        payload = {
+            <span class="string">"cve_id"</span>: <span class="string">"CVE-2024-9999"</span>,
+            <span class="string">"title"</span>: <span class="string">"Test Vulnerability"</span>,
+            <span class="string">"cvss_score"</span>: <span class="number">9.8</span>,
+            <span class="string">"severity"</span>: <span class="string">"Critical"</span>
+        }
+        
+        response = client.post(<span class="string">"/api/vulnerabilities"</span>, json=payload)
+        
+        <span class="keyword">assert</span> response.status_code == <span class="number">201</span>
+        data = response.json()
+        <span class="keyword">assert</span> data[<span class="string">"cve_id"</span>] == <span class="string">"CVE-2024-9999"</span>
+        <span class="keyword">assert</span> data[<span class="string">"id"</span>] <span class="keyword">is not</span> <span class="keyword">None</span>
+    
+    
+    <span class="keyword">def</span> <span class="function">test_create_duplicate_cve</span>(self, client, db_session):
+        <span class="string">"""重複するCVE IDはエラー"""</span>
+        <span class="comment"># 既存データを作成</span>
+        VulnerabilityFactory(cve_id=<span class="string">"CVE-2024-1111"</span>)
+        db_session.commit()
+        
+        <span class="comment"># 同じCVE IDで作成を試みる</span>
+        payload = {<span class="string">"cve_id"</span>: <span class="string">"CVE-2024-1111"</span>, <span class="string">"title"</span>: <span class="string">"Duplicate"</span>}
+        response = client.post(<span class="string">"/api/vulnerabilities"</span>, json=payload)
+        
+        <span class="keyword">assert</span> response.status_code == <span class="number">409</span>  <span class="comment"># Conflict</span>
+    
+    
+    <span class="keyword">def</span> <span class="function">test_pagination</span>(self, client, db_session):
+        <span class="string">"""ページネーション"""</span>
+        <span class="comment"># 25件作成</span>
+        vulns = VulnerabilityFactory.create_batch(<span class="number">25</span>)
+        <span class="keyword">for</span> v <span class="keyword">in</span> vulns:
+            db_session.add(v)
+        db_session.commit()
+        
+        <span class="comment"># 1ページ目（10件）</span>
+        response = client.get(<span class="string">"/api/vulnerabilities?page=1&amp;per_page=10"</span>)
+        <span class="keyword">assert</span> <span class="builtin">len</span>(response.json()) == <span class="number">10</span>
+        
+        <span class="comment"># 3ページ目（5件）</span>
+        response = client.get(<span class="string">"/api/vulnerabilities?page=3&amp;per_page=10"</span>)
+        <span class="keyword">assert</span> <span class="builtin">len</span>(response.json()) == <span class="number">5</span>
+            </div>
+            
+            <h3>マッチングエンジンの統合テスト</h3>
+            <div class="code-block">
+<span class="comment"># tests/integration/test_matching.py</span>
+<span class="keyword">import</span> pytest
+<span class="keyword">from</span> app.services.matching_engine <span class="keyword">import</span> MatchingEngine
+<span class="keyword">from</span> tests.factories <span class="keyword">import</span> VulnerabilityFactory, AssetFactory
+
+
+<span class="keyword">class</span> <span class="class">TestMatchingEngine</span>:
+    <span class="string">"""脆弱性と資産のマッチングテスト"""</span>
+    
+    <span class="keyword">def</span> <span class="function">test_match_by_cpe</span>(self, db_session):
+        <span class="string">"""CPEでマッチング"""</span>
+        <span class="comment"># Apache脆弱性を作成</span>
+        vuln = VulnerabilityFactory(
+            cve_id=<span class="string">"CVE-2024-1234"</span>,
+            cpe=<span class="string">"cpe:2.3:a:apache:http_server:2.4.49:*:*:*:*:*:*:*"</span>
+        )
+        
+        <span class="comment"># Apacheがインストールされた資産</span>
+        asset = AssetFactory(
+            hostname=<span class="string">"web-server-01"</span>,
+            installed_software=[
+                {<span class="string">"name"</span>: <span class="string">"apache"</span>, <span class="string">"version"</span>: <span class="string">"2.4.49"</span>}
+            ]
+        )
+        
+        db_session.add_all([vuln, asset])
+        db_session.commit()
+        
+        <span class="comment"># マッチング実行</span>
+        engine = MatchingEngine(db_session)
+        matches = engine.find_matches(vuln)
+        
+        <span class="comment"># 検証</span>
+        <span class="keyword">assert</span> <span class="builtin">len</span>(matches) == <span class="number">1</span>
+        <span class="keyword">assert</span> matches[<span class="number">0</span>].asset.hostname == <span class="string">"web-server-01"</span>
+    
+    
+    <span class="keyword">def</span> <span class="function">test_no_match_different_version</span>(self, db_session):
+        <span class="string">"""バージョンが違えばマッチしない"""</span>
+        vuln = VulnerabilityFactory(
+            cpe=<span class="string">"cpe:2.3:a:apache:http_server:2.4.49:*:*:*:*:*:*:*"</span>
+        )
+        asset = AssetFactory(
+            installed_software=[
+                {<span class="string">"name"</span>: <span class="string">"apache"</span>, <span class="string">"version"</span>: <span class="string">"2.4.50"</span>}  <span class="comment"># 違うバージョン</span>
+            ]
+        )
+        
+        db_session.add_all([vuln, asset])
+        db_session.commit()
+        
+        engine = MatchingEngine(db_session)
+        matches = engine.find_matches(vuln)
+        
+        <span class="keyword">assert</span> <span class="builtin">len</span>(matches) == <span class="number">0</span>  <span class="comment"># マッチなし</span>
+    
+    
+    <span class="keyword">def</span> <span class="function">test_priority_calculation</span>(self, db_session):
+        <span class="string">"""優先度計算のテスト"""</span>
+        <span class="comment"># Critical + KEV + 本番環境 → Immediate</span>
+        vuln = VulnerabilityFactory(
+            cvss_score=<span class="number">9.8</span>,
+            severity=<span class="string">"Critical"</span>,
+            is_kev=<span class="keyword">True</span>
+        )
+        asset = AssetFactory(
+            environment=<span class="string">"production"</span>,
+            criticality=<span class="string">"high"</span>
+        )
+        
+        db_session.add_all([vuln, asset])
+        db_session.commit()
+        
+        engine = MatchingEngine(db_session)
+        priority = engine.calculate_priority(vuln, asset)
+        
+        <span class="keyword">assert</span> priority == <span class="string">"Immediate"</span>
+            </div>
+            
+            <h3>通知サービスの統合テスト（モック使用）</h3>
+            <div class="code-block">
+<span class="comment"># tests/integration/test_notifications.py</span>
+<span class="keyword">import</span> pytest
+<span class="keyword">from</span> unittest.mock <span class="keyword">import</span> Mock, patch
+<span class="keyword">from</span> app.services.notification_service <span class="keyword">import</span> NotificationService
+<span class="keyword">from</span> tests.factories <span class="keyword">import</span> VulnerabilityFactory
+
+
+<span class="keyword">class</span> <span class="class">TestNotificationService</span>:
+    <span class="string">"""通知サービスのテスト"""</span>
+    
+    <span class="decorator">@patch</span>(<span class="string">"app.services.notification_service.requests.post"</span>)
+    <span class="keyword">def</span> <span class="function">test_send_slack_notification</span>(self, mock_post, db_session):
+        <span class="string">"""Slack通知が正しく送信される"""</span>
+        <span class="comment"># モックの設定</span>
+        mock_post.return_value.status_code = <span class="number">200</span>
+        mock_post.return_value.ok = <span class="keyword">True</span>
+        
+        <span class="comment"># テストデータ</span>
+        vuln = VulnerabilityFactory(
+            cve_id=<span class="string">"CVE-2024-1234"</span>,
+            severity=<span class="string">"Critical"</span>
+        )
+        
+        <span class="comment"># 通知送信</span>
+        service = NotificationService()
+        result = service.send_slack_alert(vuln)
+        
+        <span class="comment"># 検証</span>
+        <span class="keyword">assert</span> result <span class="keyword">is</span> <span class="keyword">True</span>
+        mock_post.assert_called_once()
+        
+        <span class="comment"># 送信内容を検証</span>
+        call_args = mock_post.call_args
+        payload = call_args.kwargs[<span class="string">"json"</span>]
+        <span class="keyword">assert</span> <span class="string">"CVE-2024-1234"</span> <span class="keyword">in</span> <span class="builtin">str</span>(payload)
+        <span class="keyword">assert</span> <span class="string">"Critical"</span> <span class="keyword">in</span> <span class="builtin">str</span>(payload)
+    
+    
+    <span class="decorator">@patch</span>(<span class="string">"app.services.notification_service.requests.post"</span>)
+    <span class="keyword">def</span> <span class="function">test_notification_failure_handling</span>(self, mock_post, db_session):
+        <span class="string">"""通知失敗時のエラーハンドリング"""</span>
+        <span class="comment"># 失敗をシミュレート</span>
+        mock_post.return_value.status_code = <span class="number">500</span>
+        mock_post.return_value.ok = <span class="keyword">False</span>
+        
+        vuln = VulnerabilityFactory()
+        
+        service = NotificationService()
+        result = service.send_slack_alert(vuln)
+        
+        <span class="keyword">assert</span> result <span class="keyword">is</span> <span class="keyword">False</span>
+            </div>
+            
+            <div class="callout">
+                外部サービス（Slack、Teams等）への通信は<strong>モック</strong>を使用します。<br>
+                実際のAPIを呼ばずに、送信内容と動作を検証できます。
+            </div>
+        </div>
+
+        <!-- 効率化テクニック -->
+        <div class="section">
+            <h2 class="efficiency">⚡ 7. 効率化テクニック</h2>
+            
+            <h3>① 並列実行（pytest-xdist）</h3>
+            <p style="margin-bottom: 12px;">
+                テストを並列実行すると、実行時間を大幅に短縮できます。
+            </p>
+            
+            <div class="command-block">
+                <span class="comment"># インストール</span><br>
+                <span class="prompt">$</span> pip install pytest-xdist<br>
+                <br>
+                <span class="comment"># 4並列で実行</span><br>
+                <span class="prompt">$</span> pytest -n 4<br>
+                <br>
+                <span class="comment"># CPU数に応じて自動調整</span><br>
+                <span class="prompt">$</span> pytest -n auto
+            </div>
+            
+            <h4>効果</h4>
+            <div style="max-width: 500px;">
+                <div class="time-bar">
+                    <div class="time-bar-label">通常実行</div>
+                    <div class="time-bar-visual">
+                        <div class="time-bar-fill slow" style="width: 100%;">4分</div>
+                    </div>
+                </div>
+                <div class="time-bar">
+                    <div class="time-bar-label">4並列実行</div>
+                    <div class="time-bar-visual">
+                        <div class="time-bar-fill fast" style="width: 25%;">1分</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>② カバレッジ計測（pytest-cov）</h3>
+            <p style="margin-bottom: 12px;">
+                テストがコードのどれだけをカバーしているか測定します。
+            </p>
+            
+            <div class="command-block">
+                <span class="comment"># カバレッジ付きで実行</span><br>
+                <span class="prompt">$</span> pytest --cov=app --cov-report=html<br>
+                <span class="output">
+---------- coverage: ... ----------
+Name                      Stmts   Miss  Cover
+---------------------------------------------
+app/main.py                  45      3    93%
+app/models.py                62      5    92%
+app/services/matching.py     98     12    88%
+---------------------------------------------
+TOTAL                       205     20    90%
+                </span>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ カバレッジ目標</h4>
+                <ul>
+                    <li><strong>80%以上</strong>：一般的な目標</li>
+                    <li><strong>90%以上</strong>：高品質なプロジェクト</li>
+                    <li><strong>100%</strong>：現実的には不要（コスト高）</li>
+                </ul>
+                <p style="margin-top: 8px;">
+                    重要なのは「重要な部分」をカバーすること。数字だけを追わない。
+                </p>
+            </div>
+            
+            <h3>③ テストのマーカー</h3>
+            <p style="margin-bottom: 12px;">
+                テストを分類して、必要なものだけ実行できます。
+            </p>
+            
+            <div class="code-block">
+<span class="comment"># pytest.ini</span>
+[pytest]
+markers =
+    slow: 時間のかかるテスト
+    integration: 統合テスト
+    unit: 単体テスト
+            </div>
+            
+            <div class="code-block">
+<span class="comment"># テストにマーカーを付ける</span>
+<span class="keyword">import</span> pytest
+
+<span class="decorator">@pytest.mark.unit</span>
+<span class="keyword">def</span> <span class="function">test_calculate_severity</span>():
+    ...
+
+<span class="decorator">@pytest.mark.integration</span>
+<span class="keyword">def</span> <span class="function">test_api_get_vulnerabilities</span>():
+    ...
+
+<span class="decorator">@pytest.mark.slow</span>
+<span class="keyword">def</span> <span class="function">test_full_sync</span>():
+    ...
+            </div>
+            
+            <div class="command-block">
+                <span class="comment"># 単体テストのみ実行（速い）</span><br>
+                <span class="prompt">$</span> pytest -m unit<br>
+                <br>
+                <span class="comment"># 統合テストのみ実行</span><br>
+                <span class="prompt">$</span> pytest -m integration<br>
+                <br>
+                <span class="comment"># slowを除外して実行</span><br>
+                <span class="prompt">$</span> pytest -m "not slow"
+            </div>
+            
+            <h3>④ CI連携（GitHub Actions）</h3>
+            <div class="code-block">
+<span class="comment"># .github/workflows/test.yml</span>
+<span class="keyword">name</span>: Test
+
+<span class="keyword">on</span>:
+  <span class="keyword">pull_request</span>:
+    <span class="keyword">branches</span>: [main, develop]
+
+<span class="keyword">jobs</span>:
+  <span class="keyword">test</span>:
+    <span class="keyword">runs-on</span>: ubuntu-latest
+    
+    <span class="keyword">services</span>:
+      <span class="keyword">postgres</span>:
+        <span class="keyword">image</span>: postgres:<span class="number">15</span>
+        <span class="keyword">env</span>:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        <span class="keyword">ports</span>:
+          - <span class="number">5432</span>:<span class="number">5432</span>
+    
+    <span class="keyword">steps</span>:
+      - <span class="keyword">uses</span>: actions/checkout@v4
+      
+      - <span class="keyword">name</span>: Set up Python
+        <span class="keyword">uses</span>: actions/setup-python@v5
+        <span class="keyword">with</span>:
+          <span class="keyword">python-version</span>: <span class="string">'3.11'</span>
+      
+      - <span class="keyword">name</span>: Install dependencies
+        <span class="keyword">run</span>: pip install -r requirements.txt
+      
+      - <span class="keyword">name</span>: Run tests
+        <span class="keyword">env</span>:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+        <span class="keyword">run</span>: |
+          pytest -n auto --cov=app --cov-report=xml
+      
+      - <span class="keyword">name</span>: Upload coverage
+        <span class="keyword">uses</span>: codecov/codecov-action@v3
+            </div>
+            
+            <div class="flow-container">
+                <div class="flow-step">
+                    📤 PRを作成
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step highlight">
+                    🧪 自動テスト
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step success">
+                    ✅ or ❌
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    🔀 マージ
+                </div>
+            </div>
+        </div>
+
+        <!-- 本プロジェクトへの適用 -->
+        <div class="section">
+            <h2>📁 8. 本プロジェクトへの適用</h2>
+            
+            <h3>テスト対象と優先順位</h3>
+            <table>
+                <tr>
+                    <th>機能</th>
+                    <th>テスト種類</th>
+                    <th>優先度</th>
+                    <th>テスト内容</th>
+                </tr>
+                <tr>
+                    <td><strong>脆弱性API</strong></td>
+                    <td>統合</td>
+                    <td>🔴 高</td>
+                    <td>CRUD、フィルター、ページネーション</td>
+                </tr>
+                <tr>
+                    <td><strong>マッチングエンジン</strong></td>
+                    <td>統合</td>
+                    <td>🔴 高</td>
+                    <td>CPEマッチング、優先度計算</td>
+                </tr>
+                <tr>
+                    <td><strong>優先度計算</strong></td>
+                    <td>単体</td>
+                    <td>🔴 高</td>
+                    <td>CVSS、KEV、環境の組み合わせ</td>
+                </tr>
+                <tr>
+                    <td><strong>JVN API連携</strong></td>
+                    <td>統合（モック）</td>
+                    <td>🟡 中</td>
+                    <td>データ取得、パース、保存</td>
+                </tr>
+                <tr>
+                    <td><strong>通知サービス</strong></td>
+                    <td>統合（モック）</td>
+                    <td>🟡 中</td>
+                    <td>Slack/Teams送信、条件フィルター</td>
+                </tr>
+                <tr>
+                    <td><strong>レポート生成</strong></td>
+                    <td>統合</td>
+                    <td>🟡 中</td>
+                    <td>HTML/CSV/PDF出力</td>
+                </tr>
+                <tr>
+                    <td><strong>ダッシュボード</strong></td>
+                    <td>E2E</td>
+                    <td>🟢 低</td>
+                    <td>主要シナリオのみ</td>
+                </tr>
+            </table>
+            
+            <h3>テスト数の目安</h3>
+            <table>
+                <tr>
+                    <th>テスト種類</th>
+                    <th>目標件数</th>
+                    <th>Sprint</th>
+                </tr>
+                <tr>
+                    <td>単体テスト</td>
+                    <td>100〜150件</td>
+                    <td>各機能実装と同時</td>
+                </tr>
+                <tr>
+                    <td>統合テスト</td>
+                    <td>30〜50件</td>
+                    <td>Sprint 3-4</td>
+                </tr>
+                <tr>
+                    <td>E2Eテスト</td>
+                    <td>5〜10件</td>
+                    <td>Sprint 5</td>
+                </tr>
+            </table>
+            
+            <h3>必要なパッケージ（requirements-test.txt）</h3>
+            <div class="code-block">
+<span class="comment"># requirements-test.txt</span>
+pytest==<span class="number">8.0.0</span>
+pytest-cov==<span class="number">4.1.0</span>
+pytest-xdist==<span class="number">3.5.0</span>
+pytest-asyncio==<span class="number">0.23.0</span>
+factory-boy==<span class="number">3.3.0</span>
+Faker==<span class="number">22.0.0</span>
+httpx==<span class="number">0.26.0</span>           <span class="comment"># FastAPI TestClient用</span>
+            </div>
+            
+            <h3>pytest設定（pyproject.toml）</h3>
+            <div class="code-block">
+<span class="comment"># pyproject.toml</span>
+[tool.pytest.ini_options]
+testpaths = [<span class="string">"tests"</span>]
+python_files = [<span class="string">"test_*.py"</span>]
+python_functions = [<span class="string">"test_*"</span>]
+addopts = <span class="string">"-v --tb=short"</span>
+markers = [
+    <span class="string">"unit: 単体テスト"</span>,
+    <span class="string">"integration: 統合テスト"</span>,
+    <span class="string">"slow: 時間のかかるテスト"</span>,
+]
+
+[tool.coverage.run]
+source = [<span class="string">"app"</span>]
+omit = [<span class="string">"*/tests/*"</span>, <span class="string">"*/__pycache__/*"</span>]
+
+[tool.coverage.report]
+exclude_lines = [
+    <span class="string">"pragma: no cover"</span>,
+    <span class="string">"if TYPE_CHECKING:"</span>,
+    <span class="string">"raise NotImplementedError"</span>,
+]
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 テスト担当タスク</h2>
+            
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>担当</th>
+                    <th>タスク</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 1</strong></td>
+                    <td>リード</td>
+                    <td>
+                        ・テスト環境セットアップ<br>
+                        ・conftest.py作成（共通Fixture）<br>
+                        ・factories.py作成（基本Factory）<br>
+                        ・CI設定（GitHub Actions）
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 2-4</strong></td>
+                    <td>各担当</td>
+                    <td>
+                        ・実装した機能のテストを同時に作成<br>
+                        ・Factory追加（必要に応じて）<br>
+                        ・カバレッジ80%以上を維持
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>全員</td>
+                    <td>
+                        ・統合テスト追加<br>
+                        ・E2Eテスト（主要シナリオ）<br>
+                        ・テスト見直し・リファクタリング
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ テストを効率的に進めるコツ</h4>
+                <ol style="margin-left: 20px;">
+                    <li><strong>実装と同時にテスト</strong>：後回しにしない</li>
+                    <li><strong>Factoryを活用</strong>：テストデータ作成を自動化</li>
+                    <li><strong>Fixtureで共通化</strong>：準備コードの重複を排除</li>
+                    <li><strong>CIで自動実行</strong>：手動テストをゼロに</li>
+                    <li><strong>並列実行</strong>：待ち時間を短縮</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>ポイント</th>
+                </tr>
+                <tr>
+                    <td><strong>テスト戦略</strong></td>
+                    <td>ピラミッド型（単体70%、統合20%、E2E10%）</td>
+                </tr>
+                <tr>
+                    <td><strong>ツール</strong></td>
+                    <td>pytest + Factory Boy + pytest-cov + pytest-xdist</td>
+                </tr>
+                <tr>
+                    <td><strong>効率化</strong></td>
+                    <td>Fixture（再利用）、Factory（自動生成）、並列実行</td>
+                </tr>
+                <tr>
+                    <td><strong>自動化</strong></td>
+                    <td>GitHub ActionsでPR時に自動テスト</td>
+                </tr>
+                <tr>
+                    <td><strong>汎用性</strong></td>
+                    <td>conftest.py、factories.pyは他プロジェクトでも再利用可能</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>🎯 今後のプロジェクトでも使える仕組み</h4>
+                <ul>
+                    <li><strong>conftest.py</strong>：DB接続、APIクライアントのFixture</li>
+                    <li><strong>factories.py</strong>：テストデータ生成のパターン</li>
+                    <li><strong>pytest設定</strong>：pyproject.tomlの設定</li>
+                    <li><strong>CI設定</strong>：GitHub Actionsのワークフロー</li>
+                </ul>
+                <p style="margin-top: 8px;">
+                    一度作れば、次のプロジェクトでは<strong>コピー&調整</strong>するだけ！
+                </p>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>pytest公式</strong></td>
+                    <td><a href="https://docs.pytest.org/" target="_blank">https://docs.pytest.org/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Factory Boy</strong></td>
+                    <td><a href="https://factoryboy.readthedocs.io/" target="_blank">https://factoryboy.readthedocs.io/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Faker</strong></td>
+                    <td><a href="https://faker.readthedocs.io/" target="_blank">https://faker.readthedocs.io/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>pytest-cov</strong></td>
+                    <td><a href="https://pytest-cov.readthedocs.io/" target="_blank">https://pytest-cov.readthedocs.io/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>FastAPI Testing</strong></td>
+                    <td><a href="https://fastapi.tiangolo.com/tutorial/testing/" target="_blank">https://fastapi.tiangolo.com/tutorial/testing/</a></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

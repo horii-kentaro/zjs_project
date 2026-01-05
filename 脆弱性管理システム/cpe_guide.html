@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPE（共通プラットフォーム一覧）ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* CPE構造図 */
+        .cpe-structure {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        .cpe-line {
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .cpe-part { color: #ff7b72; }
+        .cpe-vendor { color: #7ee787; }
+        .cpe-product { color: #79c0ff; }
+        .cpe-version { color: #ffa657; }
+        .cpe-other { color: #8b949e; }
+        
+        .cpe-labels {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 12px;
+        }
+        .cpe-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cpe-label-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .diagram-svg {
+            width: 100%;
+            min-width: 700px;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        
+        /* 問題→解決ボックス */
+        .problem-solution {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .problem-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .problem-box h4 {
+            color: #cf222e;
+            margin-bottom: 12px;
+        }
+        .solution-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .solution-box h4 {
+            color: #1a7f37;
+            margin-bottom: 12px;
+        }
+        
+        /* フロー */
+        .flow-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .flow-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .flow-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            color: white;
+        }
+        .flow-content {
+            flex: 1;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .flow-content h4 {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .flow-content p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 20px;
+            color: #8c959f;
+            margin: 8px 0;
+        }
+        
+        /* CPE例カード */
+        .cpe-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .cpe-example-card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cpe-example-header {
+            background: #f6f8fa;
+            padding: 10px 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .cpe-example-body {
+            padding: 12px;
+        }
+        .cpe-example-body code {
+            display: block;
+            font-size: 11px;
+            padding: 8px;
+            background: #24292f;
+            color: #7ee787;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        
+        /* マッチング図 */
+        .matching-diagram {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .problem-solution {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ CPE（共通プラットフォーム一覧）ガイド</h1>
+        <p class="subtitle">脆弱性マッチングの要となる製品識別の仕組み</p>
+
+        <!-- CPEとは -->
+        <div class="section">
+            <h2>❓ CPEとは</h2>
+            
+            <p style="font-size: 18px; margin-bottom: 20px;">
+                <strong>CPE = Common Platform Enumeration（共通プラットフォーム一覧）</strong>
+            </p>
+            
+            <p style="margin-bottom: 20px;">
+                ソフトウェアやハードウェアを<strong>世界共通のフォーマットで識別するための命名規則</strong>です。<br>
+                米国NISTが管理しており、NVDの脆弱性情報で使用されています。
+            </p>
+            
+            <div class="problem-solution">
+                <div class="problem-box">
+                    <h4>❌ 問題：製品名がバラバラ</h4>
+                    <p>同じソフトでも呼び方が異なる</p>
+                    <ul style="margin: 12px 0 0 20px; font-size: 14px;">
+                        <li>「Microsoft Office」</li>
+                        <li>「MS Office」</li>
+                        <li>「Office 365」</li>
+                        <li>「Microsoft 365」</li>
+                    </ul>
+                    <p style="margin-top: 12px; color: #cf222e;">
+                        → どれが同じ製品？<br>
+                        → 脆弱性と紐付けられない！
+                    </p>
+                </div>
+                <div class="solution-box">
+                    <h4>✅ 解決：CPEで統一的に表現</h4>
+                    <p>世界共通の識別子で表現</p>
+                    <div style="margin: 12px 0; padding: 10px; background: #24292f; border-radius: 4px;">
+                        <code style="background: transparent; color: #7ee787; font-size: 11px;">cpe:2.3:a:microsoft:365:*:*:*:*:*:*:*:*</code>
+                    </div>
+                    <p style="color: #1a7f37;">
+                        → 世界中で一意に識別可能<br>
+                        → 脆弱性情報と正確にマッチング！
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CPEの構造 -->
+        <div class="section">
+            <h2>🔍 CPEの構造</h2>
+            
+            <p style="margin-bottom: 16px;">CPEは決まったフォーマットで構成されています（CPE 2.3形式）。</p>
+            
+            <div class="cpe-structure">
+                <div class="cpe-line">
+                    cpe:2.3:<span class="cpe-part">a</span>:<span class="cpe-vendor">microsoft</span>:<span class="cpe-product">office</span>:<span class="cpe-version">2021</span>:<span class="cpe-other">*:*:*:*:*:*:*</span>
+                </div>
+                <div class="cpe-labels">
+                    <div class="cpe-label">
+                        <div class="cpe-label-color" style="background: #ff7b72;"></div>
+                        <span>種類（part）</span>
+                    </div>
+                    <div class="cpe-label">
+                        <div class="cpe-label-color" style="background: #7ee787;"></div>
+                        <span>ベンダー名</span>
+                    </div>
+                    <div class="cpe-label">
+                        <div class="cpe-label-color" style="background: #79c0ff;"></div>
+                        <span>製品名</span>
+                    </div>
+                    <div class="cpe-label">
+                        <div class="cpe-label-color" style="background: #ffa657;"></div>
+                        <span>バージョン</span>
+                    </div>
+                    <div class="cpe-label">
+                        <div class="cpe-label-color" style="background: #8b949e;"></div>
+                        <span>その他（通常 *）</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">各パートの説明</h4>
+            <table>
+                <tr>
+                    <th style="width: 15%;">位置</th>
+                    <th style="width: 20%;">名前</th>
+                    <th style="width: 25%;">値の例</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>cpe</td>
+                    <td><code>cpe</code></td>
+                    <td>固定プレフィックス</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>version</td>
+                    <td><code>2.3</code></td>
+                    <td>CPE仕様のバージョン（現在は2.3）</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><strong>part</strong></td>
+                    <td><code>a</code> / <code>o</code> / <code>h</code></td>
+                    <td>
+                        <strong>a</strong> = アプリケーション<br>
+                        <strong>o</strong> = オペレーティングシステム<br>
+                        <strong>h</strong> = ハードウェア
+                    </td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td><strong>vendor</strong></td>
+                    <td><code>microsoft</code></td>
+                    <td>ベンダー（製造元）名</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td><strong>product</strong></td>
+                    <td><code>office</code></td>
+                    <td>製品名</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td><strong>version</strong></td>
+                    <td><code>2021</code></td>
+                    <td>バージョン番号</td>
+                </tr>
+                <tr>
+                    <td>7-13</td>
+                    <td>その他</td>
+                    <td><code>*</code></td>
+                    <td>update, edition, language 等（通常は * で省略）</td>
+                </tr>
+            </table>
+            
+            <div class="callout">
+                <code>*</code> は「任意の値」を意味するワイルドカードです。バージョンが <code>*</code> の場合、全バージョンが対象になります。
+            </div>
+        </div>
+
+        <!-- 種類（part）の詳細 -->
+        <div class="section">
+            <h2>📦 種類（part）の詳細</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 15%;">値</th>
+                    <th style="width: 25%;">種類</th>
+                    <th>例</th>
+                </tr>
+                <tr>
+                    <td><code style="background: #ddf4ff; color: #0969da;">a</code></td>
+                    <td><strong>Application</strong><br>アプリケーション</td>
+                    <td>Chrome, Office, Apache, Python, Node.js など</td>
+                </tr>
+                <tr>
+                    <td><code style="background: #dafbe1; color: #1a7f37;">o</code></td>
+                    <td><strong>Operating System</strong><br>オペレーティングシステム</td>
+                    <td>Windows, Linux, macOS, iOS, Android など</td>
+                </tr>
+                <tr>
+                    <td><code style="background: #fff8c5; color: #9a6700;">h</code></td>
+                    <td><strong>Hardware</strong><br>ハードウェア</td>
+                    <td>ルーター、ファイアウォール、IoTデバイス など</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>本プロジェクトでの主な対象</h4>
+                <ul>
+                    <li><strong>a（アプリケーション）</strong>：インストールされたソフトウェア、Pythonライブラリ等</li>
+                    <li><strong>o（OS）</strong>：Windows 11、Ubuntu、Amazon Linux 等</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 具体例 -->
+        <div class="section">
+            <h2>📋 CPEの具体例</h2>
+            
+            <h4 style="margin-bottom: 16px;">よく使うソフトウェアのCPE</h4>
+            
+            <div class="cpe-examples">
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🪟 Windows 11</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:o:microsoft:windows_11:*:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🐧 Ubuntu 22.04</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:o:canonical:ubuntu_linux:22.04:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🌐 Google Chrome 120</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:google:chrome:120:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🦊 Firefox 121</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:mozilla:firefox:121:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🌐 Apache HTTP Server 2.4.52</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:apache:http_server:2.4.52:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🐘 PostgreSQL 15</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:postgresql:postgresql:15:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🐍 Python 3.11</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:python:python:3.11:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">📦 Node.js 20</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:nodejs:node.js:20:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">🗄️ MySQL 8.0</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:mysql:mysql:8.0:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">📊 Microsoft Office 2021</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:microsoft:office:2021:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">💬 Zoom</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:zoom:zoom:*:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+                
+                <div class="cpe-example-card">
+                    <div class="cpe-example-header">☕ Log4j 2.17.0</div>
+                    <div class="cpe-example-body">
+                        <code>cpe:2.3:a:apache:log4j:2.17.0:*:*:*:*:*:*:*</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 脆弱性マッチングでの使い方 -->
+        <div class="section">
+            <h2>🔗 脆弱性マッチングでの使い方</h2>
+            
+            <p style="margin-bottom: 20px;">
+                CPEは、<strong>脆弱性情報と資産情報を紐付けるキー</strong>として機能します。
+            </p>
+            
+            <div class="diagram">
+                <svg class="diagram-svg" viewBox="0 0 750 380" style="height: 380px;">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="740" height="370" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="375" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">CPEによる脆弱性マッチング</text>
+                    
+                    <!-- 脆弱性情報 -->
+                    <rect x="30" y="55" width="300" height="140" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="2"/>
+                    <text x="180" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#cf222e">脆弱性情報（NVD/JVN）</text>
+                    
+                    <rect x="45" y="95" width="270" height="85" rx="4" fill="white"/>
+                    <text x="60" y="115" font-size="11" font-weight="bold" fill="#24292f">CVE-2024-1234</text>
+                    <text x="60" y="135" font-size="10" fill="#57606a">Apache HTTP Serverの脆弱性</text>
+                    <text x="60" y="155" font-size="10" fill="#57606a">影響を受けるCPE:</text>
+                    <text x="70" y="172" font-size="9" fill="#cf222e" font-family="monospace">cpe:2.3:a:apache:http_server:2.4.52:*...</text>
+                    
+                    <!-- 資産情報 -->
+                    <rect x="30" y="215" width="300" height="140" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="180" y="240" text-anchor="middle" font-size="13" font-weight="bold" fill="#0969da">資産情報（収集データ）</text>
+                    
+                    <rect x="45" y="255" width="270" height="85" rx="4" fill="white"/>
+                    <text x="60" y="275" font-size="11" font-weight="bold" fill="#24292f">サーバーA（EC2）</text>
+                    <text x="60" y="295" font-size="10" fill="#57606a">Apache HTTP Server 2.4.52</text>
+                    <text x="60" y="315" font-size="10" fill="#57606a">CPE:</text>
+                    <text x="70" y="332" font-size="9" fill="#0969da" font-family="monospace">cpe:2.3:a:apache:http_server:2.4.52:*...</text>
+                    
+                    <!-- マッチング -->
+                    <rect x="400" y="130" width="180" height="120" rx="6" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+                    <text x="490" y="160" text-anchor="middle" font-size="13" font-weight="bold" fill="#9a6700">CPE照合</text>
+                    <text x="490" y="185" text-anchor="middle" font-size="11" fill="#24292f">脆弱性のCPE</text>
+                    <text x="490" y="200" text-anchor="middle" font-size="11" fill="#24292f">＝</text>
+                    <text x="490" y="215" text-anchor="middle" font-size="11" fill="#24292f">資産のCPE</text>
+                    <text x="490" y="240" text-anchor="middle" font-size="12" fill="#9a6700">一致 → 該当！</text>
+                    
+                    <!-- 結果 -->
+                    <rect x="620" y="130" width="110" height="120" rx="6" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="675" y="160" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a7f37">検出結果</text>
+                    <text x="675" y="190" text-anchor="middle" font-size="24">⚠️</text>
+                    <text x="675" y="215" text-anchor="middle" font-size="10" fill="#24292f">サーバーAは</text>
+                    <text x="675" y="230" text-anchor="middle" font-size="10" fill="#24292f">CVE-2024-1234</text>
+                    <text x="675" y="245" text-anchor="middle" font-size="10" fill="#24292f">に該当</text>
+                    
+                    <!-- 矢印 -->
+                    <path d="M 330 125 L 400 170" fill="none" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <path d="M 330 285 L 400 210" fill="none" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <line x1="580" y1="190" x2="620" y2="190" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <div class="point-box">
+                <h4>マッチングの流れ</h4>
+                <ol style="margin-left: 20px;">
+                    <li>NVD/JVNから脆弱性情報を取得（影響を受けるCPEのリスト付き）</li>
+                    <li>資産から収集したソフトウェア情報をCPE形式に変換</li>
+                    <li>脆弱性のCPEと資産のCPEを照合</li>
+                    <li>一致した場合 → その資産は脆弱性に該当</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- CPE生成の課題 -->
+        <div class="section">
+            <h2>⚠️ CPE生成の課題</h2>
+            
+            <p style="margin-bottom: 20px;">
+                収集した資産情報をCPE形式に変換する際、<strong>表記ゆれ</strong>の問題があります。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">表記ゆれの例</h4>
+            <table>
+                <tr>
+                    <th style="width: 40%;">収集されるソフトウェア名</th>
+                    <th>正しいCPEベンダー/製品名</th>
+                </tr>
+                <tr>
+                    <td>「Google Chrome」「Chrome」「GoogleChrome」</td>
+                    <td><code>google:chrome</code></td>
+                </tr>
+                <tr>
+                    <td>「Microsoft Edge」「Edge」「MS Edge」</td>
+                    <td><code>microsoft:edge</code></td>
+                </tr>
+                <tr>
+                    <td>「Apache HTTP Server」「Apache」「httpd」</td>
+                    <td><code>apache:http_server</code></td>
+                </tr>
+                <tr>
+                    <td>「PostgreSQL」「postgres」「Postgres」</td>
+                    <td><code>postgresql:postgresql</code></td>
+                </tr>
+                <tr>
+                    <td>「Python 3.11.0」「Python3」「python」</td>
+                    <td><code>python:python</code></td>
+                </tr>
+            </table>
+            
+            <div class="warning-box">
+                <h4>なぜ難しいか</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Windowsのレジストリに登録される名前とCPEの名前が異なる</li>
+                    <li>同じソフトでもインストーラーによって名前が違う</li>
+                    <li>バージョン番号の形式も様々（1.0、1.0.0、v1.0 など）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CPE生成の方法 -->
+        <div class="section">
+            <h2>🔧 CPE生成の方法</h2>
+            
+            <h4 style="margin-bottom: 12px;">方法1：マッピングテーブル方式</h4>
+            <p style="margin-bottom: 12px;">よく使うソフトウェアの変換ルールを事前に定義しておく</p>
+            
+            <div class="code-block">
+<span class="comment"># cpe_mapping.py - ソフトウェア名 → CPE の変換マップ</span>
+
+CPE_MAPPING = {
+    <span class="comment"># 収集される名前: (vendor, product)</span>
+    <span class="string">"Google Chrome"</span>: (<span class="string">"google"</span>, <span class="string">"chrome"</span>),
+    <span class="string">"Chrome"</span>: (<span class="string">"google"</span>, <span class="string">"chrome"</span>),
+    <span class="string">"Microsoft Edge"</span>: (<span class="string">"microsoft"</span>, <span class="string">"edge"</span>),
+    <span class="string">"Mozilla Firefox"</span>: (<span class="string">"mozilla"</span>, <span class="string">"firefox"</span>),
+    <span class="string">"Apache HTTP Server"</span>: (<span class="string">"apache"</span>, <span class="string">"http_server"</span>),
+    <span class="string">"PostgreSQL"</span>: (<span class="string">"postgresql"</span>, <span class="string">"postgresql"</span>),
+    <span class="string">"Python"</span>: (<span class="string">"python"</span>, <span class="string">"python"</span>),
+    <span class="comment"># ... 他のソフトウェア</span>
+}
+
+<span class="keyword">def</span> <span class="function">generate_cpe</span>(software_name: str, version: str) -> str:
+    <span class="string">"""ソフトウェア名とバージョンからCPEを生成"""</span>
+    
+    <span class="comment"># マッピングテーブルから検索</span>
+    <span class="keyword">for</span> name, (vendor, product) <span class="keyword">in</span> CPE_MAPPING.items():
+        <span class="keyword">if</span> name.lower() <span class="keyword">in</span> software_name.lower():
+            <span class="keyword">return</span> f<span class="string">"cpe:2.3:a:{vendor}:{product}:{version}:*:*:*:*:*:*:*"</span>
+    
+    <span class="comment"># 見つからない場合はNone</span>
+    <span class="keyword">return</span> <span class="keyword">None</span>
+            </div>
+            
+            <h4 style="margin: 24px 0 12px;">方法2：NVD CPE Dictionary の活用</h4>
+            <p style="margin-bottom: 12px;">NISTが公開しているCPE辞書（約100万件）を使って検索</p>
+            
+            <div class="code-block">
+<span class="comment"># NVD CPE Dictionary API を使用</span>
+<span class="comment"># https://nvd.nist.gov/products/cpe</span>
+
+<span class="keyword">import</span> requests
+
+<span class="keyword">def</span> <span class="function">search_cpe</span>(keyword: str) -> list:
+    <span class="string">"""NVD CPE Dictionaryでキーワード検索"""</span>
+    
+    url = <span class="string">"https://services.nvd.nist.gov/rest/json/cpes/2.0"</span>
+    params = {
+        <span class="string">"keywordSearch"</span>: keyword,
+        <span class="string">"resultsPerPage"</span>: 10
+    }
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    cpes = []
+    <span class="keyword">for</span> product <span class="keyword">in</span> data.get(<span class="string">"products"</span>, []):
+        cpe_name = product[<span class="string">"cpe"</span>][<span class="string">"cpeName"</span>]
+        cpes.append(cpe_name)
+    
+    <span class="keyword">return</span> cpes
+
+<span class="comment"># 使用例</span>
+results = search_cpe(<span class="string">"apache http server"</span>)
+<span class="comment"># → ['cpe:2.3:a:apache:http_server:2.4.52:*:*:*:*:*:*:*', ...]</span>
+            </div>
+            
+            <h4 style="margin: 24px 0 12px;">方法3：あいまい検索（Fuzzy Matching）</h4>
+            <p style="margin-bottom: 12px;">文字列の類似度を計算して最も近いCPEを選択</p>
+            
+            <div class="code-block">
+<span class="comment"># fuzzywuzzy ライブラリを使用</span>
+<span class="keyword">from</span> fuzzywuzzy <span class="keyword">import</span> fuzz, process
+
+<span class="comment"># 既知のCPE製品名リスト</span>
+KNOWN_PRODUCTS = [
+    <span class="string">"google:chrome"</span>,
+    <span class="string">"mozilla:firefox"</span>,
+    <span class="string">"microsoft:edge"</span>,
+    <span class="string">"apache:http_server"</span>,
+    <span class="comment"># ...</span>
+]
+
+<span class="keyword">def</span> <span class="function">find_best_match</span>(software_name: str) -> str:
+    <span class="string">"""最も類似度が高いCPE製品名を返す"""</span>
+    
+    best_match, score = process.extractOne(
+        software_name.lower(),
+        KNOWN_PRODUCTS
+    )
+    
+    <span class="keyword">if</span> score >= 80:  <span class="comment"># 80%以上の類似度</span>
+        <span class="keyword">return</span> best_match
+    <span class="keyword">return</span> <span class="keyword">None</span>
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨：複合アプローチ</h4>
+                <ol style="margin-left: 20px;">
+                    <li>まずマッピングテーブルで検索（高速・確実）</li>
+                    <li>見つからなければNVD CPE Dictionaryで検索</li>
+                    <li>それでも見つからなければ「未マッチ」としてログに記録</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- CPE照合のロジック -->
+        <div class="section">
+            <h2>🔍 CPE照合のロジック</h2>
+            
+            <p style="margin-bottom: 16px;">
+                脆弱性情報のCPEと資産のCPEを照合する際、<strong>バージョン範囲</strong>を考慮する必要があります。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">NVDの脆弱性情報の例</h4>
+            <div class="code-block">
+{
+  <span class="string">"cve"</span>: {
+    <span class="string">"id"</span>: <span class="string">"CVE-2024-1234"</span>
+  },
+  <span class="string">"configurations"</span>: [
+    {
+      <span class="string">"nodes"</span>: [
+        {
+          <span class="string">"cpeMatch"</span>: [
+            {
+              <span class="string">"vulnerable"</span>: true,
+              <span class="string">"criteria"</span>: <span class="string">"cpe:2.3:a:apache:http_server:*:*:*:*:*:*:*:*"</span>,
+              <span class="string">"versionStartIncluding"</span>: <span class="string">"2.4.0"</span>,
+              <span class="string">"versionEndExcluding"</span>: <span class="string">"2.4.58"</span>
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+            </div>
+            
+            <p style="margin: 16px 0;">この例では、Apache HTTP Server の <strong>2.4.0 以上 〜 2.4.58 未満</strong> が脆弱性の対象です。</p>
+            
+            <h4 style="margin: 20px 0 12px;">照合ロジックの例</h4>
+            <div class="code-block">
+<span class="keyword">from</span> packaging <span class="keyword">import</span> version
+
+<span class="keyword">def</span> <span class="function">is_vulnerable</span>(
+    asset_cpe: str,
+    asset_version: str,
+    vuln_cpe: str,
+    version_start: str = <span class="keyword">None</span>,
+    version_end: str = <span class="keyword">None</span>,
+    version_end_excluding: bool = True
+) -> bool:
+    <span class="string">"""資産が脆弱性に該当するか判定"""</span>
+    
+    <span class="comment"># CPEのベンダー・製品部分を比較</span>
+    <span class="keyword">if</span> <span class="keyword">not</span> cpe_matches(asset_cpe, vuln_cpe):
+        <span class="keyword">return</span> False
+    
+    <span class="comment"># バージョン範囲をチェック</span>
+    v = version.parse(asset_version)
+    
+    <span class="keyword">if</span> version_start <span class="keyword">and</span> v < version.parse(version_start):
+        <span class="keyword">return</span> False
+    
+    <span class="keyword">if</span> version_end:
+        end_v = version.parse(version_end)
+        <span class="keyword">if</span> version_end_excluding:
+            <span class="keyword">if</span> v >= end_v:
+                <span class="keyword">return</span> False
+        <span class="keyword">else</span>:
+            <span class="keyword">if</span> v > end_v:
+                <span class="keyword">return</span> False
+    
+    <span class="keyword">return</span> True  <span class="comment"># 該当する</span>
+            </div>
+            
+            <div class="callout">
+                バージョン比較には <code>packaging</code> ライブラリが便利です。「2.4.10」と「2.4.9」の大小比較を正しく行えます。
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当タスク</h2>
+            
+            <table>
+                <tr>
+                    <th>担当</th>
+                    <th>CPE関連タスク</th>
+                    <th>Sprint</th>
+                </tr>
+                <tr>
+                    <td><strong>担当A</strong></td>
+                    <td>NVD/JVNから脆弱性情報（CPE含む）を取得してDBに保存</td>
+                    <td>Sprint 2</td>
+                </tr>
+                <tr>
+                    <td><strong>担当B</strong></td>
+                    <td>
+                        ・収集した資産情報をCPE形式に変換するモジュール作成<br>
+                        ・CPEマッピングテーブルの整備
+                    </td>
+                    <td>Sprint 2</td>
+                </tr>
+                <tr>
+                    <td><strong>担当C</strong></td>
+                    <td>
+                        ・脆弱性CPEと資産CPEの照合ロジック実装<br>
+                        ・バージョン範囲を考慮したマッチング
+                    </td>
+                    <td>Sprint 3</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>担当間の連携</h4>
+                <ul>
+                    <li><strong>担当A → 担当C</strong>：脆弱性のCPE情報をDB経由で提供</li>
+                    <li><strong>担当B → 担当C</strong>：資産のCPE情報をDB経由で提供</li>
+                    <li><strong>担当C</strong>：両方を照合してマッチング結果を生成</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考情報 -->
+        <div class="section">
+            <h2>📚 参考情報</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL / 説明</th>
+                </tr>
+                <tr>
+                    <td><strong>NVD CPE Dictionary</strong></td>
+                    <td>
+                        <a href="https://nvd.nist.gov/products/cpe" target="_blank">https://nvd.nist.gov/products/cpe</a><br>
+                        公式のCPE辞書（検索可能）
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>CPE仕様書</strong></td>
+                    <td>
+                        <a href="https://cpe.mitre.org/specification/" target="_blank">https://cpe.mitre.org/specification/</a><br>
+                        CPE 2.3 の正式仕様
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>NVD API</strong></td>
+                    <td>
+                        <a href="https://nvd.nist.gov/developers/products" target="_blank">https://nvd.nist.gov/developers/products</a><br>
+                        CPE検索API
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>CPEとは</strong></td>
+                    <td>ソフトウェア/ハードウェアを世界共通フォーマットで識別する命名規則</td>
+                </tr>
+                <tr>
+                    <td><strong>構造</strong></td>
+                    <td><code>cpe:2.3:種類:ベンダー:製品:バージョン:...</code></td>
+                </tr>
+                <tr>
+                    <td><strong>用途</strong></td>
+                    <td>脆弱性情報（NVD/JVN）と資産情報をマッチングするためのキー</td>
+                </tr>
+                <tr>
+                    <td><strong>CPE生成</strong></td>
+                    <td>収集したソフトウェア名をCPE形式に変換（マッピングテーブル等を使用）</td>
+                </tr>
+                <tr>
+                    <td><strong>CPE照合</strong></td>
+                    <td>脆弱性のCPEと資産のCPEを比較し、バージョン範囲も考慮して判定</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ ポイント</h4>
+                <ul>
+                    <li>CPEは脆弱性マッチングの<strong>要</strong>となる仕組み</li>
+                    <li>表記ゆれの対応が課題 → マッピングテーブルで解決</li>
+                    <li>担当B（CPE生成）と担当C（CPE照合）の連携が重要</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

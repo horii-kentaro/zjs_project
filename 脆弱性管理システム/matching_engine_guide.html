@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マッチングエンジン ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cf222e;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .diagram-svg {
+            width: 100%;
+            min-width: 700px;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* フロー */
+        .flow-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .flow-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 650px;
+        }
+        .flow-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            color: white;
+        }
+        .flow-content {
+            flex: 1;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .flow-content h4 {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .flow-content p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 20px;
+            color: #8c959f;
+            margin: 8px 0;
+        }
+        
+        /* 処理カード */
+        .process-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .process-card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .process-card-header {
+            padding: 12px 16px;
+            color: white;
+            font-weight: bold;
+        }
+        .process-card-header.step1 { background: #0969da; }
+        .process-card-header.step2 { background: #8250df; }
+        .process-card-header.step3 { background: #bf8700; }
+        .process-card-header.step4 { background: #cf222e; }
+        .process-card-header.step5 { background: #2da44e; }
+        .process-card-body {
+            padding: 16px;
+        }
+        .process-card-body p {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .process-card-body ul {
+            margin-left: 20px;
+            font-size: 13px;
+        }
+        .process-card-body li {
+            margin: 4px 0;
+        }
+        
+        /* スコア表示 */
+        .score-example {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .score-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .score-box.critical { background: #cf222e; }
+        .score-box.high { background: #bf8700; }
+        .score-box.medium { background: #0969da; }
+        .score-box.low { background: #2da44e; }
+        .score-box .score-value {
+            font-size: 24px;
+        }
+        .score-box .score-label {
+            font-size: 10px;
+        }
+        .score-detail {
+            flex: 1;
+        }
+        .score-detail h4 {
+            margin-bottom: 4px;
+        }
+        .score-detail p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        
+        /* 比較表 */
+        .compare-row {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .compare-col {
+            flex: 1;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-header {
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .compare-header.before { background: #ffebe9; color: #cf222e; }
+        .compare-header.after { background: #dafbe1; color: #1a7f37; }
+        .compare-body {
+            padding: 16px;
+            font-size: 14px;
+        }
+
+        /* タイムライン */
+        .timeline {
+            margin: 20px 0;
+        }
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #cf222e;
+        }
+        .timeline-number {
+            width: 40px;
+            height: 40px;
+            background: #cf222e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .timeline-content h4 {
+            margin-bottom: 4px;
+        }
+        .timeline-content p {
+            font-size: 14px;
+            color: #57606a;
+        }
+
+        @media (max-width: 768px) {
+            .compare-row {
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ マッチングエンジン ガイド</h1>
+        <p class="subtitle">脆弱性管理システムの中核となる自動判定処理</p>
+
+        <!-- マッチングエンジンとは -->
+        <div class="section">
+            <h2>❓ マッチングエンジンとは</h2>
+            
+            <p style="font-size: 18px; margin-bottom: 20px;">
+                <strong>「どの資産が、どの脆弱性に該当するか」を自動判定する処理</strong>
+            </p>
+            
+            <p style="margin-bottom: 20px;">
+                このシステムの<strong>中核（心臓部）</strong>となる機能です。<br>
+                脆弱性情報と資産情報を照合し、対応が必要な脆弱性を検出します。
+            </p>
+            
+            <div class="diagram">
+                <svg class="diagram-svg" viewBox="0 0 750 400" style="height: 400px;">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="740" height="390" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="375" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">マッチングエンジンの全体像</text>
+                    
+                    <!-- 脆弱性情報 -->
+                    <rect x="30" y="55" width="200" height="150" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="2"/>
+                    <text x="130" y="80" text-anchor="middle" font-size="12" font-weight="bold" fill="#cf222e">脆弱性情報</text>
+                    <text x="130" y="100" text-anchor="middle" font-size="10" fill="#57606a">NVD / JVN / Inspector</text>
+                    
+                    <rect x="45" y="115" width="170" height="75" rx="4" fill="white"/>
+                    <text x="55" y="135" font-size="10" fill="#24292f">CVE-2024-1234</text>
+                    <text x="65" y="150" font-size="9" fill="#57606a">→ Apache 2.4.x</text>
+                    <text x="55" y="170" font-size="10" fill="#24292f">CVE-2024-5678</text>
+                    <text x="65" y="185" font-size="9" fill="#57606a">→ Chrome &lt; 120</text>
+                    
+                    <!-- 資産情報 -->
+                    <rect x="30" y="225" width="200" height="150" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="130" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">資産情報</text>
+                    <text x="130" y="270" text-anchor="middle" font-size="10" fill="#57606a">AWS / テレワークPC</text>
+                    
+                    <rect x="45" y="285" width="170" height="75" rx="4" fill="white"/>
+                    <text x="55" y="305" font-size="10" fill="#24292f">サーバーA（EC2）</text>
+                    <text x="65" y="320" font-size="9" fill="#57606a">→ Apache 2.4.52</text>
+                    <text x="55" y="340" font-size="10" fill="#24292f">PC-001</text>
+                    <text x="65" y="355" font-size="9" fill="#57606a">→ Chrome 119</text>
+                    
+                    <!-- マッチングエンジン -->
+                    <rect x="280" y="120" width="190" height="180" rx="8" fill="#fff8c5" stroke="#d4a72c" stroke-width="3"/>
+                    <text x="375" y="150" text-anchor="middle" font-size="14" font-weight="bold" fill="#9a6700">マッチングエンジン</text>
+                    <text x="375" y="170" text-anchor="middle" font-size="10" fill="#57606a">（担当Cが実装）</text>
+                    
+                    <rect x="295" y="185" width="160" height="100" rx="4" fill="white"/>
+                    <text x="305" y="205" font-size="10" fill="#24292f">🔍 CPE照合</text>
+                    <text x="305" y="225" font-size="10" fill="#24292f">📊 バージョン比較</text>
+                    <text x="305" y="245" font-size="10" fill="#24292f">⚖️ 優先度計算</text>
+                    <text x="305" y="265" font-size="10" fill="#24292f">🔄 差分検出</text>
+                    
+                    <!-- 結果 -->
+                    <rect x="520" y="120" width="200" height="180" rx="6" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="620" y="150" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a7f37">マッチング結果</text>
+                    
+                    <rect x="535" y="165" width="170" height="120" rx="4" fill="white"/>
+                    <text x="545" y="190" font-size="11" fill="#cf222e">⚠️ サーバーA</text>
+                    <text x="555" y="208" font-size="10" fill="#57606a">→ CVE-2024-1234</text>
+                    <text x="555" y="223" font-size="9" fill="#cf222e">優先度: 高（本番環境）</text>
+                    
+                    <text x="545" y="248" font-size="11" fill="#bf8700">⚠️ PC-001</text>
+                    <text x="555" y="266" font-size="10" fill="#57606a">→ CVE-2024-5678</text>
+                    <text x="555" y="281" font-size="9" fill="#bf8700">優先度: 中</text>
+                    
+                    <!-- 矢印 -->
+                    <path d="M 230 130 L 280 170" fill="none" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <path d="M 230 300 L 280 250" fill="none" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <line x1="470" y1="210" x2="520" y2="210" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- 出力先 -->
+                    <rect x="520" y="320" width="200" height="60" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="620" y="345" text-anchor="middle" font-size="11" font-weight="bold" fill="#8250df">出力</text>
+                    <text x="620" y="365" text-anchor="middle" font-size="10" fill="#24292f">📧 通知 → 📊 ダッシュボード → 📄 レポート</text>
+                    
+                    <line x1="620" y1="300" x2="620" y2="320" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- なぜエンジンと呼ぶか -->
+        <div class="section">
+            <h2>🔧 なぜ「エンジン」と呼ぶか</h2>
+            
+            <p style="margin-bottom: 20px;">
+                単純な比較ではなく、<strong>複雑なロジック</strong>が必要だからです。
+            </p>
+            
+            <div class="compare-row">
+                <div class="compare-col">
+                    <div class="compare-header before">❌ 単純な比較では不十分</div>
+                    <div class="compare-body">
+                        <p><strong>脆弱性情報：</strong></p>
+                        <p style="margin-left: 12px;">Apache 2.4.0 〜 2.4.57 が対象</p>
+                        <p style="margin-top: 12px;"><strong>資産情報：</strong></p>
+                        <p style="margin-left: 12px;">Apache 2.4.52</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p style="color: #cf222e;">
+                            単純な文字列比較では<br>
+                            「2.4.52 は 2.4.0〜2.4.57 の範囲内？」<br>
+                            を判定できない
+                        </p>
+                    </div>
+                </div>
+                <div class="compare-col">
+                    <div class="compare-header after">✅ エンジンが必要な理由</div>
+                    <div class="compare-body">
+                        <ul>
+                            <li>バージョン範囲の解析が必要</li>
+                            <li>CPE形式の解析・照合が必要</li>
+                            <li>数千の脆弱性 × 数百の資産を処理</li>
+                            <li>優先度の計算ロジックが必要</li>
+                            <li>差分検出（新規/解消）が必要</li>
+                        </ul>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p style="color: #1a7f37;">
+                            これらを高速かつ正確に処理する<br>
+                            →「エンジン」と呼ぶにふさわしい
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5つの主要機能 -->
+        <div class="section">
+            <h2>⚙️ マッチングエンジンの5つの機能</h2>
+            
+            <div class="process-cards">
+                <div class="process-card">
+                    <div class="process-card-header step1">1. CPE照合</div>
+                    <div class="process-card-body">
+                        <p>脆弱性のCPEと資産のCPEを比較</p>
+                        <ul>
+                            <li>ベンダー名の一致確認</li>
+                            <li>製品名の一致確認</li>
+                            <li>ワイルドカード（*）の処理</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-card">
+                    <div class="process-card-header step2">2. バージョン判定</div>
+                    <div class="process-card-body">
+                        <p>該当バージョン範囲内かチェック</p>
+                        <ul>
+                            <li>versionStartIncluding</li>
+                            <li>versionEndExcluding</li>
+                            <li>セマンティックバージョン比較</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-card">
+                    <div class="process-card-header step3">3. 重複排除</div>
+                    <div class="process-card-body">
+                        <p>同じ脆弱性を二重に検出しない</p>
+                        <ul>
+                            <li>NVDとJVNの両方に同じCVE</li>
+                            <li>Inspectorでも検出済み</li>
+                            <li>→ 1件にまとめる</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-card">
+                    <div class="process-card-header step4">4. 優先度計算</div>
+                    <div class="process-card-body">
+                        <p>対応の優先順位を決定</p>
+                        <ul>
+                            <li>CVSSスコア</li>
+                            <li>環境（本番/ステージング/開発）</li>
+                            <li>資産の重要度</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-card">
+                    <div class="process-card-header step5">5. 差分検出</div>
+                    <div class="process-card-body">
+                        <p>前回からの変化を判定</p>
+                        <ul>
+                            <li>新規検出された脆弱性</li>
+                            <li>解消された脆弱性</li>
+                            <li>ステータス変更の追跡</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 処理の流れ -->
+        <div class="section">
+            <h2>🔄 マッチング処理の流れ</h2>
+            
+            <div class="flow-vertical" style="background: white; border: 1px solid #d0d7de;">
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #0969da;">1</div>
+                    <div class="flow-content" style="border-color: #0969da;">
+                        <h4>データ取得</h4>
+                        <p>DBから脆弱性情報と資産情報を取得。<br>
+                        脆弱性: 影響を受けるCPE・バージョン範囲<br>
+                        資産: ソフトウェア一覧・CPE</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #8250df;">2</div>
+                    <div class="flow-content" style="border-color: #8250df;">
+                        <h4>CPE照合</h4>
+                        <p>各資産のソフトウェアについて、該当する脆弱性があるかCPEで照合。<br>
+                        ベンダー・製品名が一致するものを抽出。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #bf8700;">3</div>
+                    <div class="flow-content" style="border-color: #bf8700;">
+                        <h4>バージョン判定</h4>
+                        <p>CPEが一致したものについて、バージョン範囲をチェック。<br>
+                        「2.4.0以上 2.4.58未満」のような条件を評価。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #cf222e;">4</div>
+                    <div class="flow-content" style="border-color: #cf222e;">
+                        <h4>優先度計算</h4>
+                        <p>該当した脆弱性について、対応優先度を計算。<br>
+                        CVSS × 環境重要度 × 資産重要度 でスコアリング。</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item">
+                    <div class="flow-icon" style="background: #2da44e;">5</div>
+                    <div class="flow-content" style="border-color: #2da44e;">
+                        <h4>結果保存・通知</h4>
+                        <p>マッチング結果をDBに保存。<br>
+                        新規検出があれば通知をトリガー。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CPE照合の詳細 -->
+        <div class="section">
+            <h2>🔍 機能1：CPE照合の詳細</h2>
+            
+            <p style="margin-bottom: 16px;">
+                脆弱性情報に含まれるCPEと、資産から生成したCPEを比較します。
+            </p>
+            
+            <div class="code-block">
+<span class="comment"># CPE照合のロジック</span>
+
+<span class="keyword">def</span> <span class="function">cpe_matches</span>(vuln_cpe: str, asset_cpe: str) -> bool:
+    <span class="string">"""脆弱性のCPEと資産のCPEが一致するか判定"""</span>
+    
+    <span class="comment"># CPEをパーツに分解</span>
+    <span class="comment"># cpe:2.3:a:vendor:product:version:...</span>
+    vuln_parts = vuln_cpe.split(<span class="string">":"</span>)
+    asset_parts = asset_cpe.split(<span class="string">":"</span>)
+    
+    <span class="comment"># part（種類）の比較: a, o, h</span>
+    <span class="keyword">if</span> vuln_parts[<span class="number">2</span>] != <span class="string">"*"</span> <span class="keyword">and</span> vuln_parts[<span class="number">2</span>] != asset_parts[<span class="number">2</span>]:
+        <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="comment"># vendor（ベンダー）の比較</span>
+    <span class="keyword">if</span> vuln_parts[<span class="number">3</span>] != <span class="string">"*"</span> <span class="keyword">and</span> vuln_parts[<span class="number">3</span>] != asset_parts[<span class="number">3</span>]:
+        <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="comment"># product（製品）の比較</span>
+    <span class="keyword">if</span> vuln_parts[<span class="number">4</span>] != <span class="string">"*"</span> <span class="keyword">and</span> vuln_parts[<span class="number">4</span>] != asset_parts[<span class="number">4</span>]:
+        <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="comment"># ベンダーと製品が一致 → CPEマッチ</span>
+    <span class="keyword">return</span> <span class="keyword">True</span>
+
+
+<span class="comment"># 使用例</span>
+vuln = <span class="string">"cpe:2.3:a:apache:http_server:*:*:*:*:*:*:*:*"</span>
+asset = <span class="string">"cpe:2.3:a:apache:http_server:2.4.52:*:*:*:*:*:*:*"</span>
+
+cpe_matches(vuln, asset)  <span class="comment"># → True</span>
+            </div>
+            
+            <div class="callout">
+                CPE照合は「ベンダー」と「製品」の一致を確認するだけ。バージョンの判定は次のステップで行います。
+            </div>
+        </div>
+
+        <!-- バージョン判定の詳細 -->
+        <div class="section">
+            <h2>📊 機能2：バージョン判定の詳細</h2>
+            
+            <p style="margin-bottom: 16px;">
+                NVDの脆弱性情報には、影響を受けるバージョン範囲が含まれています。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">NVDのバージョン範囲指定</h4>
+            <table>
+                <tr>
+                    <th style="width: 35%;">フィールド</th>
+                    <th>意味</th>
+                    <th style="width: 25%;">例</th>
+                </tr>
+                <tr>
+                    <td><code>versionStartIncluding</code></td>
+                    <td>このバージョン<strong>以上</strong></td>
+                    <td>2.4.0</td>
+                </tr>
+                <tr>
+                    <td><code>versionStartExcluding</code></td>
+                    <td>このバージョン<strong>より大きい</strong></td>
+                    <td>2.4.0</td>
+                </tr>
+                <tr>
+                    <td><code>versionEndIncluding</code></td>
+                    <td>このバージョン<strong>以下</strong></td>
+                    <td>2.4.57</td>
+                </tr>
+                <tr>
+                    <td><code>versionEndExcluding</code></td>
+                    <td>このバージョン<strong>未満</strong></td>
+                    <td>2.4.58</td>
+                </tr>
+            </table>
+            
+            <h4 style="margin: 20px 0 12px;">バージョン判定のコード</h4>
+            <div class="code-block">
+<span class="keyword">from</span> packaging <span class="keyword">import</span> version
+
+<span class="keyword">def</span> <span class="function">is_version_affected</span>(
+    asset_version: str,
+    version_start_incl: str = <span class="keyword">None</span>,
+    version_start_excl: str = <span class="keyword">None</span>,
+    version_end_incl: str = <span class="keyword">None</span>,
+    version_end_excl: str = <span class="keyword">None</span>
+) -> bool:
+    <span class="string">"""資産のバージョンが脆弱性の影響範囲内か判定"""</span>
+    
+    <span class="keyword">try</span>:
+        v = version.parse(asset_version)
+    <span class="keyword">except</span>:
+        <span class="keyword">return</span> <span class="keyword">False</span>  <span class="comment"># パースできない場合は対象外</span>
+    
+    <span class="comment"># 開始バージョンのチェック</span>
+    <span class="keyword">if</span> version_start_incl:
+        <span class="keyword">if</span> v < version.parse(version_start_incl):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="keyword">if</span> version_start_excl:
+        <span class="keyword">if</span> v <= version.parse(version_start_excl):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="comment"># 終了バージョンのチェック</span>
+    <span class="keyword">if</span> version_end_incl:
+        <span class="keyword">if</span> v > version.parse(version_end_incl):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="keyword">if</span> version_end_excl:
+        <span class="keyword">if</span> v >= version.parse(version_end_excl):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+    
+    <span class="keyword">return</span> <span class="keyword">True</span>  <span class="comment"># 範囲内 → 脆弱性に該当</span>
+
+
+<span class="comment"># 使用例: Apache 2.4.0以上 2.4.58未満 が対象</span>
+is_version_affected(
+    <span class="string">"2.4.52"</span>,
+    version_start_incl=<span class="string">"2.4.0"</span>,
+    version_end_excl=<span class="string">"2.4.58"</span>
+)  <span class="comment"># → True（該当する）</span>
+
+is_version_affected(
+    <span class="string">"2.4.58"</span>,
+    version_start_incl=<span class="string">"2.4.0"</span>,
+    version_end_excl=<span class="string">"2.4.58"</span>
+)  <span class="comment"># → False（修正済みバージョン）</span>
+            </div>
+        </div>
+
+        <!-- 優先度計算の詳細 -->
+        <div class="section">
+            <h2>⚖️ 機能4：優先度計算の詳細</h2>
+            
+            <p style="margin-bottom: 16px;">
+                全ての脆弱性に同じ優先度で対応するのは現実的ではありません。<br>
+                <strong>ビジネスへの影響</strong>を考慮して優先度を計算します。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">優先度計算の要素</h4>
+            <table>
+                <tr>
+                    <th style="width: 25%;">要素</th>
+                    <th>説明</th>
+                    <th style="width: 25%;">重み付け例</th>
+                </tr>
+                <tr>
+                    <td><strong>CVSSスコア</strong></td>
+                    <td>脆弱性自体の深刻度（0.0〜10.0）</td>
+                    <td>そのまま使用</td>
+                </tr>
+                <tr>
+                    <td><strong>環境</strong></td>
+                    <td>本番 / ステージング / 開発</td>
+                    <td>本番: ×1.5<br>ステージング: ×1.0<br>開発: ×0.5</td>
+                </tr>
+                <tr>
+                    <td><strong>資産重要度</strong></td>
+                    <td>ビジネス上の重要性</td>
+                    <td>高: ×1.5<br>中: ×1.0<br>低: ×0.5</td>
+                </tr>
+                <tr>
+                    <td><strong>公開からの日数</strong></td>
+                    <td>脆弱性が公開されてからの経過日数</td>
+                    <td>30日以上: ×1.2</td>
+                </tr>
+            </table>
+            
+            <h4 style="margin: 20px 0 12px;">優先度スコアの計算式</h4>
+            <div class="code-block">
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+
+<span class="keyword">def</span> <span class="function">calculate_priority</span>(
+    cvss_score: float,
+    environment: str,
+    asset_criticality: str,
+    published_date: datetime
+) -> dict:
+    <span class="string">"""優先度スコアを計算"""</span>
+    
+    <span class="comment"># 環境の重み</span>
+    env_weights = {
+        <span class="string">"PROD"</span>: <span class="number">1.5</span>,
+        <span class="string">"STG"</span>: <span class="number">1.0</span>,
+        <span class="string">"DEV"</span>: <span class="number">0.5</span>
+    }
+    
+    <span class="comment"># 資産重要度の重み</span>
+    criticality_weights = {
+        <span class="string">"HIGH"</span>: <span class="number">1.5</span>,
+        <span class="string">"MEDIUM"</span>: <span class="number">1.0</span>,
+        <span class="string">"LOW"</span>: <span class="number">0.5</span>
+    }
+    
+    <span class="comment"># 公開からの日数による重み</span>
+    days_since_published = (datetime.now() - published_date).days
+    age_weight = <span class="number">1.2</span> <span class="keyword">if</span> days_since_published > <span class="number">30</span> <span class="keyword">else</span> <span class="number">1.0</span>
+    
+    <span class="comment"># 優先度スコアの計算</span>
+    score = (
+        cvss_score
+        * env_weights.get(environment, <span class="number">1.0</span>)
+        * criticality_weights.get(asset_criticality, <span class="number">1.0</span>)
+        * age_weight
+    )
+    
+    <span class="comment"># 優先度レベルの判定</span>
+    <span class="keyword">if</span> score >= <span class="number">12</span>:
+        level = <span class="string">"CRITICAL"</span>
+    <span class="keyword">elif</span> score >= <span class="number">8</span>:
+        level = <span class="string">"HIGH"</span>
+    <span class="keyword">elif</span> score >= <span class="number">4</span>:
+        level = <span class="string">"MEDIUM"</span>
+    <span class="keyword">else</span>:
+        level = <span class="string">"LOW"</span>
+    
+    <span class="keyword">return</span> {
+        <span class="string">"score"</span>: round(score, <span class="number">1</span>),
+        <span class="string">"level"</span>: level
+    }
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">計算例</h4>
+            
+            <div class="score-example">
+                <div class="score-box critical">
+                    <span class="score-value">13.5</span>
+                    <span class="score-label">CRITICAL</span>
+                </div>
+                <div class="score-detail">
+                    <h4>本番環境の重要サーバー × 高CVSSスコア</h4>
+                    <p>
+                        CVSSスコア: 9.0 × 環境（本番）: 1.5 × 資産重要度（高）: 1.0 = <strong>13.5</strong><br>
+                        → 最優先で対応が必要
+                    </p>
+                </div>
+            </div>
+            
+            <div class="score-example">
+                <div class="score-box medium">
+                    <span class="score-value">4.5</span>
+                    <span class="score-label">MEDIUM</span>
+                </div>
+                <div class="score-detail">
+                    <h4>開発環境 × 中程度のCVSSスコア</h4>
+                    <p>
+                        CVSSスコア: 6.0 × 環境（開発）: 0.5 × 資産重要度（中）: 1.0 × 日数: 1.5 = <strong>4.5</strong><br>
+                        → 時間があるときに対応
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 差分検出の詳細 -->
+        <div class="section">
+            <h2>🔄 機能5：差分検出の詳細</h2>
+            
+            <p style="margin-bottom: 16px;">
+                毎回のマッチング実行時に、前回からの変化を検出します。
+            </p>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">状態</th>
+                    <th>説明</th>
+                    <th style="width: 30%;">アクション</th>
+                </tr>
+                <tr>
+                    <td><span style="color: #cf222e; font-weight: bold;">🆕 新規検出</span></td>
+                    <td>今回初めて検出された脆弱性</td>
+                    <td>通知を送信、ステータス: OPEN</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #2da44e; font-weight: bold;">✅ 解消</span></td>
+                    <td>前回は検出されたが今回は検出されない</td>
+                    <td>ステータス: RESOLVED</td>
+                </tr>
+                <tr>
+                    <td><span style="color: #57606a; font-weight: bold;">➡️ 継続</span></td>
+                    <td>前回も今回も検出される</td>
+                    <td>ステータス変更なし</td>
+                </tr>
+            </table>
+            
+            <h4 style="margin: 20px 0 12px;">差分検出のコード</h4>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">detect_changes</span>(
+    previous_matches: set,  <span class="comment"># 前回のマッチング結果 (vuln_id, asset_id) のセット</span>
+    current_matches: set    <span class="comment"># 今回のマッチング結果</span>
+) -> dict:
+    <span class="string">"""前回からの差分を検出"""</span>
+    
+    <span class="comment"># 新規検出: 今回あって前回ない</span>
+    new_detections = current_matches - previous_matches
+    
+    <span class="comment"># 解消: 前回あって今回ない</span>
+    resolved = previous_matches - current_matches
+    
+    <span class="comment"># 継続: 両方にある</span>
+    continuing = previous_matches & current_matches
+    
+    <span class="keyword">return</span> {
+        <span class="string">"new"</span>: new_detections,
+        <span class="string">"resolved"</span>: resolved,
+        <span class="string">"continuing"</span>: continuing
+    }
+
+
+<span class="comment"># 使用例</span>
+previous = {(<span class="string">"CVE-2024-001"</span>, <span class="string">"server-a"</span>), (<span class="string">"CVE-2024-002"</span>, <span class="string">"server-a"</span>)}
+current = {(<span class="string">"CVE-2024-001"</span>, <span class="string">"server-a"</span>), (<span class="string">"CVE-2024-003"</span>, <span class="string">"server-a"</span>)}
+
+changes = detect_changes(previous, current)
+<span class="comment"># → new: {("CVE-2024-003", "server-a")}       # 新規検出</span>
+<span class="comment"># → resolved: {("CVE-2024-002", "server-a")} # 解消（パッチ適用等）</span>
+<span class="comment"># → continuing: {("CVE-2024-001", "server-a")} # 継続</span>
+            </div>
+            
+            <div class="callout">
+                新規検出があった場合のみ通知を送信することで、アラート疲れを防ぎます。
+            </div>
+        </div>
+
+        <!-- マッチングエンジンのクラス設計 -->
+        <div class="section">
+            <h2>🏗️ マッチングエンジンのクラス設計</h2>
+            
+            <div class="code-block">
+<span class="comment"># matching_engine.py - マッチングエンジンのメインクラス</span>
+
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Dict
+<span class="keyword">from</span> packaging <span class="keyword">import</span> version
+
+<span class="keyword">class</span> <span class="class">MatchingEngine</span>:
+    <span class="string">"""脆弱性マッチングエンジン"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, vuln_repo, asset_repo, match_repo):
+        self.vuln_repo = vuln_repo    <span class="comment"># 脆弱性リポジトリ</span>
+        self.asset_repo = asset_repo  <span class="comment"># 資産リポジトリ</span>
+        self.match_repo = match_repo  <span class="comment"># マッチング結果リポジトリ</span>
+    
+    <span class="keyword">def</span> <span class="function">run</span>(self) -> Dict:
+        <span class="string">"""マッチング処理を実行"""</span>
+        
+        <span class="comment"># 1. データ取得</span>
+        vulnerabilities = self.vuln_repo.get_all_active()
+        assets = self.asset_repo.get_all_with_software()
+        previous_matches = self.match_repo.get_current_open()
+        
+        <span class="comment"># 2. マッチング実行</span>
+        current_matches = set()
+        results = []
+        
+        <span class="keyword">for</span> asset <span class="keyword">in</span> assets:
+            <span class="keyword">for</span> software <span class="keyword">in</span> asset.software:
+                <span class="keyword">for</span> vuln <span class="keyword">in</span> vulnerabilities:
+                    <span class="keyword">if</span> self._is_affected(software, vuln):
+                        match = self._create_match(asset, software, vuln)
+                        current_matches.add((vuln.id, asset.id))
+                        results.append(match)
+        
+        <span class="comment"># 3. 差分検出</span>
+        changes = self._detect_changes(previous_matches, current_matches)
+        
+        <span class="comment"># 4. 結果保存</span>
+        self._save_results(results, changes)
+        
+        <span class="keyword">return</span> {
+            <span class="string">"total_matches"</span>: len(results),
+            <span class="string">"new_detections"</span>: len(changes[<span class="string">"new"</span>]),
+            <span class="string">"resolved"</span>: len(changes[<span class="string">"resolved"</span>])
+        }
+    
+    <span class="keyword">def</span> <span class="function">_is_affected</span>(self, software, vuln) -> bool:
+        <span class="string">"""ソフトウェアが脆弱性に該当するか判定"""</span>
+        
+        <span class="comment"># CPE照合</span>
+        <span class="keyword">if not</span> self._cpe_matches(software.cpe, vuln.affected_cpe):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="comment"># バージョン判定</span>
+        <span class="keyword">if not</span> self._version_affected(software.version, vuln):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="keyword">return</span> <span class="keyword">True</span>
+    
+    <span class="keyword">def</span> <span class="function">_create_match</span>(self, asset, software, vuln) -> Dict:
+        <span class="string">"""マッチング結果を作成"""</span>
+        
+        priority = self._calculate_priority(
+            vuln.cvss_score,
+            asset.environment,
+            asset.criticality,
+            vuln.published_at
+        )
+        
+        <span class="keyword">return</span> {
+            <span class="string">"vulnerability_id"</span>: vuln.id,
+            <span class="string">"asset_id"</span>: asset.id,
+            <span class="string">"software_name"</span>: software.name,
+            <span class="string">"software_version"</span>: software.version,
+            <span class="string">"detected_at"</span>: datetime.now(),
+            <span class="string">"priority_score"</span>: priority[<span class="string">"score"</span>],
+            <span class="string">"priority_level"</span>: priority[<span class="string">"level"</span>],
+            <span class="string">"status"</span>: <span class="string">"OPEN"</span>
+        }
+            </div>
+        </div>
+
+        <!-- 実行タイミング -->
+        <div class="section">
+            <h2>⏰ マッチングエンジンの実行タイミング</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">タイミング</th>
+                    <th>説明</th>
+                    <th style="width: 30%;">トリガー</th>
+                </tr>
+                <tr>
+                    <td><strong>定期実行</strong></td>
+                    <td>毎日決まった時間に実行</td>
+                    <td>cron / CloudWatch Events</td>
+                </tr>
+                <tr>
+                    <td><strong>脆弱性情報更新時</strong></td>
+                    <td>NVD/JVNから新しい脆弱性を取得した後</td>
+                    <td>担当Aの処理完了後</td>
+                </tr>
+                <tr>
+                    <td><strong>資産情報更新時</strong></td>
+                    <td>新しい資産が登録された後</td>
+                    <td>担当Bの処理完了後</td>
+                </tr>
+                <tr>
+                    <td><strong>手動実行</strong></td>
+                    <td>管理者がダッシュボードから実行</td>
+                    <td>ボタンクリック</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨：毎日深夜に定期実行</h4>
+                <p>
+                    NVD/JVNの更新が完了した後（例: 深夜3時）に自動実行。<br>
+                    朝出社したときには最新のマッチング結果が確認できる状態に。
+                </p>
+            </div>
+        </div>
+
+        <!-- パフォーマンス考慮 -->
+        <div class="section">
+            <h2>⚡ パフォーマンスの考慮</h2>
+            
+            <p style="margin-bottom: 16px;">
+                脆弱性数千件 × 資産数百件 × ソフトウェア数十件 = 大量の比較が必要です。
+            </p>
+            
+            <div class="warning-box">
+                <h4>ナイーブな実装の問題</h4>
+                <p>
+                    脆弱性 5,000件 × 資産 500件 × ソフトウェア 50件/資産<br>
+                    = <strong>1億2,500万回</strong>の比較<br>
+                    → 非常に遅くなる可能性
+                </p>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">最適化のアプローチ</h4>
+            <table>
+                <tr>
+                    <th style="width: 30%;">手法</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>インデックス作成</strong></td>
+                    <td>CPEのベンダー・製品名にインデックスを作成し、DB側で絞り込み</td>
+                </tr>
+                <tr>
+                    <td><strong>事前フィルタリング</strong></td>
+                    <td>資産に存在するベンダー・製品のみを対象に脆弱性を検索</td>
+                </tr>
+                <tr>
+                    <td><strong>差分処理</strong></td>
+                    <td>前回から変更があった資産・脆弱性のみを再計算</td>
+                </tr>
+                <tr>
+                    <td><strong>並列処理</strong></td>
+                    <td>資産ごとに並列でマッチング処理を実行</td>
+                </tr>
+            </table>
+            
+            <div class="code-block">
+<span class="comment"># 最適化例: 事前フィルタリング</span>
+
+<span class="keyword">def</span> <span class="function">run_optimized</span>(self):
+    <span class="comment"># 資産に存在するベンダー・製品の一覧を取得</span>
+    asset_products = self.asset_repo.get_distinct_products()
+    <span class="comment"># → {("apache", "http_server"), ("google", "chrome"), ...}</span>
+    
+    <span class="comment"># 該当する脆弱性のみを取得（大幅に絞り込み）</span>
+    vulnerabilities = self.vuln_repo.get_by_products(asset_products)
+    <span class="comment"># → 5,000件 → 200件程度に絞り込み</span>
+    
+    <span class="comment"># 以降は絞り込まれた脆弱性のみで処理</span>
+    ...
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当Cのタスク</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-number">1</div>
+                    <div class="timeline-content">
+                        <h4>Sprint 2：マッチングロジック設計</h4>
+                        <p>
+                            CPE照合・バージョン判定のアルゴリズム設計。<br>
+                            担当A・Bと連携して、必要なデータ構造を確認。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-number">2</div>
+                    <div class="timeline-content">
+                        <h4>Sprint 3：マッチングエンジン実装</h4>
+                        <p>
+                            MatchingEngineクラスの実装。<br>
+                            CPE照合、バージョン判定、優先度計算の実装。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-number">3</div>
+                    <div class="timeline-content">
+                        <h4>Sprint 3-4：差分検出・通知連携</h4>
+                        <p>
+                            差分検出ロジックの実装。<br>
+                            担当D（通知）との連携インターフェース作成。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-number">4</div>
+                    <div class="timeline-content">
+                        <h4>Sprint 4-5：最適化・テスト</h4>
+                        <p>
+                            パフォーマンス最適化。<br>
+                            大量データでのテスト、エッジケースの対応。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 担当間連携 -->
+        <div class="section">
+            <h2>🤝 担当間の連携</h2>
+            
+            <div class="diagram">
+                <svg class="diagram-svg" viewBox="0 0 700 280" style="height: 280px;">
+                    <!-- 担当A -->
+                    <rect x="30" y="30" width="140" height="80" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="100" y="60" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">担当A</text>
+                    <text x="100" y="80" text-anchor="middle" font-size="10" fill="#24292f">脆弱性情報取得</text>
+                    <text x="100" y="95" text-anchor="middle" font-size="9" fill="#57606a">NVD/JVN/Inspector</text>
+                    
+                    <!-- 担当B -->
+                    <rect x="30" y="170" width="140" height="80" rx="6" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="100" y="200" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a7f37">担当B</text>
+                    <text x="100" y="220" text-anchor="middle" font-size="10" fill="#24292f">資産情報取得</text>
+                    <text x="100" y="235" text-anchor="middle" font-size="9" fill="#57606a">AWS/PC/CPE生成</text>
+                    
+                    <!-- 担当C（中央） -->
+                    <rect x="250" y="80" width="180" height="120" rx="8" fill="#fff8c5" stroke="#d4a72c" stroke-width="3"/>
+                    <text x="340" y="115" text-anchor="middle" font-size="14" font-weight="bold" fill="#9a6700">担当C</text>
+                    <text x="340" y="140" text-anchor="middle" font-size="12" fill="#24292f">マッチングエンジン</text>
+                    <text x="340" y="160" text-anchor="middle" font-size="10" fill="#57606a">CPE照合・バージョン判定</text>
+                    <text x="340" y="180" text-anchor="middle" font-size="10" fill="#57606a">優先度計算・差分検出</text>
+                    
+                    <!-- 担当D -->
+                    <rect x="510" y="30" width="140" height="80" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="580" y="60" text-anchor="middle" font-size="12" font-weight="bold" fill="#8250df">担当D</text>
+                    <text x="580" y="80" text-anchor="middle" font-size="10" fill="#24292f">通知・レポート</text>
+                    <text x="580" y="95" text-anchor="middle" font-size="9" fill="#57606a">Slack/Email</text>
+                    
+                    <!-- 担当E -->
+                    <rect x="510" y="170" width="140" height="80" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="2"/>
+                    <text x="580" y="200" text-anchor="middle" font-size="12" font-weight="bold" fill="#cf222e">担当E</text>
+                    <text x="580" y="220" text-anchor="middle" font-size="10" fill="#24292f">ダッシュボード</text>
+                    <text x="580" y="235" text-anchor="middle" font-size="9" fill="#57606a">結果表示</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="170" y1="70" x2="250" y2="110" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <line x1="170" y1="210" x2="250" y2="170" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <line x1="430" y1="110" x2="510" y2="70" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    <line x1="430" y1="170" x2="510" y2="210" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow2)"/>
+                    
+                    <!-- ラベル -->
+                    <text x="200" y="80" font-size="9" fill="#57606a">脆弱性データ</text>
+                    <text x="200" y="195" font-size="9" fill="#57606a">資産データ</text>
+                    <text x="450" y="80" font-size="9" fill="#57606a">新規検出</text>
+                    <text x="450" y="195" font-size="9" fill="#57606a">結果一覧</text>
+                    
+                    <defs>
+                        <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <div class="point-box">
+                <h4>連携ポイント</h4>
+                <ul>
+                    <li><strong>担当A → 担当C</strong>：脆弱性情報（CPE、バージョン範囲）をDB経由で提供</li>
+                    <li><strong>担当B → 担当C</strong>：資産情報（ソフトウェア、CPE）をDB経由で提供</li>
+                    <li><strong>担当C → 担当D</strong>：新規検出時に通知をトリガー</li>
+                    <li><strong>担当C → 担当E</strong>：マッチング結果をDB経由で提供</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>マッチングエンジンとは</strong></td>
+                    <td>脆弱性と資産を照合し、該当する脆弱性を検出する中核処理</td>
+                </tr>
+                <tr>
+                    <td><strong>5つの機能</strong></td>
+                    <td>CPE照合、バージョン判定、重複排除、優先度計算、差分検出</td>
+                </tr>
+                <tr>
+                    <td><strong>優先度計算</strong></td>
+                    <td>CVSSスコア × 環境 × 資産重要度 でスコアリング</td>
+                </tr>
+                <tr>
+                    <td><strong>差分検出</strong></td>
+                    <td>新規検出/解消を判定し、必要な場合のみ通知</td>
+                </tr>
+                <tr>
+                    <td><strong>実行タイミング</strong></td>
+                    <td>毎日深夜に定期実行 + 必要に応じて手動実行</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ ポイント</h4>
+                <ul>
+                    <li>マッチングエンジンはシステムの<strong>心臓部</strong></li>
+                    <li>単純な比較ではなく、<strong>バージョン範囲の判定</strong>が必要</li>
+                    <li>優先度計算で<strong>ビジネスへの影響</strong>を考慮</li>
+                    <li>差分検出で<strong>アラート疲れ</strong>を防止</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

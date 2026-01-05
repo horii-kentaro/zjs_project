@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影響度・優先度計算 ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .diagram-svg {
+            width: 100%;
+            min-width: 700px;
+        }
+        
+        /* フレームワークカード */
+        .framework-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .framework-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .framework-card-header {
+            padding: 16px;
+            color: white;
+            font-weight: bold;
+        }
+        .framework-card-header.cvss { background: #0969da; }
+        .framework-card-header.epss { background: #8250df; }
+        .framework-card-header.kev { background: #cf222e; }
+        .framework-card-header.ssvc { background: #2da44e; }
+        .framework-card-body {
+            padding: 16px;
+        }
+        .framework-card-body p {
+            font-size: 13px;
+            color: #57606a;
+            margin-bottom: 8px;
+        }
+        .framework-card-body .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #24292f;
+        }
+        
+        /* スコアメーター */
+        .score-meter {
+            height: 20px;
+            background: linear-gradient(to right, #2da44e, #bf8700, #cf222e);
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+        }
+        .score-meter-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #57606a;
+            margin-top: 4px;
+        }
+        
+        /* 重要度バッジ */
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .severity-critical { background: #cf222e; color: white; }
+        .severity-high { background: #bf8700; color: white; }
+        .severity-medium { background: #0969da; color: white; }
+        .severity-low { background: #2da44e; color: white; }
+        .severity-none { background: #57606a; color: white; }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* 比較表 */
+        .compare-example {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .compare-card-header.low-priority { background: #dafbe1; color: #1a7f37; }
+        .compare-card-header.high-priority { background: #ffebe9; color: #cf222e; }
+        .compare-card-body {
+            padding: 16px;
+        }
+        .compare-card-body table {
+            margin: 0;
+        }
+        .compare-card-body th, .compare-card-body td {
+            padding: 8px;
+            font-size: 13px;
+        }
+        
+        /* 決定ツリー */
+        .decision-tree {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .decision-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .decision-question {
+            background: #0969da;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            max-width: 300px;
+        }
+        .decision-branches {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 10px;
+        }
+        .decision-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .decision-answer {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .decision-answer.yes { background: #cf222e; color: white; }
+        .decision-answer.no { background: #2da44e; color: white; }
+        .decision-result {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .result-immediate { background: #cf222e; color: white; }
+        .result-soon { background: #bf8700; color: white; }
+        .result-scheduled { background: #0969da; color: white; }
+        .result-defer { background: #57606a; color: white; }
+        
+        /* 計算式ボックス */
+        .formula-box {
+            background: #f6f8fa;
+            border: 2px solid #8250df;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .formula {
+            font-size: 18px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 12px 0;
+        }
+        .formula-var {
+            color: #8250df;
+            font-weight: bold;
+        }
+        
+        /* KEVリスト風 */
+        .kev-list {
+            border: 2px solid #cf222e;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .kev-header {
+            background: #cf222e;
+            color: white;
+            padding: 12px 16px;
+            font-weight: bold;
+        }
+        .kev-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .kev-item:last-child {
+            border-bottom: none;
+        }
+        .kev-cve {
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .kev-due {
+            color: #cf222e;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .compare-example {
+                grid-template-columns: 1fr;
+            }
+            .framework-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 影響度・優先度計算 ガイド</h1>
+        <p class="subtitle">CVSS、EPSS、KEV、SSVCを活用した実践的な優先度決定</p>
+
+        <!-- CVSSだけでは不十分 -->
+        <div class="section">
+            <h2>❓ なぜCVSSだけでは不十分なのか</h2>
+            
+            <div class="warning-box">
+                <h4>よくある問題</h4>
+                <p>
+                    CVSSスコア 9.0以上（Critical/High）の脆弱性が<strong>100件以上</strong>検出された！<br>
+                    → 全部に最優先で対応するのは現実的に不可能
+                </p>
+            </div>
+            
+            <p style="margin: 16px 0;">
+                CVSSは脆弱性<strong>自体</strong>の深刻度を示しますが、以下の要素は考慮されていません：
+            </p>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">CVSSが考慮しないこと</th>
+                    <th>なぜ重要か</th>
+                </tr>
+                <tr>
+                    <td>実際に悪用されているか</td>
+                    <td>理論上危険でも、悪用コードがなければリスクは低い</td>
+                </tr>
+                <tr>
+                    <td>悪用される確率</td>
+                    <td>攻撃者にとって魅力的かどうか</td>
+                </tr>
+                <tr>
+                    <td>自社環境での影響</td>
+                    <td>インターネット非公開なら攻撃されにくい</td>
+                </tr>
+                <tr>
+                    <td>ビジネス上の重要度</td>
+                    <td>開発環境 vs 本番環境では優先度が異なる</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 解決策：複数の指標を組み合わせる</h4>
+                <p>CVSS + EPSS + KEV + 環境要因 + ビジネス要因 → 総合的な優先度</p>
+            </div>
+        </div>
+
+        <!-- 主要なフレームワーク -->
+        <div class="section">
+            <h2>🛠️ 主要なフレームワーク・指標</h2>
+            
+            <div class="framework-cards">
+                <div class="framework-card">
+                    <div class="framework-card-header cvss">CVSS</div>
+                    <div class="framework-card-body">
+                        <p>脆弱性自体の深刻度</p>
+                        <div class="value">0.0〜10.0</div>
+                        <p style="margin-top: 8px;">提供: FIRST</p>
+                    </div>
+                </div>
+                
+                <div class="framework-card">
+                    <div class="framework-card-header epss">EPSS</div>
+                    <div class="framework-card-body">
+                        <p>悪用される確率予測</p>
+                        <div class="value">0〜100%</div>
+                        <p style="margin-top: 8px;">提供: FIRST</p>
+                    </div>
+                </div>
+                
+                <div class="framework-card">
+                    <div class="framework-card-header kev">KEV</div>
+                    <div class="framework-card-body">
+                        <p>実際に悪用されている</p>
+                        <div class="value">Yes / No</div>
+                        <p style="margin-top: 8px;">提供: CISA</p>
+                    </div>
+                </div>
+                
+                <div class="framework-card">
+                    <div class="framework-card-header ssvc">SSVC</div>
+                    <div class="framework-card-body">
+                        <p>意思決定ツリー</p>
+                        <div class="value">4段階</div>
+                        <p style="margin-top: 8px;">提供: CISA/CMU</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CVSS詳細 -->
+        <div class="section">
+            <h2>1️⃣ CVSS（Common Vulnerability Scoring System）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                <strong>脆弱性自体の技術的な深刻度</strong>を0.0〜10.0のスコアで表現します。
+            </p>
+            
+            <h3>スコアと重要度レベル</h3>
+            <div class="score-meter"></div>
+            <div class="score-meter-labels">
+                <span>0.0 (None)</span>
+                <span>4.0 (Medium)</span>
+                <span>7.0 (High)</span>
+                <span>9.0 (Critical)</span>
+                <span>10.0</span>
+            </div>
+            
+            <table style="margin-top: 20px;">
+                <tr>
+                    <th style="width: 15%;">スコア</th>
+                    <th style="width: 20%;">レベル</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td>9.0〜10.0</td>
+                    <td><span class="severity-badge severity-critical">Critical</span></td>
+                    <td>即座に悪用可能、重大な被害が発生する可能性</td>
+                </tr>
+                <tr>
+                    <td>7.0〜8.9</td>
+                    <td><span class="severity-badge severity-high">High</span></td>
+                    <td>深刻な影響を与える可能性が高い</td>
+                </tr>
+                <tr>
+                    <td>4.0〜6.9</td>
+                    <td><span class="severity-badge severity-medium">Medium</span></td>
+                    <td>一定の条件下で影響を与える可能性</td>
+                </tr>
+                <tr>
+                    <td>0.1〜3.9</td>
+                    <td><span class="severity-badge severity-low">Low</span></td>
+                    <td>限定的な影響のみ</td>
+                </tr>
+                <tr>
+                    <td>0.0</td>
+                    <td><span class="severity-badge severity-none">None</span></td>
+                    <td>影響なし</td>
+                </tr>
+            </table>
+            
+            <h3>CVSS の構成要素（v3.1）</h3>
+            <table>
+                <tr>
+                    <th style="width: 25%;">カテゴリ</th>
+                    <th style="width: 30%;">要素</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td rowspan="4"><strong>基本評価（Base）</strong><br><span style="font-size: 12px; color: #57606a;">脆弱性固有の特性</span></td>
+                    <td>Attack Vector</td>
+                    <td>攻撃経路（ネットワーク/隣接/ローカル/物理）</td>
+                </tr>
+                <tr>
+                    <td>Attack Complexity</td>
+                    <td>攻撃の複雑さ（低/高）</td>
+                </tr>
+                <tr>
+                    <td>Privileges Required</td>
+                    <td>必要な権限（なし/低/高）</td>
+                </tr>
+                <tr>
+                    <td>User Interaction</td>
+                    <td>ユーザ操作の必要性（なし/必要）</td>
+                </tr>
+                <tr>
+                    <td rowspan="2"><strong>環境評価（Environmental）</strong><br><span style="font-size: 12px; color: #57606a;">自組織での影響</span></td>
+                    <td>Modified Impact</td>
+                    <td>環境による影響の調整</td>
+                </tr>
+                <tr>
+                    <td>Security Requirements</td>
+                    <td>CIA（機密性・完全性・可用性）の要求度</td>
+                </tr>
+            </table>
+            
+            <div class="callout">
+                NVD/JVNが公開するのは「基本評価」のスコア。自組織に合わせた「環境評価」は自分で計算する必要があります。
+            </div>
+        </div>
+
+        <!-- EPSS詳細 -->
+        <div class="section">
+            <h2>2️⃣ EPSS（Exploit Prediction Scoring System）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                <strong>今後30日以内に悪用される確率</strong>を機械学習で予測します。
+            </p>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>提供元</strong></td>
+                    <td>FIRST（Forum of Incident Response and Security Teams）</td>
+                </tr>
+                <tr>
+                    <td><strong>値の範囲</strong></td>
+                    <td>0.0（0%）〜 1.0（100%）</td>
+                </tr>
+                <tr>
+                    <td><strong>更新頻度</strong></td>
+                    <td>毎日更新</td>
+                </tr>
+                <tr>
+                    <td><strong>API</strong></td>
+                    <td><code>https://api.first.org/data/v1/epss?cve=CVE-XXXX-XXXX</code></td>
+                </tr>
+            </table>
+            
+            <h3>EPSSの解釈</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">EPSSスコア</th>
+                    <th style="width: 25%;">確率</th>
+                    <th>解釈</th>
+                </tr>
+                <tr>
+                    <td>0.9以上</td>
+                    <td><span style="color: #cf222e; font-weight: bold;">90%以上</span></td>
+                    <td>非常に高い確率で悪用される → 最優先対応</td>
+                </tr>
+                <tr>
+                    <td>0.5〜0.9</td>
+                    <td><span style="color: #bf8700; font-weight: bold;">50〜90%</span></td>
+                    <td>高い確率で悪用される → 早急に対応</td>
+                </tr>
+                <tr>
+                    <td>0.1〜0.5</td>
+                    <td><span style="color: #0969da; font-weight: bold;">10〜50%</span></td>
+                    <td>一定の確率で悪用される → 計画的に対応</td>
+                </tr>
+                <tr>
+                    <td>0.1未満</td>
+                    <td><span style="color: #2da44e; font-weight: bold;">10%未満</span></td>
+                    <td>悪用される可能性は低い → 通常対応</td>
+                </tr>
+            </table>
+            
+            <h3>EPSS API のレスポンス例</h3>
+            <div class="code-block">
+{
+  <span class="string">"status"</span>: <span class="string">"OK"</span>,
+  <span class="string">"data"</span>: [
+    {
+      <span class="string">"cve"</span>: <span class="string">"CVE-2024-1234"</span>,
+      <span class="string">"epss"</span>: <span class="string">"0.97"</span>,      <span class="comment">// 97%の確率で悪用される</span>
+      <span class="string">"percentile"</span>: <span class="string">"0.99"</span>  <span class="comment">// 上位1%の危険度</span>
+    }
+  ]
+}
+            </div>
+            
+            <div class="point-box">
+                <h4>EPSSの活用ポイント</h4>
+                <ul>
+                    <li>CVSSが高くてもEPSSが低ければ、実際に攻撃される可能性は低い</li>
+                    <li>CVSSが中程度でもEPSSが高ければ、優先的に対応すべき</li>
+                    <li>毎日更新されるため、状況の変化を捉えられる</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- KEV詳細 -->
+        <div class="section">
+            <h2>3️⃣ KEV（Known Exploited Vulnerabilities）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                <strong>実際に攻撃に使用されている脆弱性</strong>のリストです。米国CISAが管理しています。
+            </p>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>提供元</strong></td>
+                    <td>CISA（Cybersecurity and Infrastructure Security Agency）</td>
+                </tr>
+                <tr>
+                    <td><strong>登録数</strong></td>
+                    <td>約1,200件（2024年時点）</td>
+                </tr>
+                <tr>
+                    <td><strong>更新頻度</strong></td>
+                    <td>随時（新しい悪用が確認され次第）</td>
+                </tr>
+                <tr>
+                    <td><strong>データ</strong></td>
+                    <td><code>https://www.cisa.gov/known-exploited-vulnerabilities-catalog</code></td>
+                </tr>
+            </table>
+            
+            <h3>KEVリストに含まれる情報</h3>
+            <div class="kev-list">
+                <div class="kev-header">⚠️ Known Exploited Vulnerabilities</div>
+                <div class="kev-item">
+                    <div>
+                        <span class="kev-cve">CVE-2021-44228</span>
+                        <span style="margin-left: 12px; font-size: 13px;">Apache Log4j2 Remote Code Execution</span>
+                    </div>
+                    <div class="kev-due">対応期限: 2021-12-24</div>
+                </div>
+                <div class="kev-item">
+                    <div>
+                        <span class="kev-cve">CVE-2024-3094</span>
+                        <span style="margin-left: 12px; font-size: 13px;">XZ Utils Backdoor</span>
+                    </div>
+                    <div class="kev-due">対応期限: 2024-04-19</div>
+                </div>
+                <div class="kev-item">
+                    <div>
+                        <span class="kev-cve">CVE-2023-4966</span>
+                        <span style="margin-left: 12px; font-size: 13px;">Citrix NetScaler Buffer Overflow</span>
+                    </div>
+                    <div class="kev-due">対応期限: 2023-11-08</div>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <h4>KEVに登録されている = 最優先で対応</h4>
+                <p>
+                    KEVに登録されている脆弱性は、<strong>実際に攻撃者が悪用している</strong>ことが確認されています。<br>
+                    米国連邦政府機関は期限内の対応が義務付けられています。
+                </p>
+            </div>
+            
+            <h3>KEVデータの取得</h3>
+            <div class="code-block">
+<span class="comment"># KEVカタログ（JSON形式）をダウンロード</span>
+<span class="keyword">import</span> requests
+
+url = <span class="string">"https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"</span>
+response = requests.get(url)
+kev_data = response.json()
+
+<span class="comment"># CVE IDでKEVに含まれているかチェック</span>
+kev_cves = {v[<span class="string">"cveID"</span>] <span class="keyword">for</span> v <span class="keyword">in</span> kev_data[<span class="string">"vulnerabilities"</span>]}
+
+<span class="keyword">def</span> <span class="function">is_in_kev</span>(cve_id: str) -> bool:
+    <span class="keyword">return</span> cve_id <span class="keyword">in</span> kev_cves
+            </div>
+        </div>
+
+        <!-- SSVC詳細 -->
+        <div class="section">
+            <h2>4️⃣ SSVC（Stakeholder-Specific Vulnerability Categorization）</h2>
+            
+            <p style="margin-bottom: 16px;">
+                <strong>意思決定ツリー</strong>を使って、対応の優先度を4段階で判断します。
+            </p>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>提供元</strong></td>
+                    <td>CISA / Carnegie Mellon University (CMU)</td>
+                </tr>
+                <tr>
+                    <td><strong>アプローチ</strong></td>
+                    <td>スコアではなく、意思決定ツリーで分類</td>
+                </tr>
+                <tr>
+                    <td><strong>出力</strong></td>
+                    <td>4段階の対応アクション</td>
+                </tr>
+            </table>
+            
+            <h3>SSVCの4つの対応アクション</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">アクション</th>
+                    <th style="width: 25%;">意味</th>
+                    <th>対応期限目安</th>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-critical">Immediate</span></td>
+                    <td>即時対応</td>
+                    <td>24時間以内</td>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-high">Out-of-Cycle</span></td>
+                    <td>通常サイクル外で対応</td>
+                    <td>1週間以内</td>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-medium">Scheduled</span></td>
+                    <td>次の定期メンテで対応</td>
+                    <td>次回パッチサイクル</td>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-low">Defer</span></td>
+                    <td>対応を見送り/監視</td>
+                    <td>リスク受容</td>
+                </tr>
+            </table>
+            
+            <h3>SSVC 決定ツリー（簡略版）</h3>
+            <div class="decision-tree">
+                <div class="decision-node">
+                    <div class="decision-question">悪用が活発か？（KEV登録 or 攻撃確認）</div>
+                    <div class="decision-branches">
+                        <div class="decision-branch">
+                            <span class="decision-answer yes">Yes</span>
+                            <div class="decision-question" style="background: #8250df; font-size: 12px; padding: 8px 12px;">インターネット公開？</div>
+                            <div class="decision-branches" style="gap: 20px; margin-top: 8px;">
+                                <div class="decision-branch">
+                                    <span class="decision-answer yes" style="font-size: 11px;">Yes</span>
+                                    <span class="decision-result result-immediate">Immediate</span>
+                                </div>
+                                <div class="decision-branch">
+                                    <span class="decision-answer no" style="font-size: 11px;">No</span>
+                                    <span class="decision-result result-soon">Out-of-Cycle</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="decision-branch">
+                            <span class="decision-answer no">No</span>
+                            <div class="decision-question" style="background: #8250df; font-size: 12px; padding: 8px 12px;">自動化された攻撃が可能？</div>
+                            <div class="decision-branches" style="gap: 20px; margin-top: 8px;">
+                                <div class="decision-branch">
+                                    <span class="decision-answer yes" style="font-size: 11px;">Yes</span>
+                                    <span class="decision-result result-scheduled">Scheduled</span>
+                                </div>
+                                <div class="decision-branch">
+                                    <span class="decision-answer no" style="font-size: 11px;">No</span>
+                                    <span class="decision-result result-defer">Defer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                SSVCは「スコア」ではなく「アクション」を出力するため、運用チームにとって分かりやすい
+            </div>
+        </div>
+
+        <!-- CVSSとEPSSの比較例 -->
+        <div class="section">
+            <h2>📊 CVSSとEPSSの比較例</h2>
+            
+            <p style="margin-bottom: 20px;">
+                同じCVSSスコアでも、EPSSスコアによって実際のリスクは大きく異なります。
+            </p>
+            
+            <div class="compare-example">
+                <div class="compare-card">
+                    <div class="compare-card-header low-priority">脆弱性A：優先度「中」</div>
+                    <div class="compare-card-body">
+                        <table>
+                            <tr>
+                                <td><strong>CVSS</strong></td>
+                                <td><span class="severity-badge severity-critical">9.8 Critical</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>EPSS</strong></td>
+                                <td><span style="color: #2da44e; font-weight: bold;">0.02（2%）</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>KEV</strong></td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+                        <div style="margin-top: 12px; padding: 8px; background: #f6f8fa; border-radius: 4px; font-size: 13px;">
+                            <strong>解釈：</strong>理論上は深刻だが、実際に悪用される可能性は低い。計画的に対応。
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="compare-card-header high-priority">脆弱性B：優先度「最優先」</div>
+                    <div class="compare-card-body">
+                        <table>
+                            <tr>
+                                <td><strong>CVSS</strong></td>
+                                <td><span class="severity-badge severity-high">7.5 High</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>EPSS</strong></td>
+                                <td><span style="color: #cf222e; font-weight: bold;">0.85（85%）</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>KEV</strong></td>
+                                <td><span style="color: #cf222e; font-weight: bold;">Yes ⚠️</span></td>
+                            </tr>
+                        </table>
+                        <div style="margin-top: 12px; padding: 8px; background: #ffebe9; border-radius: 4px; font-size: 13px;">
+                            <strong>解釈：</strong>CVSSはAより低いが、実際に攻撃に使われている。即時対応が必要。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 推奨する優先度計算式 -->
+        <div class="section">
+            <h2>🧮 推奨する優先度計算方法</h2>
+            
+            <p style="margin-bottom: 16px;">
+                本プロジェクトでは、以下の複合的なアプローチを推奨します。
+            </p>
+            
+            <div class="diagram">
+                <svg class="diagram-svg" viewBox="0 0 750 300" style="height: 300px;">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="740" height="290" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="375" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">優先度計算の構成要素</text>
+                    
+                    <!-- 要素ボックス -->
+                    <rect x="30" y="55" width="130" height="80" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="95" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">CVSS</text>
+                    <text x="95" y="105" text-anchor="middle" font-size="10" fill="#57606a">脆弱性の深刻度</text>
+                    <text x="95" y="125" text-anchor="middle" font-size="14" font-weight="bold" fill="#24292f">0.0〜10.0</text>
+                    
+                    <rect x="180" y="55" width="130" height="80" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="2"/>
+                    <text x="245" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="#8250df">EPSS</text>
+                    <text x="245" y="105" text-anchor="middle" font-size="10" fill="#57606a">悪用確率</text>
+                    <text x="245" y="125" text-anchor="middle" font-size="14" font-weight="bold" fill="#24292f">0〜100%</text>
+                    
+                    <rect x="330" y="55" width="130" height="80" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="2"/>
+                    <text x="395" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="#cf222e">KEV</text>
+                    <text x="395" y="105" text-anchor="middle" font-size="10" fill="#57606a">悪用実績</text>
+                    <text x="395" y="125" text-anchor="middle" font-size="14" font-weight="bold" fill="#24292f">Yes / No</text>
+                    
+                    <rect x="480" y="55" width="130" height="80" rx="6" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="545" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a7f37">環境要因</text>
+                    <text x="545" y="105" text-anchor="middle" font-size="10" fill="#57606a">公開/内部、本番/開発</text>
+                    <text x="545" y="125" text-anchor="middle" font-size="14" font-weight="bold" fill="#24292f">係数</text>
+                    
+                    <rect x="630" y="55" width="100" height="80" rx="6" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+                    <text x="680" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="#9a6700">資産重要度</text>
+                    <text x="680" y="105" text-anchor="middle" font-size="10" fill="#57606a">ビジネス影響</text>
+                    <text x="680" y="125" text-anchor="middle" font-size="14" font-weight="bold" fill="#24292f">高/中/低</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="95" y1="135" x2="95" y2="170" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="245" y1="135" x2="245" y2="170" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="395" y1="135" x2="395" y2="170" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="545" y1="135" x2="545" y2="170" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="680" y1="135" x2="680" y2="170" stroke="#8c959f" stroke-width="2"/>
+                    
+                    <line x1="95" y1="170" x2="375" y2="190" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="245" y1="170" x2="375" y2="190" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="395" y1="170" x2="375" y2="190" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="545" y1="170" x2="375" y2="190" stroke="#8c959f" stroke-width="2"/>
+                    <line x1="680" y1="170" x2="375" y2="190" stroke="#8c959f" stroke-width="2"/>
+                    
+                    <!-- 計算ボックス -->
+                    <rect x="250" y="195" width="250" height="45" rx="6" fill="#8250df"/>
+                    <text x="375" y="223" text-anchor="middle" font-size="14" font-weight="bold" fill="white">優先度計算エンジン</text>
+                    
+                    <!-- 出力 -->
+                    <line x1="375" y1="240" x2="375" y2="265" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow3)"/>
+                    <rect x="275" y="265" width="200" height="25" rx="4" fill="#f6f8fa" stroke="#d0d7de"/>
+                    <text x="375" y="282" text-anchor="middle" font-size="12" fill="#24292f">優先度スコア + アクション</text>
+                    
+                    <defs>
+                        <marker id="arrow3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <h3>計算式</h3>
+            <div class="formula-box">
+                <p style="font-size: 14px; color: #57606a;">優先度スコア =</p>
+                <div class="formula">
+                    <span class="formula-var">CVSS</span> × <span class="formula-var">EPSS係数</span> × <span class="formula-var">KEV係数</span> × <span class="formula-var">環境係数</span> × <span class="formula-var">資産係数</span>
+                </div>
+            </div>
+            
+            <h3>各係数の設定例</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">要素</th>
+                    <th style="width: 30%;">条件</th>
+                    <th>係数</th>
+                </tr>
+                <tr>
+                    <td rowspan="3"><strong>EPSS係数</strong></td>
+                    <td>EPSS ≥ 0.5（50%以上）</td>
+                    <td>2.0</td>
+                </tr>
+                <tr>
+                    <td>EPSS 0.1〜0.5</td>
+                    <td>1.5</td>
+                </tr>
+                <tr>
+                    <td>EPSS < 0.1</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td rowspan="2"><strong>KEV係数</strong></td>
+                    <td>KEVに登録あり</td>
+                    <td>2.5</td>
+                </tr>
+                <tr>
+                    <td>KEVに登録なし</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td rowspan="3"><strong>環境係数</strong></td>
+                    <td>インターネット公開 + 本番</td>
+                    <td>2.0</td>
+                </tr>
+                <tr>
+                    <td>内部ネットワーク + 本番</td>
+                    <td>1.5</td>
+                </tr>
+                <tr>
+                    <td>開発/検証環境</td>
+                    <td>0.5</td>
+                </tr>
+                <tr>
+                    <td rowspan="3"><strong>資産係数</strong></td>
+                    <td>重要度：高（基幹システム等）</td>
+                    <td>1.5</td>
+                </tr>
+                <tr>
+                    <td>重要度：中</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td>重要度：低</td>
+                    <td>0.5</td>
+                </tr>
+            </table>
+            
+            <h3>実装コード</h3>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">calculate_priority</span>(
+    cvss_score: float,
+    epss_score: float,
+    is_in_kev: bool,
+    environment: str,        <span class="comment"># "public_prod", "internal_prod", "dev"</span>
+    asset_criticality: str   <span class="comment"># "high", "medium", "low"</span>
+) -> dict:
+    <span class="string">"""優先度スコアを計算"""</span>
+    
+    <span class="comment"># EPSS係数</span>
+    <span class="keyword">if</span> epss_score >= <span class="number">0.5</span>:
+        epss_factor = <span class="number">2.0</span>
+    <span class="keyword">elif</span> epss_score >= <span class="number">0.1</span>:
+        epss_factor = <span class="number">1.5</span>
+    <span class="keyword">else</span>:
+        epss_factor = <span class="number">1.0</span>
+    
+    <span class="comment"># KEV係数</span>
+    kev_factor = <span class="number">2.5</span> <span class="keyword">if</span> is_in_kev <span class="keyword">else</span> <span class="number">1.0</span>
+    
+    <span class="comment"># 環境係数</span>
+    env_factors = {
+        <span class="string">"public_prod"</span>: <span class="number">2.0</span>,
+        <span class="string">"internal_prod"</span>: <span class="number">1.5</span>,
+        <span class="string">"dev"</span>: <span class="number">0.5</span>
+    }
+    env_factor = env_factors.get(environment, <span class="number">1.0</span>)
+    
+    <span class="comment"># 資産係数</span>
+    asset_factors = {
+        <span class="string">"high"</span>: <span class="number">1.5</span>,
+        <span class="string">"medium"</span>: <span class="number">1.0</span>,
+        <span class="string">"low"</span>: <span class="number">0.5</span>
+    }
+    asset_factor = asset_factors.get(asset_criticality, <span class="number">1.0</span>)
+    
+    <span class="comment"># スコア計算</span>
+    score = cvss_score * epss_factor * kev_factor * env_factor * asset_factor
+    
+    <span class="comment"># アクション決定（SSVCスタイル）</span>
+    <span class="keyword">if</span> is_in_kev <span class="keyword">or</span> score >= <span class="number">30</span>:
+        action = <span class="string">"Immediate"</span>
+    <span class="keyword">elif</span> score >= <span class="number">15</span>:
+        action = <span class="string">"Out-of-Cycle"</span>
+    <span class="keyword">elif</span> score >= <span class="number">5</span>:
+        action = <span class="string">"Scheduled"</span>
+    <span class="keyword">else</span>:
+        action = <span class="string">"Defer"</span>
+    
+    <span class="keyword">return</span> {
+        <span class="string">"score"</span>: round(score, <span class="number">1</span>),
+        <span class="string">"action"</span>: action,
+        <span class="string">"factors"</span>: {
+            <span class="string">"cvss"</span>: cvss_score,
+            <span class="string">"epss"</span>: epss_score,
+            <span class="string">"kev"</span>: is_in_kev,
+            <span class="string">"environment"</span>: environment,
+            <span class="string">"asset_criticality"</span>: asset_criticality
+        }
+    }
+            </div>
+            
+            <h3>計算例</h3>
+            <table>
+                <tr>
+                    <th>シナリオ</th>
+                    <th>CVSS</th>
+                    <th>EPSS</th>
+                    <th>KEV</th>
+                    <th>環境</th>
+                    <th>資産</th>
+                    <th>スコア</th>
+                    <th>アクション</th>
+                </tr>
+                <tr>
+                    <td>最悪ケース</td>
+                    <td>9.8</td>
+                    <td>0.9</td>
+                    <td>Yes</td>
+                    <td>公開+本番</td>
+                    <td>高</td>
+                    <td><strong>147.0</strong></td>
+                    <td><span class="severity-badge severity-critical">Immediate</span></td>
+                </tr>
+                <tr>
+                    <td>高リスク</td>
+                    <td>7.5</td>
+                    <td>0.3</td>
+                    <td>No</td>
+                    <td>内部+本番</td>
+                    <td>高</td>
+                    <td><strong>25.3</strong></td>
+                    <td><span class="severity-badge severity-high">Out-of-Cycle</span></td>
+                </tr>
+                <tr>
+                    <td>通常</td>
+                    <td>6.5</td>
+                    <td>0.05</td>
+                    <td>No</td>
+                    <td>内部+本番</td>
+                    <td>中</td>
+                    <td><strong>9.8</strong></td>
+                    <td><span class="severity-badge severity-medium">Scheduled</span></td>
+                </tr>
+                <tr>
+                    <td>低リスク</td>
+                    <td>4.0</td>
+                    <td>0.01</td>
+                    <td>No</td>
+                    <td>開発</td>
+                    <td>低</td>
+                    <td><strong>1.0</strong></td>
+                    <td><span class="severity-badge severity-low">Defer</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- データ取得方法 -->
+        <div class="section">
+            <h2>🔗 各データの取得方法</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 15%;">データ</th>
+                    <th style="width: 35%;">API / データソース</th>
+                    <th>備考</th>
+                </tr>
+                <tr>
+                    <td><strong>CVSS</strong></td>
+                    <td>
+                        NVD API<br>
+                        <code style="font-size: 11px;">https://services.nvd.nist.gov/rest/json/cves/2.0</code>
+                    </td>
+                    <td>脆弱性情報取得時に一緒に取得</td>
+                </tr>
+                <tr>
+                    <td><strong>EPSS</strong></td>
+                    <td>
+                        FIRST EPSS API<br>
+                        <code style="font-size: 11px;">https://api.first.org/data/v1/epss</code>
+                    </td>
+                    <td>毎日更新。CVE IDで検索可能</td>
+                </tr>
+                <tr>
+                    <td><strong>KEV</strong></td>
+                    <td>
+                        CISA KEV JSON<br>
+                        <code style="font-size: 11px;">https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json</code>
+                    </td>
+                    <td>JSONをダウンロードしてローカルで照合</td>
+                </tr>
+            </table>
+            
+            <div class="code-block">
+<span class="comment"># EPSS APIからスコアを取得</span>
+<span class="keyword">import</span> requests
+
+<span class="keyword">def</span> <span class="function">get_epss_score</span>(cve_id: str) -> float:
+    url = f<span class="string">"https://api.first.org/data/v1/epss?cve={cve_id}"</span>
+    response = requests.get(url)
+    
+    <span class="keyword">if</span> response.status_code == <span class="number">200</span>:
+        data = response.json()
+        <span class="keyword">if</span> data[<span class="string">"data"</span>]:
+            <span class="keyword">return</span> float(data[<span class="string">"data"</span>][<span class="number">0</span>][<span class="string">"epss"</span>])
+    
+    <span class="keyword">return</span> <span class="number">0.0</span>  <span class="comment"># 見つからない場合</span>
+
+
+<span class="comment"># 使用例</span>
+epss = get_epss_score(<span class="string">"CVE-2021-44228"</span>)
+print(f<span class="string">"EPSS: {epss}"</span>)  <span class="comment"># → EPSS: 0.97548</span>
+            </div>
+        </div>
+
+        <!-- 運用での活用 -->
+        <div class="section">
+            <h2>📋 運用での活用方法</h2>
+            
+            <h3>対応期限の目安</h3>
+            <table>
+                <tr>
+                    <th style="width: 20%;">アクション</th>
+                    <th style="width: 25%;">対応期限</th>
+                    <th>具体的なアクション</th>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-critical">Immediate</span></td>
+                    <td>24〜48時間以内</td>
+                    <td>
+                        ・即座にパッチ適用<br>
+                        ・パッチがなければワークアラウンド適用<br>
+                        ・該当システムの隔離を検討
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-high">Out-of-Cycle</span></td>
+                    <td>1週間以内</td>
+                    <td>
+                        ・定期メンテを待たずに対応<br>
+                        ・緊急変更プロセスで実施
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-medium">Scheduled</span></td>
+                    <td>次回定期メンテ（〜1ヶ月）</td>
+                    <td>
+                        ・通常の変更管理プロセスで対応<br>
+                        ・他の更新と合わせて実施
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="severity-badge severity-low">Defer</span></td>
+                    <td>リスク受容 / 監視継続</td>
+                    <td>
+                        ・状況を監視（EPSSの上昇等）<br>
+                        ・次の大規模更新時に対応
+                    </td>
+                </tr>
+            </table>
+            
+            <h3>ダッシュボードでの表示例</h3>
+            <div style="background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <table style="margin: 0;">
+                    <tr>
+                        <th>CVE ID</th>
+                        <th>資産</th>
+                        <th>CVSS</th>
+                        <th>EPSS</th>
+                        <th>KEV</th>
+                        <th>スコア</th>
+                        <th>アクション</th>
+                    </tr>
+                    <tr>
+                        <td><code>CVE-2024-1234</code></td>
+                        <td>web-server-01</td>
+                        <td>9.8</td>
+                        <td>0.85</td>
+                        <td>⚠️ Yes</td>
+                        <td><strong>73.5</strong></td>
+                        <td><span class="severity-badge severity-critical">Immediate</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>CVE-2024-5678</code></td>
+                        <td>db-server-01</td>
+                        <td>7.5</td>
+                        <td>0.25</td>
+                        <td>No</td>
+                        <td><strong>16.9</strong></td>
+                        <td><span class="severity-badge severity-high">Out-of-Cycle</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>CVE-2024-9012</code></td>
+                        <td>dev-pc-001</td>
+                        <td>6.5</td>
+                        <td>0.03</td>
+                        <td>No</td>
+                        <td><strong>4.9</strong></td>
+                        <td><span class="severity-badge severity-low">Defer</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当タスク</h2>
+            
+            <table>
+                <tr>
+                    <th>担当</th>
+                    <th>タスク</th>
+                    <th>Sprint</th>
+                </tr>
+                <tr>
+                    <td><strong>担当A</strong></td>
+                    <td>
+                        ・NVDからCVSSスコアを取得してDB保存<br>
+                        ・EPSS APIとの連携実装<br>
+                        ・KEVリストのダウンロード・更新処理
+                    </td>
+                    <td>Sprint 2-3</td>
+                </tr>
+                <tr>
+                    <td><strong>担当C</strong></td>
+                    <td>
+                        ・優先度計算ロジックの実装<br>
+                        ・係数設定の調整機能<br>
+                        ・アクション判定ロジック
+                    </td>
+                    <td>Sprint 3</td>
+                </tr>
+                <tr>
+                    <td><strong>担当E</strong></td>
+                    <td>
+                        ・優先度順のソート表示<br>
+                        ・アクション別のフィルタリング<br>
+                        ・スコア内訳の表示
+                    </td>
+                    <td>Sprint 4</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">指標</th>
+                    <th>役割</th>
+                    <th style="width: 25%;">提供元</th>
+                </tr>
+                <tr>
+                    <td><strong>CVSS</strong></td>
+                    <td>脆弱性自体の技術的な深刻度（0.0〜10.0）</td>
+                    <td>FIRST / NVD</td>
+                </tr>
+                <tr>
+                    <td><strong>EPSS</strong></td>
+                    <td>30日以内に悪用される確率の予測（0〜100%）</td>
+                    <td>FIRST</td>
+                </tr>
+                <tr>
+                    <td><strong>KEV</strong></td>
+                    <td>実際に攻撃に使用されている脆弱性リスト</td>
+                    <td>CISA</td>
+                </tr>
+                <tr>
+                    <td><strong>SSVC</strong></td>
+                    <td>意思決定ツリーによる対応アクションの決定</td>
+                    <td>CISA / CMU</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨アプローチ</h4>
+                <ul>
+                    <li><strong>CVSSだけで判断しない</strong>：EPSSとKEVを組み合わせる</li>
+                    <li><strong>KEV登録は最優先</strong>：実際に攻撃されている証拠</li>
+                    <li><strong>環境要因を考慮</strong>：本番/開発、公開/内部で係数を調整</li>
+                    <li><strong>アクションを明確に</strong>：スコアだけでなく「何をすべきか」を出力</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>CVSS v3.1 仕様</strong></td>
+                    <td><a href="https://www.first.org/cvss/v3.1/specification-document" target="_blank">https://www.first.org/cvss/v3.1/specification-document</a></td>
+                </tr>
+                <tr>
+                    <td><strong>EPSS</strong></td>
+                    <td><a href="https://www.first.org/epss/" target="_blank">https://www.first.org/epss/</a></td>
+                </tr>
+                <tr>
+                    <td><strong>CISA KEV</strong></td>
+                    <td><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank">https://www.cisa.gov/known-exploited-vulnerabilities-catalog</a></td>
+                </tr>
+                <tr>
+                    <td><strong>SSVC</strong></td>
+                    <td><a href="https://www.cisa.gov/stakeholder-specific-vulnerability-categorization-ssvc" target="_blank">https://www.cisa.gov/stakeholder-specific-vulnerability-categorization-ssvc</a></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVE/NVD連携 図解ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cf222e;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* CVE ID表示 */
+        .cve-id {
+            display: inline-block;
+            background: #24292f;
+            color: #f0f6fc;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin: 4px 2px;
+        }
+        
+        /* データベースカード */
+        .db-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .db-card {
+            border: 2px solid #d0d7de;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .db-card-header {
+            padding: 16px;
+            color: white;
+            text-align: center;
+        }
+        .db-card-header h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        .db-card-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .db-card.cve .db-card-header { background: #24292f; }
+        .db-card.nvd .db-card-header { background: #0969da; }
+        .db-card.jvn .db-card-header { background: #cf222e; }
+        .db-card-body {
+            padding: 16px;
+        }
+        .db-card-body ul {
+            margin-left: 20px;
+        }
+        .db-card-body li {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        /* フロー図 */
+        .flow-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .flow-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .flow-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            color: white;
+        }
+        .flow-content {
+            flex: 1;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .flow-content h4 {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .flow-content p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 20px;
+            color: #8c959f;
+            margin: 8px 0;
+        }
+        
+        .step-1 .flow-icon { background: #24292f; }
+        .step-1 .flow-content { border-color: #24292f; }
+        .step-2 .flow-icon { background: #0969da; }
+        .step-2 .flow-content { border-color: #0969da; }
+        .step-3 .flow-icon { background: #cf222e; }
+        .step-3 .flow-content { border-color: #cf222e; }
+        
+        /* システム図 */
+        .system-diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .system-svg {
+            width: 100%;
+            min-width: 700px;
+            height: 350px;
+        }
+        
+        /* 比較表 */
+        .compare-table {
+            margin: 20px 0;
+        }
+        .compare-table th:first-child {
+            width: 30%;
+        }
+        .compare-table .highlight {
+            background: #dafbe1;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .key {
+            color: #7ee787;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        /* CVSSスコア表示 */
+        .cvss-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 4px;
+        }
+        .cvss-critical { background: #7d1a0e; color: white; }
+        .cvss-high { background: #cf222e; color: white; }
+        .cvss-medium { background: #bf8700; color: white; }
+        .cvss-low { background: #1a7f37; color: white; }
+        .cvss-none { background: #57606a; color: white; }
+        
+        /* タイムライン */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #d0d7de;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #0969da;
+            border: 2px solid white;
+        }
+        .timeline-item h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .timeline-item p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        
+        /* API情報 */
+        .api-info {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .api-header {
+            background: #24292f;
+            color: white;
+            padding: 12px 16px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .api-body {
+            padding: 16px;
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 CVE/NVD連携 図解ガイド</h1>
+        <p class="subtitle">世界標準の脆弱性データベースを活用する</p>
+
+        <!-- CVEとは -->
+        <div class="section">
+            <h2>📌 CVEとは？</h2>
+            
+            <p style="font-size: 18px; margin-bottom: 16px;">
+                <strong>CVE = Common Vulnerabilities and Exposures</strong>
+            </p>
+            <p style="margin-bottom: 16px;">
+                世界共通の<span style="color: #cf222e; font-weight: bold;">「脆弱性の識別番号」</span>です。<br>
+                発見された脆弱性1つ1つに、一意のIDが付与されます。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">CVE IDの例</h4>
+            <div style="margin-bottom: 16px;">
+                <span class="cve-id">CVE-2021-44228</span> Log4Shell（Apache Log4j）<br>
+                <span class="cve-id">CVE-2024-3094</span> XZ Utils バックドア<br>
+                <span class="cve-id">CVE-2014-0160</span> Heartbleed（OpenSSL）
+            </div>
+            
+            <div class="callout">
+                CVE番号があれば、世界中の誰でも同じ脆弱性について話していることが分かる「共通言語」
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">CVE IDの構造</h4>
+            <div style="background: #f6f8fa; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 16px;">
+                <span style="color: #cf222e; font-weight: bold;">CVE</span>-<span style="color: #0969da; font-weight: bold;">2024</span>-<span style="color: #1a7f37; font-weight: bold;">12345</span>
+            </div>
+            <table style="margin-top: 12px;">
+                <tr>
+                    <td style="color: #cf222e; font-weight: bold; width: 100px;">CVE</td>
+                    <td>固定のプレフィックス</td>
+                </tr>
+                <tr>
+                    <td style="color: #0969da; font-weight: bold;">2024</td>
+                    <td>CVE IDが割り当てられた年</td>
+                </tr>
+                <tr>
+                    <td style="color: #1a7f37; font-weight: bold;">12345</td>
+                    <td>連番（4桁以上）</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- NVDとは -->
+        <div class="section">
+            <h2>📊 NVDとは？</h2>
+            
+            <p style="font-size: 18px; margin-bottom: 16px;">
+                <strong>NVD = National Vulnerability Database</strong>
+            </p>
+            <p style="margin-bottom: 16px;">
+                米国NIST（国立標準技術研究所）が運営する<span style="color: #0969da; font-weight: bold;">脆弱性データベース</span>です。<br>
+                CVEに対して、追加の詳細情報を付与して公開しています。
+            </p>
+            
+            <h4 style="margin-bottom: 12px;">NVDが提供する追加情報</h4>
+            <table>
+                <tr>
+                    <th style="width: 30%;">情報</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>CVSSスコア</strong></td>
+                    <td>脆弱性の深刻度を0.0〜10.0で数値化</td>
+                </tr>
+                <tr>
+                    <td><strong>CPE</strong></td>
+                    <td>影響を受ける製品・バージョンの一覧</td>
+                </tr>
+                <tr>
+                    <td><strong>CWE</strong></td>
+                    <td>脆弱性の種類（SQLインジェクション、XSSなど）</td>
+                </tr>
+                <tr>
+                    <td><strong>参考リンク</strong></td>
+                    <td>ベンダーの公式情報、パッチ情報など</td>
+                </tr>
+            </table>
+            
+            <h4 style="margin: 20px 0 12px;">CVSSスコアの深刻度</h4>
+            <div>
+                <span class="cvss-score cvss-critical">9.0-10.0 Critical</span>
+                <span class="cvss-score cvss-high">7.0-8.9 High</span>
+                <span class="cvss-score cvss-medium">4.0-6.9 Medium</span>
+                <span class="cvss-score cvss-low">0.1-3.9 Low</span>
+                <span class="cvss-score cvss-none">0.0 None</span>
+            </div>
+        </div>
+
+        <!-- 3つのデータベースの関係 -->
+        <div class="section">
+            <h2>🔗 CVE・NVD・JVN iPediaの関係</h2>
+            
+            <div class="db-cards">
+                <div class="db-card cve">
+                    <div class="db-card-header">
+                        <h3>CVE</h3>
+                        <p>MITRE（米国）</p>
+                    </div>
+                    <div class="db-card-body">
+                        <ul>
+                            <li>脆弱性のID発行元</li>
+                            <li>基本的な説明文のみ</li>
+                            <li>「脆弱性の戸籍」のような存在</li>
+                            <li>詳細情報は他DBで補完</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="db-card nvd">
+                    <div class="db-card-header">
+                        <h3>NVD</h3>
+                        <p>NIST（米国）</p>
+                    </div>
+                    <div class="db-card-body">
+                        <ul>
+                            <li>CVEに詳細情報を追加</li>
+                            <li>CVSSスコア、CPE情報</li>
+                            <li>世界で最も参照されるDB</li>
+                            <li>英語のみ</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="db-card jvn">
+                    <div class="db-card-header">
+                        <h3>JVN iPedia</h3>
+                        <p>IPA（日本）</p>
+                    </div>
+                    <div class="db-card-body">
+                        <ul>
+                            <li>日本向けの脆弱性DB</li>
+                            <li>日本語で解説</li>
+                            <li>国内製品の情報が充実</li>
+                            <li>NVDより登録が遅れることも</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">情報の流れ</h4>
+            <div class="flow-vertical">
+                <div class="flow-item step-1">
+                    <div class="flow-icon">🔍</div>
+                    <div class="flow-content">
+                        <h4>1. 脆弱性が発見される</h4>
+                        <p>セキュリティ研究者、ベンダーなどが脆弱性を発見・報告</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-1">
+                    <div class="flow-icon">🏷️</div>
+                    <div class="flow-content">
+                        <h4>2. CVE番号が発行される</h4>
+                        <p>MITREがCVE IDを割り当て（例：CVE-2024-12345）</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-2">
+                    <div class="flow-icon">📊</div>
+                    <div class="flow-content">
+                        <h4>3. NVDに詳細情報が登録</h4>
+                        <p>CVSSスコア、影響製品（CPE）、CWEなどが追加される</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-item step-3">
+                    <div class="flow-icon">🇯🇵</div>
+                    <div class="flow-content">
+                        <h4>4. JVN iPediaに日本語情報が登録</h4>
+                        <p>日本語の解説、国内向け対策情報が追加（数日〜数週間遅れることも）</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- なぜ両方必要か -->
+        <div class="section">
+            <h2>🎯 なぜJVN iPediaとCVE/NVD両方が必要か</h2>
+            
+            <table class="compare-table">
+                <tr>
+                    <th>観点</th>
+                    <th>JVN iPediaのみ</th>
+                    <th class="highlight">CVE/NVD連携を追加</th>
+                </tr>
+                <tr>
+                    <td><strong>検知速度</strong></td>
+                    <td>日本語化を待つため遅れる場合がある</td>
+                    <td class="highlight">より早く脆弱性を検知できる</td>
+                </tr>
+                <tr>
+                    <td><strong>カバー範囲</strong></td>
+                    <td>日本で使われる製品が中心</td>
+                    <td class="highlight">世界中の脆弱性を網羅</td>
+                </tr>
+                <tr>
+                    <td><strong>詳細情報</strong></td>
+                    <td>日本語で分かりやすい</td>
+                    <td class="highlight">CVSSスコア、CPE情報が豊富</td>
+                </tr>
+                <tr>
+                    <td><strong>更新頻度</strong></td>
+                    <td>平日中心</td>
+                    <td class="highlight">ほぼリアルタイムで更新</td>
+                </tr>
+            </table>
+            
+            <div class="warning-box">
+                <h4>⚠️ 実際にあった事例</h4>
+                <p>Log4Shell（CVE-2021-44228）は2021年12月10日に公開され、NVDには即日登録されましたが、JVN iPediaへの日本語情報登録には数日かかりました。その間にも攻撃は始まっていたため、NVD情報を直接参照できる体制が重要です。</p>
+            </div>
+            
+            <div class="point-box">
+                <h4>両方使うメリット</h4>
+                <ul>
+                    <li><strong>JVN iPedia</strong>：日本語で対策を理解、国内製品の情報</li>
+                    <li><strong>NVD</strong>：最速で脆弱性を検知、詳細な技術情報</li>
+                    <li>両方を統合することで、速度と分かりやすさを両立</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- システムでの役割 -->
+        <div class="section">
+            <h2>🏗️ 今回のシステムでの役割</h2>
+            
+            <div class="system-diagram">
+                <svg class="system-svg" viewBox="0 0 700 320">
+                    <!-- 背景 -->
+                    <rect x="10" y="10" width="680" height="300" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="350" y="35" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">脆弱性管理システム - データ収集層</text>
+                    
+                    <!-- 外部データソース -->
+                    <rect x="30" y="60" width="140" height="60" rx="6" fill="#cf222e" stroke="#a40e26" stroke-width="2"/>
+                    <text x="100" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="white">JVN iPedia</text>
+                    <text x="100" y="105" text-anchor="middle" font-size="10" fill="white">日本語・国内向け</text>
+                    
+                    <rect x="30" y="140" width="140" height="60" rx="6" fill="#0969da" stroke="#0550ae" stroke-width="2"/>
+                    <text x="100" y="165" text-anchor="middle" font-size="12" font-weight="bold" fill="white">NVD</text>
+                    <text x="100" y="185" text-anchor="middle" font-size="10" fill="white">CVSS・CPE情報</text>
+                    
+                    <rect x="30" y="220" width="140" height="60" rx="6" fill="#24292f" stroke="#1b1f24" stroke-width="2"/>
+                    <text x="100" y="245" text-anchor="middle" font-size="12" font-weight="bold" fill="white">CVE</text>
+                    <text x="100" y="265" text-anchor="middle" font-size="10" fill="white">ID・基本情報</text>
+                    
+                    <!-- 矢印 -->
+                    <path d="M 175 90 L 230 150" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <path d="M 175 170 L 230 160" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    <path d="M 175 250 L 230 170" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- APIクライアント -->
+                    <rect x="235" y="110" width="150" height="100" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="310" y="135" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da">APIクライアント</text>
+                    <text x="310" y="155" text-anchor="middle" font-size="10" fill="#24292f">・データ取得</text>
+                    <text x="310" y="170" text-anchor="middle" font-size="10" fill="#24292f">・パース処理</text>
+                    <text x="310" y="185" text-anchor="middle" font-size="10" fill="#24292f">・エラーハンドリング</text>
+                    <text x="310" y="200" text-anchor="middle" font-size="9" fill="#57606a">担当A</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="390" y1="160" x2="430" y2="160" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- 統合・正規化 -->
+                    <rect x="435" y="110" width="120" height="100" rx="6" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+                    <text x="495" y="135" text-anchor="middle" font-size="12" font-weight="bold" fill="#9a6700">統合・正規化</text>
+                    <text x="495" y="155" text-anchor="middle" font-size="10" fill="#24292f">・重複排除</text>
+                    <text x="495" y="170" text-anchor="middle" font-size="10" fill="#24292f">・データ統合</text>
+                    <text x="495" y="185" text-anchor="middle" font-size="10" fill="#24292f">・形式統一</text>
+                    <text x="495" y="200" text-anchor="middle" font-size="9" fill="#57606a">担当A</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="560" y1="160" x2="600" y2="160" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow)"/>
+                    
+                    <!-- DB保存 -->
+                    <rect x="605" y="125" width="70" height="70" rx="6" fill="#dafbe1" stroke="#2da44e" stroke-width="2"/>
+                    <text x="640" y="155" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a7f37">DB</text>
+                    <text x="640" y="175" text-anchor="middle" font-size="9" fill="#24292f">保存</text>
+                    
+                    <!-- 矢印マーカー -->
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">処理</th>
+                    <th>内容</th>
+                    <th style="width: 15%;">担当</th>
+                </tr>
+                <tr>
+                    <td><strong>データ取得</strong></td>
+                    <td>JVN iPedia、NVD、CVEの各APIから脆弱性情報を取得</td>
+                    <td>担当A</td>
+                </tr>
+                <tr>
+                    <td><strong>パース</strong></td>
+                    <td>各APIのレスポンス（JSON/XML）を解析・構造化</td>
+                    <td>担当A</td>
+                </tr>
+                <tr>
+                    <td><strong>統合</strong></td>
+                    <td>同じCVE IDの情報を統合、重複を排除</td>
+                    <td>担当A</td>
+                </tr>
+                <tr>
+                    <td><strong>正規化</strong></td>
+                    <td>内部で扱いやすい共通フォーマットに変換</td>
+                    <td>担当A</td>
+                </tr>
+                <tr>
+                    <td><strong>DB保存</strong></td>
+                    <td>PostgreSQLに保存（担当Bが設計したスキーマ）</td>
+                    <td>担当A/B</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- API情報 -->
+        <div class="section">
+            <h2>🔌 API情報</h2>
+            
+            <h4 style="margin-bottom: 12px;">NVD API</h4>
+            <div class="api-info">
+                <div class="api-header">GET https://services.nvd.nist.gov/rest/json/cves/2.0</div>
+                <div class="api-body">
+                    <table>
+                        <tr>
+                            <td style="width: 25%;"><strong>認証</strong></td>
+                            <td>APIキー推奨（なしでも利用可、レート制限あり）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>形式</strong></td>
+                            <td>JSON</td>
+                        </tr>
+                        <tr>
+                            <td><strong>レート制限</strong></td>
+                            <td>APIキーなし: 5リクエスト/30秒、あり: 50リクエスト/30秒</td>
+                        </tr>
+                        <tr>
+                            <td><strong>主なパラメータ</strong></td>
+                            <td><code>cveId</code>, <code>lastModStartDate</code>, <code>keywordSearch</code></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">JVN iPedia API（MyJVN API）</h4>
+            <div class="api-info">
+                <div class="api-header">GET https://jvndb.jvn.jp/myjvn</div>
+                <div class="api-body">
+                    <table>
+                        <tr>
+                            <td style="width: 25%;"><strong>認証</strong></td>
+                            <td>不要</td>
+                        </tr>
+                        <tr>
+                            <td><strong>形式</strong></td>
+                            <td>XML</td>
+                        </tr>
+                        <tr>
+                            <td><strong>レート制限</strong></td>
+                            <td>明示的な制限なし（常識的な範囲で）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>主なパラメータ</strong></td>
+                            <td><code>method</code>, <code>feed</code>, <code>startItem</code>, <code>maxCountItem</code></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <h4 style="margin: 20px 0 12px;">レスポンス例（NVD API）</h4>
+            <div class="code-block">
+<span class="comment">// GET /rest/json/cves/2.0?cveId=CVE-2021-44228</span>
+{
+  <span class="key">"vulnerabilities"</span>: [{
+    <span class="key">"cve"</span>: {
+      <span class="key">"id"</span>: <span class="string">"CVE-2021-44228"</span>,
+      <span class="key">"descriptions"</span>: [{
+        <span class="key">"lang"</span>: <span class="string">"en"</span>,
+        <span class="key">"value"</span>: <span class="string">"Apache Log4j2 ... allows remote code execution..."</span>
+      }],
+      <span class="key">"metrics"</span>: {
+        <span class="key">"cvssMetricV31"</span>: [{
+          <span class="key">"cvssData"</span>: {
+            <span class="key">"baseScore"</span>: <span class="number">10.0</span>,
+            <span class="key">"baseSeverity"</span>: <span class="string">"CRITICAL"</span>
+          }
+        }]
+      },
+      <span class="key">"configurations"</span>: [{
+        <span class="key">"nodes"</span>: [{
+          <span class="key">"cpeMatch"</span>: [{
+            <span class="key">"criteria"</span>: <span class="string">"cpe:2.3:a:apache:log4j:*:*:*:*:*:*:*:*"</span>,
+            <span class="key">"versionEndExcluding"</span>: <span class="string">"2.15.0"</span>
+          }]
+        }]
+      }]
+    }
+  }]
+}
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当Aのタスク（CVE/NVD連携）</h2>
+            
+            <table>
+                <tr>
+                    <th>タスクID</th>
+                    <th>タスク名</th>
+                    <th>内容</th>
+                    <th>Sprint</th>
+                </tr>
+                <tr>
+                    <td>A-5</td>
+                    <td>CVE/NVD連携開始</td>
+                    <td>NVD APIの調査、基本的な接続実装</td>
+                    <td>Sprint 2</td>
+                </tr>
+                <tr>
+                    <td>T-020</td>
+                    <td>CVE/NVD実装完了</td>
+                    <td>データ取得、パース、統合処理の完成</td>
+                    <td>Sprint 3</td>
+                </tr>
+            </table>
+            
+            <div class="point-box">
+                <h4>サブ担当：担当B</h4>
+                <ul>
+                    <li>コードレビューを担当</li>
+                    <li>DB保存部分との連携確認</li>
+                    <li>担当Aの不在時のバックアップ</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 用語まとめ -->
+        <div class="section">
+            <h2>📚 用語まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 20%;">用語</th>
+                    <th>意味</th>
+                </tr>
+                <tr>
+                    <td><strong>CVE</strong></td>
+                    <td>Common Vulnerabilities and Exposures。脆弱性の識別番号体系</td>
+                </tr>
+                <tr>
+                    <td><strong>NVD</strong></td>
+                    <td>National Vulnerability Database。米国NISTの脆弱性DB</td>
+                </tr>
+                <tr>
+                    <td><strong>CVSS</strong></td>
+                    <td>Common Vulnerability Scoring System。脆弱性の深刻度スコア（0.0〜10.0）</td>
+                </tr>
+                <tr>
+                    <td><strong>CPE</strong></td>
+                    <td>Common Platform Enumeration。製品を識別する標準形式</td>
+                </tr>
+                <tr>
+                    <td><strong>CWE</strong></td>
+                    <td>Common Weakness Enumeration。脆弱性の種類の分類</td>
+                </tr>
+                <tr>
+                    <td><strong>JVN</strong></td>
+                    <td>Japan Vulnerability Notes。日本の脆弱性情報ポータル</td>
+                </tr>
+                <tr>
+                    <td><strong>JVN iPedia</strong></td>
+                    <td>JVNの脆弱性対策情報データベース</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

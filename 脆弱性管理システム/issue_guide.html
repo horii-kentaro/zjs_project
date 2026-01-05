@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Issue 図解ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8250df;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* Issue モックアップ */
+        .issue-mockup {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .issue-header {
+            background: #f6f8fa;
+            padding: 16px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .issue-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .issue-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        .issue-status.open {
+            background: #2da44e;
+        }
+        .issue-status.closed {
+            background: #8250df;
+        }
+        .issue-title-text {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .issue-meta {
+            font-size: 13px;
+            color: #57606a;
+        }
+        .issue-body {
+            padding: 16px;
+        }
+        
+        /* ラベル */
+        .label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 2px;
+        }
+        .label-feature { background: #a2eeef; color: #0a5d63; }
+        .label-bug { background: #ff8182; color: #8a0002; }
+        .label-docs { background: #0075ca; color: white; }
+        .label-api { background: #7057ff; color: white; }
+        .label-priority-high { background: #d73a4a; color: white; }
+        .label-priority-medium { background: #fbca04; color: #533d00; }
+        .label-priority-low { background: #0e8a16; color: white; }
+        .label-担当a { background: #3498db; color: white; }
+        .label-担当b { background: #f39c12; color: white; }
+        .label-担当c { background: #e74c3c; color: white; }
+        .label-担当d { background: #27ae60; color: white; }
+        .label-担当e { background: #9b59b6; color: white; }
+        
+        /* サイドバー */
+        .issue-content {
+            display: flex;
+            gap: 20px;
+        }
+        .issue-main {
+            flex: 1;
+        }
+        .issue-sidebar {
+            width: 240px;
+            flex-shrink: 0;
+        }
+        .sidebar-section {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #57606a;
+            margin-bottom: 8px;
+        }
+        .sidebar-value {
+            font-size: 14px;
+        }
+        
+        /* Issue リスト */
+        .issue-list {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .issue-list-header {
+            background: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+        }
+        .issue-list-header span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .issue-list-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .issue-list-item:last-child {
+            border-bottom: none;
+        }
+        .issue-list-item:hover {
+            background: #f6f8fa;
+        }
+        .issue-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .issue-icon.open { background: #2da44e; }
+        .issue-icon.closed { background: #8250df; }
+        .issue-list-content {
+            flex: 1;
+        }
+        .issue-list-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .issue-list-meta {
+            font-size: 12px;
+            color: #57606a;
+        }
+        
+        /* フロー図 */
+        .flow-horizontal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+        .flow-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 24px;
+        }
+        .flow-step-1 .flow-icon { background: #ddf4ff; }
+        .flow-step-2 .flow-icon { background: #fff8c5; }
+        .flow-step-3 .flow-icon { background: #dafbe1; }
+        .flow-step-4 .flow-icon { background: #fbefff; }
+        .flow-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .flow-desc {
+            font-size: 11px;
+            color: #57606a;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #8c959f;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        /* 用途カード */
+        .use-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .use-card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            background: white;
+        }
+        .use-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .use-card p {
+            font-size: 13px;
+            color: #57606a;
+        }
+        
+        /* コードブロック */
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        /* Issue テンプレート */
+        .template-box {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        .template-box h4 {
+            margin-bottom: 12px;
+            color: #24292f;
+        }
+        .template-content {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        /* 比較表 */
+        .compare-row {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .compare-col {
+            flex: 1;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-header {
+            padding: 12px 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .compare-header.issue { background: #fbefff; color: #8250df; }
+        .compare-header.pr { background: #dafbe1; color: #1a7f37; }
+        .compare-body {
+            padding: 16px;
+            font-size: 14px;
+        }
+        .compare-body ul {
+            margin-left: 20px;
+        }
+        .compare-body li {
+            margin: 6px 0;
+        }
+
+        @media (max-width: 768px) {
+            .issue-content {
+                flex-direction: column;
+            }
+            .issue-sidebar {
+                width: 100%;
+            }
+            .compare-row {
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 GitHub Issue 図解ガイド</h1>
+        <p class="subtitle">「やるべきこと」を管理するチケットシステム</p>
+
+        <!-- Issueとは -->
+        <div class="section">
+            <h2>📌 Issueとは？</h2>
+            <p style="font-size: 18px; margin-bottom: 16px;">
+                <strong>「やるべきこと」を管理するチケット</strong>のこと
+            </p>
+            <p style="margin-bottom: 16px;">
+                タスク管理ツール（Backlog、Jira、Trello、Redmineなど）のチケットと同じ役割です。<br>
+                GitHubに標準で備わっているので、追加ツールなしでタスク管理ができます。
+            </p>
+            
+            <div class="callout">
+                「Issue立てておいて」＝「タスクのチケットを作っておいて」という意味
+            </div>
+        </div>
+
+        <!-- Issueの画面イメージ -->
+        <div class="section">
+            <h2>📺 Issueの画面イメージ</h2>
+            
+            <div class="issue-mockup">
+                <div class="issue-header">
+                    <div class="issue-title-row">
+                        <span class="issue-status open">Open</span>
+                        <span class="issue-title-text">JVN iPedia APIクライアントの実装</span>
+                    </div>
+                    <div class="issue-meta">
+                        #12 opened 3 days ago by <strong>担当A</strong>
+                    </div>
+                </div>
+                <div class="issue-body">
+                    <div class="issue-content">
+                        <div class="issue-main">
+                            <h4 style="margin-bottom: 12px;">📋 概要</h4>
+                            <p style="margin-bottom: 16px;">
+                                JVN iPedia APIから脆弱性情報を取得する機能を実装する。
+                            </p>
+                            
+                            <h4 style="margin-bottom: 12px;">✅ やること</h4>
+                            <ul style="margin-left: 20px; margin-bottom: 16px;">
+                                <li>APIクライアントクラスの作成</li>
+                                <li>レスポンスのパース処理</li>
+                                <li>エラーハンドリング・リトライ機構</li>
+                                <li>ユニットテストの作成</li>
+                            </ul>
+                            
+                            <h4 style="margin-bottom: 12px;">📎 参考資料</h4>
+                            <p>
+                                <a href="#" style="color: #0969da;">JVN iPedia API仕様書</a>
+                            </p>
+                        </div>
+                        <div class="issue-sidebar">
+                            <div class="sidebar-section">
+                                <div class="sidebar-title">Assignees（担当者）</div>
+                                <div class="sidebar-value">👤 担当A</div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-title">Labels（ラベル）</div>
+                                <div class="sidebar-value">
+                                    <span class="label label-feature">機能追加</span>
+                                    <span class="label label-api">API連携</span>
+                                    <span class="label label-priority-high">優先度:高</span>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-title">Milestone（マイルストーン）</div>
+                                <div class="sidebar-value">🎯 Sprint 2</div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-title">Linked PRs</div>
+                                <div class="sidebar-value" style="color: #57606a; font-size: 13px;">
+                                    なし（作業開始後にリンク）
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issueの用途 -->
+        <div class="section">
+            <h2>🎯 Issueの使い道</h2>
+            
+            <div class="use-cards">
+                <div class="use-card">
+                    <h4>🚀 機能追加</h4>
+                    <p>「通知機能を実装する」<br>「ダッシュボードを作成する」</p>
+                </div>
+                <div class="use-card">
+                    <h4>🐛 バグ報告</h4>
+                    <p>「○○の条件でエラーになる」<br>「画面が正しく表示されない」</p>
+                </div>
+                <div class="use-card">
+                    <h4>💡 改善要望</h4>
+                    <p>「処理速度を改善したい」<br>「UIを使いやすくしたい」</p>
+                </div>
+                <div class="use-card">
+                    <h4>❓ 質問・議論</h4>
+                    <p>「この設計方針でよいか？」<br>「ライブラリ選定の相談」</p>
+                </div>
+                <div class="use-card">
+                    <h4>📝 ドキュメント</h4>
+                    <p>「READMEを更新する」<br>「API仕様書を作成する」</p>
+                </div>
+                <div class="use-card">
+                    <h4>🔧 技術的負債</h4>
+                    <p>「リファクタリングする」<br>「テストを追加する」</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- IssueとPRの関係 -->
+        <div class="section">
+            <h2>🔗 IssueとPR（Pull Request）の関係</h2>
+            
+            <div class="flow-horizontal">
+                <div class="flow-step flow-step-1">
+                    <div class="flow-icon">📋</div>
+                    <div class="flow-title">Issue作成</div>
+                    <div class="flow-desc">Issue #12<br>「JVN API実装」</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step flow-step-2">
+                    <div class="flow-icon">🌿</div>
+                    <div class="flow-title">ブランチ作成</div>
+                    <div class="flow-desc">feature/jvn-api<br>で作業開始</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step flow-step-3">
+                    <div class="flow-icon">🔀</div>
+                    <div class="flow-title">PR作成</div>
+                    <div class="flow-desc">本文に<br>「Closes #12」</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step flow-step-4">
+                    <div class="flow-icon">✅</div>
+                    <div class="flow-title">マージ</div>
+                    <div class="flow-desc">Issue #12 が<br>自動クローズ</div>
+                </div>
+            </div>
+            
+            <div class="point-box">
+                <h4>PRとIssueを紐付けるキーワード</h4>
+                <p>PRの本文に以下を書くと、マージ時にIssueが自動クローズされます：</p>
+                <ul>
+                    <li><code>Closes #12</code> / <code>closes #12</code></li>
+                    <li><code>Fixes #12</code> / <code>fixes #12</code></li>
+                    <li><code>Resolves #12</code> / <code>resolves #12</code></li>
+                </ul>
+            </div>
+            
+            <div class="compare-row">
+                <div class="compare-col">
+                    <div class="compare-header issue">📋 Issue</div>
+                    <div class="compare-body">
+                        <ul>
+                            <li><strong>何をやるか</strong>を定義</li>
+                            <li>タスクの管理・議論の場</li>
+                            <li>作業前〜作業中に使う</li>
+                            <li>1つのIssueに複数PRもあり得る</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="compare-col">
+                    <div class="compare-header pr">🔀 Pull Request</div>
+                    <div class="compare-body">
+                        <ul>
+                            <li><strong>どう実装したか</strong>を示す</li>
+                            <li>コードレビューの場</li>
+                            <li>実装完了後に作成</li>
+                            <li>Issueを解決するための手段</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issueリストの見え方 -->
+        <div class="section">
+            <h2>📑 Issueリストの画面</h2>
+            
+            <div class="issue-list">
+                <div class="issue-list-header">
+                    <span><span class="issue-icon open" style="width: 16px; height: 16px; font-size: 10px;">●</span> 5 Open</span>
+                    <span>✓ 12 Closed</span>
+                </div>
+                <div class="issue-list-item">
+                    <div class="issue-icon open">●</div>
+                    <div class="issue-list-content">
+                        <div class="issue-list-title">
+                            ダッシュボードUIの実装
+                            <span class="label label-feature">機能追加</span>
+                            <span class="label label-担当e">担当E</span>
+                        </div>
+                        <div class="issue-list-meta">#18 opened 1 day ago by 担当E • Sprint 3</div>
+                    </div>
+                </div>
+                <div class="issue-list-item">
+                    <div class="issue-icon open">●</div>
+                    <div class="issue-list-content">
+                        <div class="issue-list-title">
+                            マッチングエンジンの実装
+                            <span class="label label-feature">機能追加</span>
+                            <span class="label label-priority-high">優先度:高</span>
+                            <span class="label label-担当c">担当C</span>
+                        </div>
+                        <div class="issue-list-meta">#15 opened 3 days ago by 担当C • Sprint 3</div>
+                    </div>
+                </div>
+                <div class="issue-list-item">
+                    <div class="issue-icon open">●</div>
+                    <div class="issue-list-content">
+                        <div class="issue-list-title">
+                            メール通知機能の実装
+                            <span class="label label-feature">機能追加</span>
+                            <span class="label label-担当d">担当D</span>
+                        </div>
+                        <div class="issue-list-meta">#14 opened 4 days ago by 担当D • Sprint 2</div>
+                    </div>
+                </div>
+                <div class="issue-list-item">
+                    <div class="issue-icon closed">✓</div>
+                    <div class="issue-list-content">
+                        <div class="issue-list-title" style="color: #57606a;">
+                            JVN iPedia APIクライアントの実装
+                            <span class="label label-api">API連携</span>
+                        </div>
+                        <div class="issue-list-meta">#12 closed 1 day ago by 担当A • Sprint 2</div>
+                    </div>
+                </div>
+                <div class="issue-list-item">
+                    <div class="issue-icon closed">✓</div>
+                    <div class="issue-list-content">
+                        <div class="issue-list-title" style="color: #57606a;">
+                            PostgreSQLスキーマの設計・実装
+                            <span class="label label-feature">機能追加</span>
+                        </div>
+                        <div class="issue-list-meta">#8 closed 5 days ago by 担当B • Sprint 1</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="callout">
+                ラベルやマイルストーンでフィルタリングできるので、「自分の担当だけ」「今週やるものだけ」などの絞り込みが可能
+            </div>
+        </div>
+
+        <!-- ラベルの使い方 -->
+        <div class="section">
+            <h2>🏷️ ラベルの使い方</h2>
+            
+            <p style="margin-bottom: 16px;">ラベルを付けることで、Issueを分類・検索しやすくなります。</p>
+            
+            <h4 style="margin-bottom: 12px;">今回のプロジェクトで使うラベル例</h4>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">カテゴリ</th>
+                    <th style="width: 30%;">ラベル</th>
+                    <th>用途</th>
+                </tr>
+                <tr>
+                    <td rowspan="4"><strong>種類</strong></td>
+                    <td><span class="label label-feature">機能追加</span></td>
+                    <td>新機能の実装</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-bug">バグ</span></td>
+                    <td>不具合の報告・修正</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-docs">ドキュメント</span></td>
+                    <td>ドキュメント作成・更新</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-api">API連携</span></td>
+                    <td>外部API関連のタスク</td>
+                </tr>
+                <tr>
+                    <td rowspan="3"><strong>優先度</strong></td>
+                    <td><span class="label label-priority-high">優先度:高</span></td>
+                    <td>最優先で対応</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-priority-medium">優先度:中</span></td>
+                    <td>通常の優先度</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-priority-low">優先度:低</span></td>
+                    <td>余裕があれば対応</td>
+                </tr>
+                <tr>
+                    <td rowspan="5"><strong>担当</strong></td>
+                    <td><span class="label label-担当a">担当A</span></td>
+                    <td>担当Aがメイン</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-担当b">担当B</span></td>
+                    <td>担当Bがメイン</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-担当c">担当C</span></td>
+                    <td>担当Cがメイン</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-担当d">担当D</span></td>
+                    <td>担当Dがメイン</td>
+                </tr>
+                <tr>
+                    <td><span class="label label-担当e">担当E</span></td>
+                    <td>担当Eがメイン</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Issueテンプレート -->
+        <div class="section">
+            <h2>📝 Issue作成テンプレート</h2>
+            
+            <p style="margin-bottom: 16px;">Issueを作成する際は、以下のテンプレートを参考にしてください。</p>
+            
+            <div class="template-box">
+                <h4>🚀 機能追加テンプレート</h4>
+                <div class="template-content">## 📋 概要
+（何を実装するか簡潔に）
+
+## ✅ やること
+- [ ] タスク1
+- [ ] タスク2
+- [ ] タスク3
+
+## 📎 参考資料
+（設計書、API仕様書などのリンク）
+
+## 💬 備考
+（注意点、相談事項など）</div>
+            </div>
+            
+            <div class="template-box">
+                <h4>🐛 バグ報告テンプレート</h4>
+                <div class="template-content">## 🐛 バグの内容
+（何が起きているか）
+
+## 🔄 再現手順
+1. ○○を開く
+2. △△をクリック
+3. エラーが発生
+
+## ✅ 期待する動作
+（本来どうなるべきか）
+
+## 📸 スクリーンショット
+（あれば添付）
+
+## 🖥️ 環境
+- OS: 
+- ブラウザ: 
+- バージョン: </div>
+            </div>
+            
+            <div class="point-box">
+                <h4>GitHubの機能：Issueテンプレート</h4>
+                <p><code>.github/ISSUE_TEMPLATE/</code> フォルダにテンプレートファイルを置くと、Issue作成時に自動でテンプレートが表示されます。担当Eが環境構築時に設定する予定です。</p>
+            </div>
+        </div>
+
+        <!-- なぜIssueを使うか -->
+        <div class="section">
+            <h2>🎯 なぜIssueを使うのか</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">メリット</th>
+                    <th>説明</th>
+                </tr>
+                <tr>
+                    <td><strong>作業の見える化</strong></td>
+                    <td>誰が何をやっているか、何が残っているかが一覧で分かる</td>
+                </tr>
+                <tr>
+                    <td><strong>議論の記録</strong></td>
+                    <td>Issue上でのコメントのやり取りが残る。後から経緯を追える</td>
+                </tr>
+                <tr>
+                    <td><strong>進捗管理</strong></td>
+                    <td>Open/Closedで完了状況が分かる。マイルストーンで期限管理も可能</td>
+                </tr>
+                <tr>
+                    <td><strong>PRとの紐付け</strong></td>
+                    <td>どのPRがどの機能・バグ修正に対応するか明確になる</td>
+                </tr>
+                <tr>
+                    <td><strong>検索性</strong></td>
+                    <td>ラベル、担当者、キーワードで絞り込みが可能</td>
+                </tr>
+                <tr>
+                    <td><strong>属人化防止</strong></td>
+                    <td>タスクの内容がIssueに書かれているので、担当者以外も状況を把握できる</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 今回のプロジェクトでの運用 -->
+        <div class="section">
+            <h2>📋 今回のプロジェクトでのIssue運用</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>運用ルール</th>
+                </tr>
+                <tr>
+                    <td><strong>Issue作成タイミング</strong></td>
+                    <td>スプリント開始時に、そのスプリントのタスクをIssue化</td>
+                </tr>
+                <tr>
+                    <td><strong>担当者の設定</strong></td>
+                    <td>メイン担当をAssigneeに設定。サブ担当はラベルで管理</td>
+                </tr>
+                <tr>
+                    <td><strong>マイルストーン</strong></td>
+                    <td>Sprint 1〜5 を作成し、各Issueを紐付け</td>
+                </tr>
+                <tr>
+                    <td><strong>進捗更新</strong></td>
+                    <td>作業開始時・完了時にコメントを残す</td>
+                </tr>
+                <tr>
+                    <td><strong>クローズ</strong></td>
+                    <td>PRマージ時に自動クローズ（Closes #xx を使用）</td>
+                </tr>
+            </table>
+            
+            <div class="callout">
+                分担表の「詳細タスク一覧」シートに記載された各タスク（T-001〜T-043）を、それぞれIssueとして登録していきます
+            </div>
+        </div>
+
+        <!-- 用語まとめ -->
+        <div class="section">
+            <h2>📚 用語まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">用語</th>
+                    <th>意味</th>
+                </tr>
+                <tr>
+                    <td><strong>Issue</strong></td>
+                    <td>やるべきことを管理するチケット。タスク、バグ、質問など何でも</td>
+                </tr>
+                <tr>
+                    <td><strong>Open / Closed</strong></td>
+                    <td>Issueの状態。Open=未完了、Closed=完了</td>
+                </tr>
+                <tr>
+                    <td><strong>Assignee</strong></td>
+                    <td>担当者。そのIssueの責任者</td>
+                </tr>
+                <tr>
+                    <td><strong>Label</strong></td>
+                    <td>Issueに付けるタグ。分類・検索用</td>
+                </tr>
+                <tr>
+                    <td><strong>Milestone</strong></td>
+                    <td>期限やフェーズの管理単位。Sprint 1、Sprint 2 など</td>
+                </tr>
+                <tr>
+                    <td><strong>Closes #xx</strong></td>
+                    <td>PRの本文に書くと、マージ時に該当Issueが自動クローズ</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; color: #57606a; margin-top: 30px; padding: 20px;">
+            <p>脆弱性管理システム開発プロジェクト チーム向け資料</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知システム（Slack/メール）ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #24292f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #57606a;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #24292f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e01e5a;
+        }
+        .section h3 {
+            color: #24292f;
+            font-size: 16px;
+            margin: 24px 0 12px;
+        }
+        .section h2.email {
+            border-bottom-color: #0969da;
+        }
+        .section h2.design {
+            border-bottom-color: #2da44e;
+        }
+        
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d0d7de;
+        }
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        /* 図解 */
+        .diagram {
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .diagram-svg {
+            width: 100%;
+            min-width: 700px;
+        }
+        
+        /* ポイントボックス */
+        .point-box {
+            background: #ddf4ff;
+            border: 1px solid #54aeff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .point-box h4 {
+            color: #0969da;
+            margin-bottom: 8px;
+        }
+        .point-box ul {
+            margin-left: 20px;
+        }
+        .point-box li {
+            margin: 4px 0;
+        }
+        
+        .callout {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .callout::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        
+        .recommend-box {
+            background: #dafbe1;
+            border: 1px solid #2da44e;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .recommend-box h4 {
+            color: #1a7f37;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #ffebe9;
+            border: 1px solid #ff8182;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning-box h4 {
+            color: #cf222e;
+            margin-bottom: 8px;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #24292f;
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.5;
+        }
+        .code-block .comment {
+            color: #8b949e;
+        }
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+        .code-block .string {
+            color: #a5d6ff;
+        }
+        .code-block .function {
+            color: #d2a8ff;
+        }
+        .code-block .number {
+            color: #79c0ff;
+        }
+        .code-block .class {
+            color: #7ee787;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        /* 手順リスト */
+        .steps {
+            margin: 20px 0;
+        }
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            border-left: 4px solid #0969da;
+        }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: #0969da;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .step-content h4 {
+            margin-bottom: 4px;
+        }
+        .step-content p {
+            font-size: 14px;
+            color: #57606a;
+        }
+        
+        /* Slack風メッセージ */
+        .slack-message {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Slack-Lato', 'Lato', sans-serif;
+        }
+        .slack-message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .slack-bot-icon {
+            width: 36px;
+            height: 36px;
+            background: #4a154b;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        .slack-bot-name {
+            font-weight: bold;
+        }
+        .slack-timestamp {
+            font-size: 12px;
+            color: #616061;
+        }
+        .slack-attachment {
+            border-left: 4px solid #cf222e;
+            padding-left: 12px;
+            margin: 8px 0;
+        }
+        .slack-attachment.warning {
+            border-left-color: #bf8700;
+        }
+        .slack-attachment.info {
+            border-left-color: #0969da;
+        }
+        .slack-attachment-title {
+            font-weight: bold;
+            color: #1264a3;
+        }
+        .slack-field {
+            display: inline-block;
+            margin-right: 24px;
+            margin-top: 8px;
+        }
+        .slack-field-title {
+            font-size: 12px;
+            color: #616061;
+            font-weight: bold;
+        }
+        .slack-field-value {
+            font-size: 14px;
+        }
+        
+        /* メール風 */
+        .email-preview {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .email-header {
+            background: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .email-header-row {
+            display: flex;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+        .email-header-label {
+            width: 60px;
+            color: #57606a;
+        }
+        .email-header-value {
+            font-weight: 500;
+        }
+        .email-body {
+            padding: 20px;
+        }
+        .email-body h2 {
+            border: none;
+            font-size: 18px;
+            margin-bottom: 16px;
+            padding: 0;
+        }
+        
+        /* 比較カード */
+        .compare-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 16px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .compare-card-header.slack { background: #4a154b; }
+        .compare-card-header.email { background: #0969da; }
+        .compare-card-header.webhook { background: #2da44e; }
+        .compare-card-header.ses { background: #ff9900; }
+        .compare-card-body {
+            padding: 16px;
+        }
+        .compare-card-body ul {
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .compare-card-body li {
+            margin: 6px 0;
+        }
+        
+        /* 通知タイプカード */
+        .notification-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .notification-type {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .notification-type-header {
+            padding: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .notification-type-header.immediate { background: #ffebe9; color: #cf222e; }
+        .notification-type-header.daily { background: #fff8c5; color: #9a6700; }
+        .notification-type-header.weekly { background: #ddf4ff; color: #0969da; }
+        .notification-type-body {
+            padding: 12px;
+            font-size: 13px;
+        }
+        .notification-type-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .notification-types {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 通知システム（Slack/メール）ガイド</h1>
+        <p class="subtitle">脆弱性検出時のアラートと定期レポートの実装</p>
+
+        <!-- 通知システムの概要 -->
+        <div class="section">
+            <h2>📋 通知システムの概要</h2>
+            
+            <p style="margin-bottom: 20px;">
+                マッチングエンジンで検出された脆弱性を、適切なタイミングで適切な人に通知します。
+            </p>
+            
+            <div class="diagram">
+                <svg class="diagram-svg" viewBox="0 0 750 320" style="height: 320px;">
+                    <!-- 背景 -->
+                    <rect x="5" y="5" width="740" height="310" rx="8" fill="white" stroke="#d0d7de" stroke-width="2"/>
+                    
+                    <!-- タイトル -->
+                    <text x="375" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#24292f">通知システムの全体像</text>
+                    
+                    <!-- マッチングエンジン -->
+                    <rect x="30" y="100" width="140" height="100" rx="6" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+                    <text x="100" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#9a6700">マッチングエンジン</text>
+                    <text x="100" y="150" text-anchor="middle" font-size="10" fill="#57606a">新規脆弱性検出</text>
+                    <text x="100" y="170" text-anchor="middle" font-size="10" fill="#57606a">差分情報</text>
+                    <text x="100" y="190" text-anchor="middle" font-size="10" fill="#57606a">優先度スコア</text>
+                    
+                    <!-- 通知サービス -->
+                    <rect x="230" y="70" width="180" height="160" rx="8" fill="#fbefff" stroke="#8250df" stroke-width="3"/>
+                    <text x="320" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#8250df">通知サービス</text>
+                    <text x="320" y="120" text-anchor="middle" font-size="10" fill="#57606a">（担当D実装）</text>
+                    
+                    <rect x="245" y="135" width="150" height="80" rx="4" fill="white"/>
+                    <text x="255" y="155" font-size="10" fill="#24292f">📋 通知ルール判定</text>
+                    <text x="255" y="175" font-size="10" fill="#24292f">📝 メッセージ生成</text>
+                    <text x="255" y="195" font-size="10" fill="#24292f">📤 配信処理</text>
+                    
+                    <!-- Slack -->
+                    <rect x="480" y="55" width="120" height="80" rx="6" fill="#4a154b"/>
+                    <text x="540" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Slack</text>
+                    <text x="540" y="105" text-anchor="middle" font-size="10" fill="#e8d5e8">Incoming Webhook</text>
+                    <text x="540" y="120" text-anchor="middle" font-size="10" fill="#e8d5e8">即時通知向け</text>
+                    
+                    <!-- Email -->
+                    <rect x="480" y="155" width="120" height="80" rx="6" fill="#0969da"/>
+                    <text x="540" y="185" text-anchor="middle" font-size="12" font-weight="bold" fill="white">メール</text>
+                    <text x="540" y="205" text-anchor="middle" font-size="10" fill="#c8e1ff">AWS SES / SMTP</text>
+                    <text x="540" y="220" text-anchor="middle" font-size="10" fill="#c8e1ff">レポート向け</text>
+                    
+                    <!-- Teams（オプション） -->
+                    <rect x="620" y="105" width="100" height="60" rx="6" fill="#5558af" opacity="0.5"/>
+                    <text x="670" y="130" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Teams</text>
+                    <text x="670" y="145" text-anchor="middle" font-size="9" fill="#c8c8ff">（オプション）</text>
+                    
+                    <!-- 矢印 -->
+                    <line x1="170" y1="150" x2="230" y2="150" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow4)"/>
+                    <path d="M 410 120 L 480 95" fill="none" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow4)"/>
+                    <path d="M 410 180 L 480 195" fill="none" stroke="#8c959f" stroke-width="2" marker-end="url(#arrow4)"/>
+                    
+                    <!-- ラベル -->
+                    <text x="185" y="140" font-size="9" fill="#57606a">イベント</text>
+                    <text x="430" y="100" font-size="9" fill="#57606a">即時</text>
+                    <text x="430" y="200" font-size="9" fill="#57606a">定期</text>
+                    
+                    <!-- DB -->
+                    <rect x="230" y="250" width="180" height="50" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+                    <text x="320" y="275" text-anchor="middle" font-size="11" font-weight="bold" fill="#0969da">通知設定DB</text>
+                    <text x="320" y="290" text-anchor="middle" font-size="9" fill="#57606a">宛先・条件・履歴</text>
+                    
+                    <line x1="320" y1="230" x2="320" y2="250" stroke="#8c959f" stroke-width="2"/>
+                    
+                    <defs>
+                        <marker id="arrow4" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8c959f"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <h3>通知の種類</h3>
+            <div class="notification-types">
+                <div class="notification-type">
+                    <div class="notification-type-header immediate">即時アラート</div>
+                    <div class="notification-type-body">
+                        <div class="notification-type-icon">🚨</div>
+                        <p><strong>トリガー：</strong><br>Critical検出/KEV登録</p>
+                        <p style="margin-top: 8px;"><strong>配信先：</strong><br>Slack + メール</p>
+                    </div>
+                </div>
+                <div class="notification-type">
+                    <div class="notification-type-header daily">日次サマリー</div>
+                    <div class="notification-type-body">
+                        <div class="notification-type-icon">📊</div>
+                        <p><strong>トリガー：</strong><br>毎朝 9:00</p>
+                        <p style="margin-top: 8px;"><strong>配信先：</strong><br>Slack / メール</p>
+                    </div>
+                </div>
+                <div class="notification-type">
+                    <div class="notification-type-header weekly">週次レポート</div>
+                    <div class="notification-type-body">
+                        <div class="notification-type-icon">📑</div>
+                        <p><strong>トリガー：</strong><br>毎週月曜 9:00</p>
+                        <p style="margin-top: 8px;"><strong>配信先：</strong><br>メール（PDF添付）</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slack通知 -->
+        <div class="section">
+            <h2>💬 Slack通知</h2>
+            
+            <p style="margin-bottom: 16px;">
+                Slackへの通知は<strong>Incoming Webhook</strong>を使うのが最もシンプルです。
+            </p>
+            
+            <div class="compare-cards">
+                <div class="compare-card">
+                    <div class="compare-card-header webhook">Incoming Webhook（推奨）</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>URLにPOSTするだけ</li>
+                            <li>設定が簡単</li>
+                            <li>一方向通知に最適</li>
+                            <li>チャンネル固定</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #2da44e;">
+                            ✅ 脆弱性アラートにはこちらで十分
+                        </p>
+                    </div>
+                </div>
+                <div class="compare-card">
+                    <div class="compare-card-header slack">Slack API（Bot Token）</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>双方向のやり取り可能</li>
+                            <li>動的にチャンネル選択</li>
+                            <li>リアクション取得など</li>
+                            <li>設定がやや複雑</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #57606a;">
+                            将来的に対話機能が必要な場合
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Incoming Webhook の設定手順</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Slack Appを作成</h4>
+                        <p><a href="https://api.slack.com/apps" target="_blank">https://api.slack.com/apps</a> → 「Create New App」→「From scratch」</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Incoming Webhooksを有効化</h4>
+                        <p>左メニュー「Incoming Webhooks」→ トグルをON</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Webhook URLを生成</h4>
+                        <p>「Add New Webhook to Workspace」→ 通知先チャンネルを選択 → URLをコピー</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>URLを環境変数に保存</h4>
+                        <p><code>SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXXXX/XXXXX/XXXXX</code></p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>基本的な通知コード</h3>
+            <div class="code-block">
+<span class="comment"># slack_notifier.py</span>
+<span class="keyword">import</span> requests
+<span class="keyword">import</span> os
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Dict
+
+<span class="keyword">class</span> <span class="class">SlackNotifier</span>:
+    <span class="string">"""Slack通知クラス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, webhook_url: str = <span class="keyword">None</span>):
+        self.webhook_url = webhook_url <span class="keyword">or</span> os.getenv(<span class="string">"SLACK_WEBHOOK_URL"</span>)
+    
+    <span class="keyword">def</span> <span class="function">send_message</span>(self, text: str, blocks: List[Dict] = <span class="keyword">None</span>) -> bool:
+        <span class="string">"""メッセージを送信"""</span>
+        payload = {<span class="string">"text"</span>: text}
+        
+        <span class="keyword">if</span> blocks:
+            payload[<span class="string">"blocks"</span>] = blocks
+        
+        response = requests.post(self.webhook_url, json=payload)
+        <span class="keyword">return</span> response.status_code == <span class="number">200</span>
+    
+    <span class="keyword">def</span> <span class="function">send_vulnerability_alert</span>(self, vuln: Dict, asset: Dict, priority: Dict):
+        <span class="string">"""脆弱性アラートを送信"""</span>
+        
+        <span class="comment"># 優先度に応じた色</span>
+        colors = {
+            <span class="string">"Immediate"</span>: <span class="string">"#cf222e"</span>,
+            <span class="string">"Out-of-Cycle"</span>: <span class="string">"#bf8700"</span>,
+            <span class="string">"Scheduled"</span>: <span class="string">"#0969da"</span>,
+            <span class="string">"Defer"</span>: <span class="string">"#57606a"</span>
+        }
+        color = colors.get(priority[<span class="string">"action"</span>], <span class="string">"#57606a"</span>)
+        
+        blocks = [
+            {
+                <span class="string">"type"</span>: <span class="string">"header"</span>,
+                <span class="string">"text"</span>: {
+                    <span class="string">"type"</span>: <span class="string">"plain_text"</span>,
+                    <span class="string">"text"</span>: <span class="string">"🚨 新しい脆弱性が検出されました"</span>,
+                    <span class="string">"emoji"</span>: <span class="keyword">True</span>
+                }
+            },
+            {
+                <span class="string">"type"</span>: <span class="string">"section"</span>,
+                <span class="string">"fields"</span>: [
+                    {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*CVE ID:*\n{vuln['cve_id']}"</span>},
+                    {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*CVSS:*\n{vuln['cvss_score']}"</span>},
+                    {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*対象資産:*\n{asset['hostname']}"</span>},
+                    {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*優先度:*\n{priority['action']}"</span>}
+                ]
+            },
+            {
+                <span class="string">"type"</span>: <span class="string">"section"</span>,
+                <span class="string">"text"</span>: {
+                    <span class="string">"type"</span>: <span class="string">"mrkdwn"</span>,
+                    <span class="string">"text"</span>: f<span class="string">"*概要:*\n{vuln['title']}"</span>
+                }
+            },
+            {
+                <span class="string">"type"</span>: <span class="string">"actions"</span>,
+                <span class="string">"elements"</span>: [
+                    {
+                        <span class="string">"type"</span>: <span class="string">"button"</span>,
+                        <span class="string">"text"</span>: {<span class="string">"type"</span>: <span class="string">"plain_text"</span>, <span class="string">"text"</span>: <span class="string">"詳細を見る"</span>},
+                        <span class="string">"url"</span>: f<span class="string">"https://nvd.nist.gov/vuln/detail/{vuln['cve_id']}"</span>
+                    }
+                ]
+            }
+        ]
+        
+        <span class="keyword">return</span> self.send_message(
+            text=f<span class="string">"🚨 {vuln['cve_id']} が {asset['hostname']} で検出されました"</span>,
+            blocks=blocks
+        )
+            </div>
+            
+            <h3>Slack通知の表示イメージ</h3>
+            <div class="slack-message">
+                <div class="slack-message-header">
+                    <div class="slack-bot-icon">🛡️</div>
+                    <span class="slack-bot-name">脆弱性管理Bot</span>
+                    <span class="slack-timestamp">10:30 AM</span>
+                </div>
+                <div style="font-weight: bold; font-size: 16px; margin-bottom: 12px;">🚨 新しい脆弱性が検出されました</div>
+                <div class="slack-attachment">
+                    <div class="slack-field">
+                        <div class="slack-field-title">CVE ID</div>
+                        <div class="slack-field-value">CVE-2024-1234</div>
+                    </div>
+                    <div class="slack-field">
+                        <div class="slack-field-title">CVSS</div>
+                        <div class="slack-field-value">9.8 (Critical)</div>
+                    </div>
+                    <div class="slack-field">
+                        <div class="slack-field-title">対象資産</div>
+                        <div class="slack-field-value">web-server-01</div>
+                    </div>
+                    <div class="slack-field">
+                        <div class="slack-field-title">優先度</div>
+                        <div class="slack-field-value">Immediate</div>
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <div class="slack-field-title">概要</div>
+                        <div class="slack-field-value">Apache HTTP Server における重大な脆弱性</div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <button style="background: #007a5a; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">詳細を見る</button>
+                </div>
+            </div>
+            
+            <h3>日次サマリーの送信</h3>
+            <div class="code-block">
+<span class="keyword">def</span> <span class="function">send_daily_summary</span>(self, summary: Dict):
+    <span class="string">"""日次サマリーを送信"""</span>
+    
+    blocks = [
+        {
+            <span class="string">"type"</span>: <span class="string">"header"</span>,
+            <span class="string">"text"</span>: {
+                <span class="string">"type"</span>: <span class="string">"plain_text"</span>,
+                <span class="string">"text"</span>: <span class="string">"📊 脆弱性日次レポート"</span>
+            }
+        },
+        {
+            <span class="string">"type"</span>: <span class="string">"section"</span>,
+            <span class="string">"fields"</span>: [
+                {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*新規検出:*\n{summary['new_count']}件"</span>},
+                {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*解消:*\n{summary['resolved_count']}件"</span>},
+                {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*未対応:*\n{summary['open_count']}件"</span>},
+                {<span class="string">"type"</span>: <span class="string">"mrkdwn"</span>, <span class="string">"text"</span>: f<span class="string">"*Critical:*\n{summary['critical_count']}件"</span>}
+            ]
+        },
+        {
+            <span class="string">"type"</span>: <span class="string">"divider"</span>
+        },
+        {
+            <span class="string">"type"</span>: <span class="string">"section"</span>,
+            <span class="string">"text"</span>: {
+                <span class="string">"type"</span>: <span class="string">"mrkdwn"</span>,
+                <span class="string">"text"</span>: <span class="string">"&lt;https://vuln-dashboard.example.com|📈 ダッシュボードを開く&gt;"</span>
+            }
+        }
+    ]
+    
+    <span class="keyword">return</span> self.send_message(
+        text=f<span class="string">"📊 日次レポート: 新規{summary['new_count']}件"</span>,
+        blocks=blocks
+    )
+            </div>
+        </div>
+
+        <!-- メール通知 -->
+        <div class="section">
+            <h2 class="email">📧 メール通知</h2>
+            
+            <p style="margin-bottom: 16px;">
+                メール通知は、詳細なレポートや正式な通知に適しています。
+            </p>
+            
+            <div class="compare-cards">
+                <div class="compare-card">
+                    <div class="compare-card-header email">SMTP（社内メールサーバー）</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>既存インフラを利用</li>
+                            <li>追加コストなし</li>
+                            <li>社内ネットワークで完結</li>
+                            <li>設定は社内IT部門と調整</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #0969da;">
+                            ✅ 社内メールサーバーがある場合
+                        </p>
+                    </div>
+                </div>
+                <div class="compare-card">
+                    <div class="compare-card-header ses">AWS SES</div>
+                    <div class="compare-card-body">
+                        <ul>
+                            <li>高い到達率</li>
+                            <li>大量配信対応</li>
+                            <li>AWSとの統合が容易</li>
+                            <li>従量課金（1,000通/$0.10）</li>
+                        </ul>
+                        <p style="margin-top: 12px; font-size: 13px; color: #ff9900;">
+                            ✅ AWS環境なら推奨
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>SMTP方式の実装</h3>
+            <div class="code-block">
+<span class="comment"># email_notifier.py</span>
+<span class="keyword">import</span> smtplib
+<span class="keyword">from</span> email.mime.text <span class="keyword">import</span> MIMEText
+<span class="keyword">from</span> email.mime.multipart <span class="keyword">import</span> MIMEMultipart
+<span class="keyword">from</span> email.mime.application <span class="keyword">import</span> MIMEApplication
+<span class="keyword">import</span> os
+
+<span class="keyword">class</span> <span class="class">EmailNotifier</span>:
+    <span class="string">"""メール通知クラス（SMTP）"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.smtp_host = os.getenv(<span class="string">"SMTP_HOST"</span>, <span class="string">"smtp.example.com"</span>)
+        self.smtp_port = int(os.getenv(<span class="string">"SMTP_PORT"</span>, <span class="string">"587"</span>))
+        self.smtp_user = os.getenv(<span class="string">"SMTP_USER"</span>)
+        self.smtp_password = os.getenv(<span class="string">"SMTP_PASSWORD"</span>)
+        self.from_address = os.getenv(<span class="string">"EMAIL_FROM"</span>, <span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6117140d0f4c000d041315210419000c110d044f020e0c">[email&#160;protected]</a>"</span>)
+    
+    <span class="keyword">def</span> <span class="function">send_email</span>(
+        self,
+        to: list,
+        subject: str,
+        body_html: str,
+        attachments: list = <span class="keyword">None</span>
+    ) -> bool:
+        <span class="string">"""メールを送信"""</span>
+        
+        msg = MIMEMultipart(<span class="string">"alternative"</span>)
+        msg[<span class="string">"Subject"</span>] = subject
+        msg[<span class="string">"From"</span>] = self.from_address
+        msg[<span class="string">"To"</span>] = <span class="string">", "</span>.join(to)
+        
+        <span class="comment"># HTML本文</span>
+        msg.attach(MIMEText(body_html, <span class="string">"html"</span>))
+        
+        <span class="comment"># 添付ファイル</span>
+        <span class="keyword">if</span> attachments:
+            <span class="keyword">for</span> filepath <span class="keyword">in</span> attachments:
+                <span class="keyword">with</span> open(filepath, <span class="string">"rb"</span>) <span class="keyword">as</span> f:
+                    part = MIMEApplication(f.read())
+                    part.add_header(
+                        <span class="string">"Content-Disposition"</span>,
+                        <span class="string">"attachment"</span>,
+                        filename=os.path.basename(filepath)
+                    )
+                    msg.attach(part)
+        
+        <span class="comment"># 送信</span>
+        <span class="keyword">try</span>:
+            <span class="keyword">with</span> smtplib.SMTP(self.smtp_host, self.smtp_port) <span class="keyword">as</span> server:
+                server.starttls()
+                server.login(self.smtp_user, self.smtp_password)
+                server.send_message(msg)
+            <span class="keyword">return</span> <span class="keyword">True</span>
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            print(f<span class="string">"メール送信エラー: {e}"</span>)
+            <span class="keyword">return</span> <span class="keyword">False</span>
+            </div>
+            
+            <h3>AWS SES方式の実装</h3>
+            <div class="code-block">
+<span class="comment"># ses_notifier.py</span>
+<span class="keyword">import</span> boto3
+<span class="keyword">from</span> botocore.exceptions <span class="keyword">import</span> ClientError
+
+<span class="keyword">class</span> <span class="class">SESNotifier</span>:
+    <span class="string">"""メール通知クラス（AWS SES）"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, region: str = <span class="string">"ap-northeast-1"</span>):
+        self.client = boto3.client(<span class="string">"ses"</span>, region_name=region)
+        self.from_address = <span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4d3b382123602c21283f390d28352c203d2128632e2220">[email&#160;protected]</a>"</span>
+    
+    <span class="keyword">def</span> <span class="function">send_email</span>(
+        self,
+        to: list,
+        subject: str,
+        body_html: str
+    ) -> bool:
+        <span class="string">"""メールを送信"""</span>
+        
+        <span class="keyword">try</span>:
+            response = self.client.send_email(
+                Source=self.from_address,
+                Destination={
+                    <span class="string">"ToAddresses"</span>: to
+                },
+                Message={
+                    <span class="string">"Subject"</span>: {
+                        <span class="string">"Data"</span>: subject,
+                        <span class="string">"Charset"</span>: <span class="string">"UTF-8"</span>
+                    },
+                    <span class="string">"Body"</span>: {
+                        <span class="string">"Html"</span>: {
+                            <span class="string">"Data"</span>: body_html,
+                            <span class="string">"Charset"</span>: <span class="string">"UTF-8"</span>
+                        }
+                    }
+                }
+            )
+            <span class="keyword">return</span> <span class="keyword">True</span>
+        <span class="keyword">except</span> ClientError <span class="keyword">as</span> e:
+            print(f<span class="string">"SESエラー: {e}"</span>)
+            <span class="keyword">return</span> <span class="keyword">False</span>
+            </div>
+            
+            <div class="callout">
+                AWS SESを使う場合、送信元メールアドレスの検証（Verification）が必要です。本番環境ではサンドボックス解除も必要になります。
+            </div>
+            
+            <h3>メール通知の表示イメージ</h3>
+            <div class="email-preview">
+                <div class="email-header">
+                    <div class="email-header-row">
+                        <span class="email-header-label">From:</span>
+                        <span class="email-header-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6a1c1f0604470b060f181e2a0f120b071a060f44090507">[email&#160;protected]</a></span>
+                    </div>
+                    <div class="email-header-row">
+                        <span class="email-header-label">To:</span>
+                        <span class="email-header-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5625333523243f222f7b2233373b16332e373b263a337835393b">[email&#160;protected]</a></span>
+                    </div>
+                    <div class="email-header-row">
+                        <span class="email-header-label">Subject:</span>
+                        <span class="email-header-value">【重要】新規脆弱性検出: CVE-2024-1234（Critical）</span>
+                    </div>
+                </div>
+                <div class="email-body">
+                    <h2 style="color: #cf222e;">🚨 新しい脆弱性が検出されました</h2>
+                    <table style="margin: 16px 0; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">CVE ID</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">CVE-2024-1234</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">CVSSスコア</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">9.8（Critical）</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">対象資産</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">web-server-01（本番環境）</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f6f8fa; font-weight: bold;">推奨アクション</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; color: #cf222e; font-weight: bold;">Immediate（24時間以内に対応）</td>
+                        </tr>
+                    </table>
+                    <p><strong>概要：</strong>Apache HTTP Server における重大な脆弱性が発見されました。</p>
+                    <p style="margin-top: 16px;">
+                        <a href="#" style="background: #0969da; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">ダッシュボードで詳細を確認</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HTMLメールテンプレート -->
+        <div class="section">
+            <h2>📝 HTMLメールテンプレート</h2>
+            
+            <div class="code-block">
+<span class="comment"># templates/vulnerability_alert.html</span>
+VULNERABILITY_ALERT_TEMPLATE = <span class="string">"""
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;style&gt;
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .header { background: #cf222e; color: white; padding: 20px; }
+        .content { padding: 20px; }
+        .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .info-table th { background: #f6f8fa; text-align: left; padding: 10px; border: 1px solid #ddd; }
+        .info-table td { padding: 10px; border: 1px solid #ddd; }
+        .btn { display: inline-block; background: #0969da; color: white; padding: 12px 24px; 
+               text-decoration: none; border-radius: 4px; }
+        .critical { color: #cf222e; font-weight: bold; }
+        .high { color: #bf8700; font-weight: bold; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="header"&gt;
+        &lt;h1&gt;🚨 新しい脆弱性が検出されました&lt;/h1&gt;
+    &lt;/div&gt;
+    &lt;div class="content"&gt;
+        &lt;table class="info-table"&gt;
+            &lt;tr&gt;&lt;th&gt;CVE ID&lt;/th&gt;&lt;td&gt;{{ cve_id }}&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;th&gt;CVSSスコア&lt;/th&gt;&lt;td&gt;{{ cvss_score }} ({{ severity }})&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;th&gt;対象資産&lt;/th&gt;&lt;td&gt;{{ hostname }} ({{ environment }})&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;th&gt;推奨アクション&lt;/th&gt;&lt;td class="{{ action_class }}"&gt;{{ action }}&lt;/td&gt;&lt;/tr&gt;
+        &lt;/table&gt;
+        &lt;h3&gt;概要&lt;/h3&gt;
+        &lt;p&gt;{{ description }}&lt;/p&gt;
+        &lt;p style="margin-top: 20px;"&gt;
+            &lt;a href="{{ dashboard_url }}" class="btn"&gt;ダッシュボードで詳細を確認&lt;/a&gt;
+        &lt;/p&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"""</span>
+
+<span class="comment"># テンプレートエンジンで変数を埋め込み</span>
+<span class="keyword">from</span> jinja2 <span class="keyword">import</span> Template
+
+<span class="keyword">def</span> <span class="function">render_alert_email</span>(vuln: Dict, asset: Dict, priority: Dict) -> str:
+    template = Template(VULNERABILITY_ALERT_TEMPLATE)
+    <span class="keyword">return</span> template.render(
+        cve_id=vuln[<span class="string">"cve_id"</span>],
+        cvss_score=vuln[<span class="string">"cvss_score"</span>],
+        severity=vuln[<span class="string">"severity"</span>],
+        hostname=asset[<span class="string">"hostname"</span>],
+        environment=asset[<span class="string">"environment"</span>],
+        action=priority[<span class="string">"action"</span>],
+        action_class=priority[<span class="string">"action"</span>].lower(),
+        description=vuln[<span class="string">"title"</span>],
+        dashboard_url=<span class="string">"https://vuln-dashboard.example.com"</span>
+    )
+            </div>
+        </div>
+
+        <!-- 通知サービスの設計 -->
+        <div class="section">
+            <h2 class="design">🏗️ 通知サービスの設計</h2>
+            
+            <h3>通知サービスクラス</h3>
+            <div class="code-block">
+<span class="comment"># notification_service.py</span>
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Dict
+<span class="keyword">from</span> enum <span class="keyword">import</span> Enum
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">class</span> <span class="class">NotificationType</span>(Enum):
+    IMMEDIATE = <span class="string">"immediate"</span>    <span class="comment"># 即時アラート</span>
+    DAILY = <span class="string">"daily"</span>            <span class="comment"># 日次サマリー</span>
+    WEEKLY = <span class="string">"weekly"</span>          <span class="comment"># 週次レポート</span>
+
+<span class="keyword">class</span> <span class="class">NotificationChannel</span>(Enum):
+    SLACK = <span class="string">"slack"</span>
+    EMAIL = <span class="string">"email"</span>
+
+<span class="keyword">class</span> <span class="class">NotificationService</span>:
+    <span class="string">"""通知サービス"""</span>
+    
+    <span class="keyword">def</span> <span class="function">__init__</span>(
+        self,
+        slack_notifier: SlackNotifier,
+        email_notifier: EmailNotifier,
+        settings_repo: NotificationSettingsRepository
+    ):
+        self.slack = slack_notifier
+        self.email = email_notifier
+        self.settings_repo = settings_repo
+    
+    <span class="keyword">def</span> <span class="function">notify_new_vulnerability</span>(
+        self,
+        vuln: Dict,
+        asset: Dict,
+        priority: Dict
+    ):
+        <span class="string">"""新規脆弱性を通知"""</span>
+        
+        <span class="comment"># 通知設定を取得</span>
+        settings = self.settings_repo.get_active_settings()
+        
+        <span class="keyword">for</span> setting <span class="keyword">in</span> settings:
+            <span class="comment"># 条件に合致するかチェック</span>
+            <span class="keyword">if not</span> self._matches_condition(setting, vuln, asset, priority):
+                <span class="keyword">continue</span>
+            
+            <span class="comment"># 通知を送信</span>
+            <span class="keyword">if</span> setting.channel == NotificationChannel.SLACK:
+                self.slack.send_vulnerability_alert(vuln, asset, priority)
+            <span class="keyword">elif</span> setting.channel == NotificationChannel.EMAIL:
+                html = render_alert_email(vuln, asset, priority)
+                self.email.send_email(
+                    to=setting.recipients,
+                    subject=f<span class="string">"【{priority['action']}】{vuln['cve_id']} が検出されました"</span>,
+                    body_html=html
+                )
+            
+            <span class="comment"># 通知履歴を保存</span>
+            self._save_history(setting, vuln, asset)
+    
+    <span class="keyword">def</span> <span class="function">_matches_condition</span>(
+        self,
+        setting,
+        vuln: Dict,
+        asset: Dict,
+        priority: Dict
+    ) -> bool:
+        <span class="string">"""通知条件に合致するかチェック"""</span>
+        
+        <span class="comment"># 優先度フィルタ</span>
+        <span class="keyword">if</span> setting.min_priority:
+            priority_order = [<span class="string">"Defer"</span>, <span class="string">"Scheduled"</span>, <span class="string">"Out-of-Cycle"</span>, <span class="string">"Immediate"</span>]
+            <span class="keyword">if</span> priority_order.index(priority[<span class="string">"action"</span>]) < priority_order.index(setting.min_priority):
+                <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="comment"># 環境フィルタ</span>
+        <span class="keyword">if</span> setting.environments <span class="keyword">and</span> asset[<span class="string">"environment"</span>] <span class="keyword">not in</span> setting.environments:
+            <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="comment"># KEVフィルタ（KEVのみ通知）</span>
+        <span class="keyword">if</span> setting.kev_only <span class="keyword">and not</span> vuln.get(<span class="string">"is_in_kev"</span>):
+            <span class="keyword">return</span> <span class="keyword">False</span>
+        
+        <span class="keyword">return</span> <span class="keyword">True</span>
+            </div>
+            
+            <h3>通知設定のDBテーブル</h3>
+            <div class="code-block">
+<span class="comment">-- notification_settings テーブル</span>
+CREATE TABLE notification_settings (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    channel VARCHAR(20) NOT NULL,       <span class="comment">-- 'slack' or 'email'</span>
+    notification_type VARCHAR(20) NOT NULL, <span class="comment">-- 'immediate', 'daily', 'weekly'</span>
+    
+    <span class="comment">-- 宛先</span>
+    webhook_url TEXT,                   <span class="comment">-- Slack Webhook URL</span>
+    recipients TEXT[],                  <span class="comment">-- メールアドレスの配列</span>
+    
+    <span class="comment">-- フィルタ条件</span>
+    min_priority VARCHAR(20),           <span class="comment">-- 最低優先度（これ以上のみ通知）</span>
+    environments TEXT[],                <span class="comment">-- 対象環境（NULLは全て）</span>
+    kev_only BOOLEAN DEFAULT FALSE,     <span class="comment">-- KEV登録のみ</span>
+    
+    <span class="comment">-- スケジュール（日次/週次用）</span>
+    schedule_time TIME,                 <span class="comment">-- 送信時刻</span>
+    schedule_day INTEGER,               <span class="comment">-- 曜日（週次の場合、0=日曜）</span>
+    
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+<span class="comment">-- notification_history テーブル</span>
+CREATE TABLE notification_history (
+    id SERIAL PRIMARY KEY,
+    setting_id INTEGER REFERENCES notification_settings(id),
+    vulnerability_id INTEGER REFERENCES vulnerabilities(id),
+    asset_id INTEGER REFERENCES assets(id),
+    
+    channel VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL,        <span class="comment">-- 'sent', 'failed'</span>
+    error_message TEXT,
+    
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+            </div>
+            
+            <h3>通知設定の例</h3>
+            <table>
+                <tr>
+                    <th>設定名</th>
+                    <th>チャンネル</th>
+                    <th>タイプ</th>
+                    <th>条件</th>
+                    <th>宛先</th>
+                </tr>
+                <tr>
+                    <td>Critical即時アラート</td>
+                    <td>Slack + Email</td>
+                    <td>即時</td>
+                    <td>Immediate または KEV</td>
+                    <td>#security-alerts<br>security-team@</td>
+                </tr>
+                <tr>
+                    <td>日次サマリー</td>
+                    <td>Slack</td>
+                    <td>日次</td>
+                    <td>全て</td>
+                    <td>#vulnerability-report</td>
+                </tr>
+                <tr>
+                    <td>週次レポート</td>
+                    <td>Email</td>
+                    <td>週次</td>
+                    <td>全て</td>
+                    <td>managers@<br>audit@</td>
+                </tr>
+                <tr>
+                    <td>本番環境アラート</td>
+                    <td>Slack</td>
+                    <td>即時</td>
+                    <td>環境=本番、High以上</td>
+                    <td>#prod-alerts</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 定期実行の設定 -->
+        <div class="section">
+            <h2>⏰ 定期実行の設定</h2>
+            
+            <p style="margin-bottom: 16px;">
+                日次/週次の通知は、スケジューラーで定期実行します。
+            </p>
+            
+            <h3>AWS Lambda + EventBridgeの例</h3>
+            <div class="code-block">
+<span class="comment"># serverless.yml（Serverless Framework）</span>
+functions:
+  dailySummary:
+    handler: handlers.send_daily_summary
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *)  <span class="comment"># 毎日 09:00 JST（UTC 0:00）</span>
+          enabled: true
+
+  weeklySummary:
+    handler: handlers.send_weekly_report
+    events:
+      - schedule:
+          rate: cron(0 0 ? * MON *)  <span class="comment"># 毎週月曜 09:00 JST</span>
+          enabled: true
+            </div>
+            
+            <h3>cronジョブの例（EC2/オンプレミス）</h3>
+            <div class="code-block">
+<span class="comment"># crontab -e</span>
+
+<span class="comment"># 日次サマリー: 毎日 09:00</span>
+0 9 * * * /usr/bin/python3 /app/scripts/send_daily_summary.py
+
+<span class="comment"># 週次レポート: 毎週月曜 09:00</span>
+0 9 * * 1 /usr/bin/python3 /app/scripts/send_weekly_report.py
+            </div>
+            
+            <h3>日次/週次レポートの生成</h3>
+            <div class="code-block">
+<span class="comment"># scheduled_reports.py</span>
+
+<span class="keyword">def</span> <span class="function">send_daily_summary</span>():
+    <span class="string">"""日次サマリーを送信"""</span>
+    
+    <span class="comment"># 過去24時間のサマリーを取得</span>
+    summary = match_repo.get_daily_summary()
+    
+    <span class="comment"># Slack通知</span>
+    slack.send_daily_summary(summary)
+    
+    <span class="comment"># メール通知（設定されている場合）</span>
+    settings = settings_repo.get_by_type(NotificationType.DAILY)
+    <span class="keyword">for</span> setting <span class="keyword">in</span> settings:
+        <span class="keyword">if</span> setting.channel == NotificationChannel.EMAIL:
+            html = render_daily_summary_email(summary)
+            email.send_email(
+                to=setting.recipients,
+                subject=f<span class="string">"【日次】脆弱性サマリー {datetime.now().strftime('%Y/%m/%d')}"</span>,
+                body_html=html
+            )
+
+
+<span class="keyword">def</span> <span class="function">send_weekly_report</span>():
+    <span class="string">"""週次レポートを送信（PDF添付）"""</span>
+    
+    <span class="comment"># 週次レポートを生成</span>
+    report = report_generator.generate_weekly_report()
+    pdf_path = report.export_pdf()
+    
+    <span class="comment"># メール送信</span>
+    settings = settings_repo.get_by_type(NotificationType.WEEKLY)
+    <span class="keyword">for</span> setting <span class="keyword">in</span> settings:
+        email.send_email(
+            to=setting.recipients,
+            subject=f<span class="string">"【週次】脆弱性レポート {report.period}"</span>,
+            body_html=render_weekly_report_email(report),
+            attachments=[pdf_path]
+        )
+            </div>
+        </div>
+
+        <!-- エラーハンドリング -->
+        <div class="section">
+            <h2>⚠️ エラーハンドリングとリトライ</h2>
+            
+            <div class="code-block">
+<span class="comment"># notification_service.py（エラーハンドリング追加版）</span>
+<span class="keyword">import</span> time
+<span class="keyword">from</span> functools <span class="keyword">import</span> wraps
+
+<span class="keyword">def</span> <span class="function">retry</span>(max_attempts: int = <span class="number">3</span>, delay: float = <span class="number">1.0</span>):
+    <span class="string">"""リトライデコレータ"""</span>
+    <span class="keyword">def</span> <span class="function">decorator</span>(func):
+        @wraps(func)
+        <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+            <span class="keyword">for</span> attempt <span class="keyword">in</span> range(max_attempts):
+                <span class="keyword">try</span>:
+                    <span class="keyword">return</span> func(*args, **kwargs)
+                <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+                    <span class="keyword">if</span> attempt == max_attempts - <span class="number">1</span>:
+                        <span class="keyword">raise</span>
+                    time.sleep(delay * (<span class="number">2</span> ** attempt))  <span class="comment"># 指数バックオフ</span>
+        <span class="keyword">return</span> wrapper
+    <span class="keyword">return</span> decorator
+
+
+<span class="keyword">class</span> <span class="class">NotificationService</span>:
+    
+    @retry(max_attempts=<span class="number">3</span>, delay=<span class="number">1.0</span>)
+    <span class="keyword">def</span> <span class="function">_send_slack</span>(self, message):
+        <span class="string">"""Slack送信（リトライ付き）"""</span>
+        result = self.slack.send_message(message)
+        <span class="keyword">if not</span> result:
+            <span class="keyword">raise</span> Exception(<span class="string">"Slack送信失敗"</span>)
+        <span class="keyword">return</span> result
+    
+    <span class="keyword">def</span> <span class="function">notify_with_fallback</span>(self, vuln, asset, priority):
+        <span class="string">"""フォールバック付き通知"""</span>
+        
+        <span class="keyword">try</span>:
+            <span class="comment"># まずSlackで通知</span>
+            self._send_slack(...)
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            <span class="comment"># Slack失敗時はメールにフォールバック</span>
+            print(f<span class="string">"Slack失敗、メールにフォールバック: {e}"</span>)
+            self._send_email_fallback(vuln, asset, priority)
+            
+            <span class="comment"># エラーを記録</span>
+            self._save_error_history(
+                channel=<span class="string">"slack"</span>,
+                error=str(e),
+                vuln_id=vuln[<span class="string">"id"</span>]
+            )
+            </div>
+            
+            <div class="recommend-box">
+                <h4>✅ 通知の信頼性を高めるポイント</h4>
+                <ul>
+                    <li><strong>リトライ</strong>：一時的なエラーに対応（指数バックオフ）</li>
+                    <li><strong>フォールバック</strong>：Slack失敗時にメールで送信</li>
+                    <li><strong>履歴保存</strong>：送信成功/失敗を記録して追跡可能に</li>
+                    <li><strong>重複防止</strong>：同じ脆弱性を短時間に複数回通知しない</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 担当タスク -->
+        <div class="section">
+            <h2>📋 担当Dのタスク</h2>
+            
+            <table>
+                <tr>
+                    <th>Sprint</th>
+                    <th>タスク</th>
+                    <th>詳細</th>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 2</strong></td>
+                    <td>通知基盤の設計</td>
+                    <td>
+                        ・通知サービスのクラス設計<br>
+                        ・通知設定DBテーブルの作成<br>
+                        ・Slack Webhook設定
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 3</strong></td>
+                    <td>即時通知の実装</td>
+                    <td>
+                        ・Slack通知の実装<br>
+                        ・メール通知の実装（SMTP/SES）<br>
+                        ・マッチングエンジンとの連携
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 4</strong></td>
+                    <td>定期レポートの実装</td>
+                    <td>
+                        ・日次サマリーの実装<br>
+                        ・週次レポートの実装（PDF生成含む）<br>
+                        ・スケジューラー設定
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Sprint 5</strong></td>
+                    <td>通知設定UI・テスト</td>
+                    <td>
+                        ・通知設定画面（担当Eと連携）<br>
+                        ・テスト通知機能<br>
+                        ・エラーハンドリング強化
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- まとめ -->
+        <div class="section">
+            <h2>📝 まとめ</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 25%;">項目</th>
+                    <th>内容</th>
+                </tr>
+                <tr>
+                    <td><strong>Slack通知</strong></td>
+                    <td>Incoming Webhook でシンプルに実装。即時アラートに最適。</td>
+                </tr>
+                <tr>
+                    <td><strong>メール通知</strong></td>
+                    <td>SMTP または AWS SES。詳細レポート・正式通知向け。</td>
+                </tr>
+                <tr>
+                    <td><strong>通知の種類</strong></td>
+                    <td>即時アラート、日次サマリー、週次レポートの3種類</td>
+                </tr>
+                <tr>
+                    <td><strong>条件フィルタ</strong></td>
+                    <td>優先度、環境、KEV登録有無で通知対象を絞り込み</td>
+                </tr>
+                <tr>
+                    <td><strong>信頼性</strong></td>
+                    <td>リトライ、フォールバック、履歴保存で確実に配信</td>
+                </tr>
+            </table>
+            
+            <div class="recommend-box">
+                <h4>✅ 推奨構成</h4>
+                <ul>
+                    <li><strong>即時アラート</strong>：Slack（Critical/KEV）+ メール（同時送信）</li>
+                    <li><strong>日次サマリー</strong>：Slack（#vulnerability-reportチャンネル）</li>
+                    <li><strong>週次レポート</strong>：メール（PDF添付、管理者・監査向け）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 参考リンク -->
+        <div class="section">
+            <h2>🔗 参考リンク</h2>
+            
+            <table>
+                <tr>
+                    <th style="width: 30%;">リソース</th>
+                    <th>URL</th>
+                </tr>
+                <tr>
+                    <td><strong>Slack Incoming Webhooks</strong></td>
+                    <td><a href="https://api.slack.com/messaging/webhooks" target="_blank">https://api.slack.com/messaging/webhooks</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Slack Block Kit Builder</strong></td>
+                    <td><a href="https://app.slack.com/block-kit-builder" target="_blank">https://app.slack.com/block-kit-builder</a></td>
+                </tr>
+                <tr>
+                    <td><strong>AWS SES ドキュメント</strong></td>
+                    <td><a href="https://docs.aws.amazon.com/ses/" target="_blank">https://docs.aws.amazon.com/ses/</a></td>
+                </tr>
+                <
