@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 要件定義 進捗レポート - 脆弱性管理システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .metadata {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .metadata-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metadata-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .metadata-value {
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .subsection-title {
+            font-size: 1.4em;
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 30px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .task-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .task-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .task-item.completed {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .task-item.in-progress {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .task-item.pending {
+            background: #f8f9fa;
+            border-left: 4px solid #6c757d;
+        }
+
+        .task-status {
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .task-item.completed .task-status {
+            color: #28a745;
+        }
+
+        .task-item.in-progress .task-status {
+            color: #ffc107;
+        }
+
+        .task-item.pending .task-status {
+            color: #6c757d;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .badge-required {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-recommended {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-optional {
+            background: #6c757d;
+            color: white;
+        }
+
+        .badge-free {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 3px solid #667eea;
+            color: #6c757d;
+        }
+
+        .api-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .api-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .api-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .api-card-header {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .api-card-body {
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        .api-card-body ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .api-card-body li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .api-card-body li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Phase 1 要件定義 進捗レポート</h1>
+            <div class="subtitle">脆弱性管理システム - 脆弱性情報取得基盤</div>
+        </div>
+
+        <div class="metadata">
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <div class="metadata-label">プロジェクト名</div>
+                    <div class="metadata-value">脆弱性管理システム</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">フェーズ</div>
+                    <div class="metadata-value">Phase 1: 脆弱性情報取得基盤</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">作成日</div>
+                    <div class="metadata-value">2026年1月5日</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">進捗状況</div>
+                    <div class="metadata-value">要件定義中（36%完了）</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">GitHubリポジトリ</div>
+                    <div class="metadata-value"><a href="https://github.com/horii-kentaro/zjs_project" target="_blank">horii-kentaro/zjs_project</a></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- エグゼクティブサマリー -->
+            <div class="section">
+                <h2 class="section-title">📋 エグゼクティブサマリー</h2>
+                <div class="success-box">
+                    <p><strong>Phase 1の目的：</strong> JVN iPedia APIから脆弱性情報を自動取得し、PostgreSQLに永続化する<span class="highlight">堅牢なデータ取得基盤</span>を構築する。Phase 2以降のCPEマッチング・通知機能の土台となる品質の高いデータ基盤を確立する。</p>
+                </div>
+
+                <h3 class="subsection-title">現在の進捗</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 36%;">36% 完了（4/11タスク）</div>
+                </div>
+
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">完了タスク</div>
+                        <div class="metric-value">4/11</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">開発期間</div>
+                        <div class="metric-value">2週間</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">外部API調査</div>
+                        <div class="metric-value">3件完了</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">総コスト</div>
+                        <div class="metric-value">¥0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 実施済みタスク -->
+            <div class="section">
+                <h2 class="section-title">✅ 実施済みタスク</h2>
+                <ul class="task-list">
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>Step#1:</strong> 成果目標と成功指標の明確化</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>Step#2:</strong> 実現可能性調査（JVN iPedia API、NVD API、CISA KEV）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>Step#2.5:</strong> 開発アプローチの選択（MVPルート選択）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>Step#3:</strong> 認証・権限設計（MVPルートのためスキップ）</span>
+                    </li>
+                    <li class="task-item in-progress">
+                        <span class="task-status">▶</span>
+                        <span><strong>Step#4:</strong> ページリストの作成（簡易UI設計）- 進行中</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#5:</strong> 技術スタック最終決定</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#6:</strong> 外部API最終決定</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#7:</strong> 要件定義書の書き出し（docs/requirements.md）</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#7.5:</strong> 品質基準設定（Lint設定ファイル生成）</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#8:</strong> SCOPE_PROGRESS更新（統合ページ管理表追加）</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#9:</strong> CLAUDE.md生成</span>
+                    </li>
+                    <li class="task-item pending">
+                        <span class="task-status">○</span>
+                        <span><strong>Step#10:</strong> ページの深掘り</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 成果目標と成功指標 -->
+            <div class="section">
+                <h2 class="section-title">🎯 成果目標と成功指標（Step#1で確定）</h2>
+
+                <h3 class="subsection-title">最終成果</h3>
+                <div class="info-box">
+                    <p>JVN iPedia APIから脆弱性情報（<strong>直近3年分、全期間対応可能</strong>）を自動取得し、PostgreSQLに永続化する堅牢なデータ基盤。GitHub Actionsで定期実行（<strong>毎日午前3時</strong>）、簡易UIで動作確認可能、Phase 2以降の拡張を阻害しない設計。</p>
+                </div>
+
+                <h3 class="subsection-title">定量的指標</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>指標</th>
+                            <th>目標値</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>データ取得成功率</td>
+                            <td><strong>99.9%以上</strong></td>
+                            <td>JVN iPedia APIに適用、リトライ3回、API完全障害のみ許容</td>
+                        </tr>
+                        <tr>
+                            <td>差分取得精度</td>
+                            <td><strong>100%</strong></td>
+                            <td>新規・更新分を漏れなく取得</td>
+                        </tr>
+                        <tr>
+                            <td>処理時間</td>
+                            <td><strong>10分以内</strong></td>
+                            <td>1,000件の脆弱性情報を処理・保存</td>
+                        </tr>
+                        <tr>
+                            <td>コードカバレッジ</td>
+                            <td><strong>80%以上</strong></td>
+                            <td>pytest + カバレッジ計測</td>
+                        </tr>
+                        <tr>
+                            <td>冪等性</td>
+                            <td><strong>データ不整合ゼロ</strong></td>
+                            <td>同一処理を3回実行しても破綻しない</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">定性的指標</h3>
+                <ul class="task-list">
+                    <li class="task-item completed">
+                        <span class="task-status">1</span>
+                        <span><strong>保守性：</strong> 新規メンバーが1時間以内にコード構造を理解可能（命名・コメント・設計の明瞭さ）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">2</span>
+                        <span><strong>拡張性：</strong> 設定変更のみで「3年分→全期間」に拡張可能、Phase 2実装時の既存コード修正が最小限</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">3</span>
+                        <span><strong>運用性：</strong> エラー発生時、ログから5分以内に原因特定可能（詳細なログ出力・エラー分類）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">4</span>
+                        <span><strong>堅牢性：</strong> API障害・ネットワークエラー時も、部分的なデータ損失やDB破損が発生しない</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">5</span>
+                        <span><strong>視認性：</strong> 簡易UIで取得データの正常性（件数・最新日時・エラー履歴）を即座に確認可能</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 実現可能性調査結果 -->
+            <div class="section">
+                <h2 class="section-title">🔍 実現可能性調査結果（Step#2で完了）</h2>
+
+                <h3 class="subsection-title">調査対象API</h3>
+                <div class="api-comparison">
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <span>JVN iPedia API</span>
+                            <span class="badge badge-required">必須</span>
+                        </div>
+                        <div class="api-card-body">
+                            <p><strong>エンドポイント:</strong> <code>https://jvndb.jvn.jp/myjvn</code></p>
+                            <p><strong>特徴:</strong></p>
+                            <ul>
+                                <li>完全無料、認証不要</li>
+                                <li>日本語で脆弱性情報を提供</li>
+                                <li>CVE ID、CVSS、CPE情報が完備</li>
+                                <li>差分取得対応（日付範囲指定）</li>
+                                <li>直近3年分のデータ取得が容易</li>
+                            </ul>
+                            <p><strong>制約:</strong></p>
+                            <ul>
+                                <li>データ形式: XML（JSONではない）</li>
+                                <li>1リクエスト最大50件（ページネーション必須）</li>
+                                <li>レート制限: 明示的制限なし（推奨: 秒間2-3リクエスト）</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <span>NVD API 2.0</span>
+                            <span class="badge badge-recommended">推奨</span>
+                        </div>
+                        <div class="api-card-body">
+                            <p><strong>エンドポイント:</strong> <code>https://services.nvd.nist.gov/rest/json/cves/2.0</code></p>
+                            <p><strong>特徴:</strong></p>
+                            <ul>
+                                <li>世界最大の脆弱性DB（280,000件以上）</li>
+                                <li>CVE公開後1時間以内にデータ利用可能</li>
+                                <li>JSONフォーマット</li>
+                                <li>CISA KEV情報も統合済み</li>
+                                <li>差分取得対応</li>
+                            </ul>
+                            <p><strong>制約:</strong></p>
+                            <ul>
+                                <li>APIキー推奨（無料、50req/30s）</li>
+                                <li>エンリッチメント遅延あり（数日〜数週間）</li>
+                                <li>日付範囲最大120日間</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <span>CISA KEV</span>
+                            <span class="badge badge-recommended">推奨（優先度高）</span>
+                        </div>
+                        <div class="api-card-body">
+                            <p><strong>エンドポイント:</strong> <code>https://www.cisa.gov/.../known_exploited_vulnerabilities.json</code></p>
+                            <p><strong>特徴:</strong></p>
+                            <ul>
+                                <li>完全無料、認証不要</li>
+                                <li>実際に悪用されている脆弱性のリスト（1,484件）</li>
+                                <li>対応期限情報あり（優先度判定に活用）</li>
+                                <li>ランサムウェア悪用フラグあり</li>
+                                <li>JSON/CSV形式で取得容易</li>
+                            </ul>
+                            <p><strong>利点:</strong></p>
+                            <ul>
+                                <li>実装が非常に簡単（JSONダウンロードのみ）</li>
+                                <li>優先度判定の精度が大幅に向上</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">概算コスト</h3>
+                <div class="success-box">
+                    <h4>初期費用: <span class="highlight">¥0</span></h4>
+                    <p>すべてのAPIが無料で利用可能</p>
+
+                    <h4 style="margin-top: 15px;">月額費用: <span class="highlight">¥0</span></h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>JVN iPedia API: 無料</li>
+                        <li>NVD API: 無料</li>
+                        <li>CISA KEV: 無料</li>
+                        <li>PostgreSQL（Neon無料枠）: 10GB、月500時間のコンピュート</li>
+                    </ul>
+
+                    <p style="margin-top: 15px;"><strong>合計月額: ¥0</strong>（無料枠内で運用可能）</p>
+                </div>
+            </div>
+
+            <!-- 開発アプローチ -->
+            <div class="section">
+                <h2 class="section-title">🚀 開発アプローチ（Step#2.5で確定）</h2>
+
+                <div class="info-box">
+                    <h3 style="margin-bottom: 15px;">選択: <span class="highlight">アプローチA - 究極のMVP（1ページ）</span></h3>
+                    <p><strong>理由:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Phase 1の目的は「データ取得基盤」の構築</li>
+                        <li>簡易UIは「データが正しく保存されているか確認する」ための最小限の機能で十分</li>
+                        <li>Phase 5以降で本格的なダッシュボードを実装する方が、設計の自由度が高い</li>
+                        <li>2週間で確実に高品質なバックエンドを完成させられる</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">Phase 1実装範囲</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th>実装内容</th>
+                            <th>優先度</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>バックエンド</strong></td>
+                            <td>
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li>JVN iPedia API統合</li>
+                                    <li>PostgreSQL永続化（SQLAlchemy）</li>
+                                    <li>差分取得ロジック</li>
+                                    <li>リトライ処理（3回）</li>
+                                    <li>エラーハンドリング・詳細ログ</li>
+                                    <li>GitHub Actions定期実行（毎日午前3時）</li>
+                                    <li>Docker Compose環境</li>
+                                    <li>pytest + カバレッジ80%以上</li>
+                                </ul>
+                            </td>
+                            <td><span class="badge badge-required">必須</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>簡易UI</strong></td>
+                            <td>
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li>脆弱性一覧表示（1ページ）</li>
+                                    <li>CVE ID、タイトル、CVSS、公開日を表示</li>
+                                    <li>取得件数・最終更新日時の表示</li>
+                                    <li>エラー履歴の表示</li>
+                                    <li>FastAPI + Jinja2</li>
+                                </ul>
+                            </td>
+                            <td><span class="badge badge-required">必須</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>認証</strong></td>
+                            <td>不要（公開ページ、社内利用想定）</td>
+                            <td><span class="badge badge-optional">不要</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>推奨実装</strong></td>
+                            <td>
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li>CISA KEV統合（優先度: 高）</li>
+                                    <li>NVD API統合（優先度: 中）</li>
+                                    <li>取得期間の全期間対応（優先度: 低）</li>
+                                </ul>
+                            </td>
+                            <td><span class="badge badge-recommended">時間があれば</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">Phase 5以降で実装予定</h3>
+                <div class="warning-box">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>本格的なダッシュボード（React + MUI v6）</li>
+                        <li>高度なフィルタリング（重要度・製品名・日付範囲）</li>
+                        <li>グラフ・統計表示（月別トレンド、重要度分布）</li>
+                        <li>CPEマッチング結果の可視化</li>
+                        <li>通知設定・レポート生成</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 技術スタック -->
+            <div class="section">
+                <h2 class="section-title">🔧 技術スタック（仮）</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th>技術</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>言語</td>
+                            <td>Python 3.11+</td>
+                            <td>AI/ML連携、データ処理に最適</td>
+                        </tr>
+                        <tr>
+                            <td>データベース</td>
+                            <td>PostgreSQL 15+</td>
+                            <td>推奨: Neon（https://neon.tech）- サーバーレス、無料枠あり</td>
+                        </tr>
+                        <tr>
+                            <td>ORM</td>
+                            <td>SQLAlchemy</td>
+                            <td>型安全、マイグレーション管理</td>
+                        </tr>
+                        <tr>
+                            <td>HTTPクライアント</td>
+                            <td>httpx または requests</td>
+                            <td>非同期処理対応</td>
+                        </tr>
+                        <tr>
+                            <td>テスト</td>
+                            <td>pytest</td>
+                            <td>カバレッジ80%以上</td>
+                        </tr>
+                        <tr>
+                            <td>Web UI</td>
+                            <td>FastAPI + Jinja2</td>
+                            <td>高速、自動ドキュメント生成</td>
+                        </tr>
+                        <tr>
+                            <td>CI/CD</td>
+                            <td>GitHub Actions</td>
+                            <td>毎日午前3時実行（UTC 18:00）</td>
+                        </tr>
+                        <tr>
+                            <td>コンテナ</td>
+                            <td>Docker Compose</td>
+                            <td>ローカル開発環境</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ページ設計 -->
+            <div class="section">
+                <h2 class="section-title">📄 ページ設計（Step#4進行中）</h2>
+
+                <h3 class="subsection-title">P-001: 脆弱性一覧ページ</h3>
+                <div class="info-box">
+                    <p><strong>目的:</strong> 取得した脆弱性データの一覧表示と動作確認</p>
+                    <p><strong>成果達成への貢献:</strong> JVN iPedia APIから取得したデータが正しくPostgreSQLに保存されていることを視覚的に確認でき、データ取得基盤の品質を保証</p>
+                </div>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">表示項目</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CVE ID</td>
+                            <td>CVE識別子（例: CVE-2024-1234）</td>
+                        </tr>
+                        <tr>
+                            <td>タイトル</td>
+                            <td>脆弱性の概要説明</td>
+                        </tr>
+                        <tr>
+                            <td>CVSS v3スコア</td>
+                            <td>深刻度（0.0-10.0）</td>
+                        </tr>
+                        <tr>
+                            <td>公開日</td>
+                            <td>脆弱性が公開された日付</td>
+                        </tr>
+                        <tr>
+                            <td>最終更新日</td>
+                            <td>脆弱性情報が最後に更新された日付</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">画面上部の統計情報</h4>
+                <ul style="margin-left: 20px;">
+                    <li>最終取得日時</li>
+                    <li>総取得件数</li>
+                    <li>エラー件数（直近の取得処理）</li>
+                </ul>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">簡易な機能</h4>
+                <ul style="margin-left: 20px;">
+                    <li>CVE IDでの検索</li>
+                    <li>ページネーション（1ページ50件表示）</li>
+                </ul>
+            </div>
+
+            <!-- 次のステップ -->
+            <div class="section">
+                <h2 class="section-title">🔜 次のステップ</h2>
+
+                <div class="warning-box">
+                    <h3 style="margin-bottom: 15px;">残りの要件定義タスク（7タスク）</h3>
+                    <ol style="margin-left: 20px;">
+                        <li><strong>Step#4:</strong> ページリストの最終確認</li>
+                        <li><strong>Step#5:</strong> 技術スタック最終決定</li>
+                        <li><strong>Step#6:</strong> 外部API最終決定</li>
+                        <li><strong>Step#7:</strong> 要件定義書の書き出し（docs/requirements.md）</li>
+                        <li><strong>Step#7.5:</strong> 品質基準設定（Lint設定ファイル生成）</li>
+                        <li><strong>Step#8:</strong> SCOPE_PROGRESS更新（統合ページ管理表追加）</li>
+                        <li><strong>Step#9:</strong> CLAUDE.md生成</li>
+                        <li><strong>Step#10:</strong> ページの深掘り</li>
+                    </ol>
+                </div>
+
+                <h3 class="subsection-title">Phase 2以降の予定</h3>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Phase 2:</strong> Git/GitHub管理</li>
+                    <li><strong>Phase 3:</strong> フロントエンド基盤</li>
+                    <li><strong>Phase 4:</strong> ページ実装</li>
+                    <li><strong>Phase 5:</strong> バックエンドAPI実装</li>
+                    <li>...</li>
+                </ul>
+            </div>
+
+            <!-- 主要な意思決定 -->
+            <div class="section">
+                <h2 class="section-title">💡 主要な意思決定サマリー</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>決定事項</th>
+                            <th>選択内容</th>
+                            <th>理由</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>データ取得期間</td>
+                            <td>直近3年分（全期間対応可能）</td>
+                            <td>初期検証が高速、後から全期間に拡張可能</td>
+                        </tr>
+                        <tr>
+                            <td>簡易UIの範囲</td>
+                            <td>1ページ（最小限のテーブル表示）</td>
+                            <td>データ確認に必要な最小限の機能、Phase 5で本格UI実装</td>
+                        </tr>
+                        <tr>
+                            <td>必須データソース</td>
+                            <td>JVN iPedia API</td>
+                            <td>日本語、無料、認証不要、差分取得対応</td>
+                        </tr>
+                        <tr>
+                            <td>推奨データソース</td>
+                            <td>CISA KEV（優先度: 高）<br>NVD API（優先度: 中）</td>
+                            <td>CISA KEVは実装が容易で優先度判定に有用<br>NVDは最新性が必要な場合に補完</td>
+                        </tr>
+                        <tr>
+                            <td>定期実行頻度</td>
+                            <td>毎日午前3時（日本時間）</td>
+                            <td>API負荷が少ない深夜帯、業務開始前に最新データが揃う</td>
+                        </tr>
+                        <tr>
+                            <td>開発アプローチ</td>
+                            <td>究極のMVP（1ページ）</td>
+                            <td>2週間で確実に完成、Phase 1の目的に最適</td>
+                        </tr>
+                        <tr>
+                            <td>認証</td>
+                            <td>不要（MVPルート）</td>
+                            <td>社内利用想定、Phase 5以降で追加</td>
+                        </tr>
+                        <tr>
+                            <td>データ取得成功率</td>
+                            <td>99.9%以上（リトライ3回）</td>
+                            <td>堅牢性を重視、API障害時も安全に失敗</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- リスクと対策 -->
+            <div class="section">
+                <h2 class="section-title">⚠️ リスクと対策</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>リスク</th>
+                            <th>影響</th>
+                            <th>対策</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>JVN iPedia APIのメンテナンス</td>
+                            <td>数日間のサービス停止</td>
+                            <td>リトライロジック実装、エラーハンドリングで一時的な障害に対応</td>
+                        </tr>
+                        <tr>
+                            <td>レート制限の明示的制限なし</td>
+                            <td>過度なアクセスによる一時的なアクセス制限</td>
+                            <td>秒間2-3リクエストに自主規制（スリープ処理実装）</td>
+                        </tr>
+                        <tr>
+                            <td>XML解析の複雑さ</td>
+                            <td>実装工数の増加</td>
+                            <td>実績のあるXML解析ライブラリ（lxml）を使用</td>
+                        </tr>
+                        <tr>
+                            <td>NVD APIのエンリッチメント遅延</td>
+                            <td>CVSSスコアが即座に提供されない</td>
+                            <td>JVN iPediaと併用することで日本語情報と分析済みデータを補完</td>
+                        </tr>
+                        <tr>
+                            <td>2週間という開発期間</td>
+                            <td>すべての推奨実装を完了できない可能性</td>
+                            <td>必須実装（JVN iPedia API）を優先、CISA KEV/NVDは時間があれば追加</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>作成者:</strong> Claude Code (BlueLamp Phase 1 要件定義エンジニア)</p>
+            <p><strong>作成日:</strong> 2026年1月5日</p>
+            <p><strong>GitHubリポジトリ:</strong> <a href="https://github.com/horii-kentaro/zjs_project" target="_blank">https://github.com/horii-kentaro/zjs_project</a></p>
+            <p style="margin-top: 15px; font-size: 0.9em;">このレポートは Phase 1: 要件定義の途中経過を記録したものです。<br>最新の進捗状況は SCOPE_PROGRESS.md をご確認ください。</p>
+        </div>
+    </div>
+</body>
+</html>
