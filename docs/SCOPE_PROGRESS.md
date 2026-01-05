@@ -4,8 +4,8 @@
 
 - **プロジェクト名**: 脆弱性管理システム（Phase 1: 脆弱性情報取得基盤）
 - **ステータス**: Phase 1 要件定義中
-- **完了タスク数**: 4/11
-- **進捗率**: 36%
+- **完了タスク数**: 6/11
+- **進捗率**: 55%
 - **次のマイルストーン**: Phase 1 要件定義完了
 - **最終更新日**: 2026-01-05
 
@@ -19,9 +19,9 @@ BlueLampでの開発は以下のフローに沿って進行します。
 - [x] Step#2: 実現可能性調査（JVN iPedia API、NVD API、CISA KEV）
 - [x] Step#2.5: 開発アプローチの選択（MVP or 通常版）→ MVPルート選択
 - [x] Step#3: 認証・権限設計（スキップ - MVPルートのため不要）
-- [ ] Step#4: ページリストの作成（簡易UI設計）→ 進行中
-- [ ] Step#5: 技術スタック最終決定
-- [ ] Step#6: 外部API最終決定
+- [x] Step#4: ページリストの作成（簡易UI設計）→ P-001: 脆弱性一覧ページ
+- [x] Step#5: 技術スタック最終決定 → Python + FastAPI + PostgreSQL(Neon)
+- [x] Step#6: 外部API最終決定 → JVN iPedia API（必須）、NVD/CISA KEV（推奨）
 - [ ] Step#7: 要件定義書の書き出し（docs/requirements.md）
 - [ ] Step#7.5: 品質基準設定（Lint設定ファイル生成）
 - [ ] Step#8: SCOPE_PROGRESS更新（統合ページ管理表追加）
