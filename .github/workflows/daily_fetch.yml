@@ -1,0 +1,40 @@
+name: Daily Vulnerability Fetch
+
+on:
+  schedule:
+    # 日本時間 午前3時 (UTC 18時) に毎日実行
+    - cron: '0 18 * * *'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  fetch-vulnerabilities:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Fetch vulnerabilities from JVN iPedia
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JVN_API_ENDPOINT: https://jvndb.jvn.jp/myjvn
+        run: |
+          # Phase 5で実装される脆弱性取得スクリプトを実行
+          if [ -f "src/fetchers/jvn_fetcher.py" ]; then
+            python -m src.fetchers.jvn_fetcher
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "脆弱性情報の定期取得に失敗しました"
+          # 将来的にSlack/Email通知を追加可能

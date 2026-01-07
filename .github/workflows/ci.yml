@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install flake8 mypy pytest pytest-cov black isort
+
+      - name: Syntax check
+        run: |
+          if [ -d "src" ]; then
+            python -m compileall -q src/
+          fi
+
+      - name: Type check
+        run: |
+          if [ -d "src" ]; then
+            mypy src/ --ignore-missing-imports
+          fi
+
+      - name: Lint with complexity check
+        run: |
+          if [ -d "src" ]; then
+            flake8 src --max-complexity=10 --max-line-length=120
+          fi
+
+      - name: Format check (black)
+        run: |
+          if [ -d "src" ]; then
+            black --check --line-length=120 src/
+          fi
+
+      - name: Import sort check (isort)
+        run: |
+          if [ -d "src" ]; then
+            isort --check-only --profile=black --line-length=120 src/
+          fi
+
+      - name: Test with coverage
+        run: |
+          if [ -d "tests" ]; then
+            pytest --cov=src/ --cov-branch --cov-report=html --cov-report=term-missing tests/
+          fi
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov/
+        if: always()
