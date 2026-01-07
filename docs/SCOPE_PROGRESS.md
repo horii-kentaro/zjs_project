@@ -3,17 +3,17 @@
 ## 1. 基本情報
 
 - **プロジェクト名**: 脆弱性管理システム（Phase 1: 脆弱性情報取得基盤）
-- **ステータス**: Phase 2 Git/GitHub管理完了
-- **完了タスク数**: 2/2（Phase 2）
-- **進捗率**: 100%
-- **次のマイルストーン**: Phase 3 フロントエンド基盤
-- **最終更新日**: 2026-01-07
+- **ステータス**: Phase 4 完了 → Phase 5 バックエンドAPI実装へ
+- **完了フェーズ**: Phase 1（要件定義）、Phase 2（Git/GitHub）、Phase 3（スキップ）、Phase 4（ページ実装）
+- **進捗率**: Phase 4まで完了（4/10フェーズ、40%）
+- **次のマイルストーン**: Phase 5 バックエンドAPI実装（JVN iPedia API統合 + PostgreSQL）
+- **最終更新日**: 2026-01-08
 
 ## 2. Phase 1 開発フロー
 
 BlueLampでの開発は以下のフローに沿って進行します。
 
-### Phase 1: 要件定義（進行中）
+### Phase 1: 要件定義（完了）
 
 - [x] Step#1: 成果目標と成功指標の明確化
 - [x] Step#2: 実現可能性調査（JVN iPedia API、NVD API、CISA KEV）
@@ -34,12 +34,40 @@ BlueLampでの開発は以下のフローに沿って進行します。
 - [x] GitHub Actions CI/CD設定
 - [x] 脆弱性情報定期取得ワークフロー設定（日本時間午前3時）
 
-### Phase 3以降（予定）
+### Phase 3: フロントエンド基盤（スキップ）
 
-- [ ] Phase 3: フロントエンド基盤
-- [ ] Phase 4: ページ実装
-- [ ] Phase 5: バックエンドAPI実装
-- ...
+- [x] **Phase 3 スキップ理由**: FastAPI + Jinja2による簡易UI実装のため、React + Vite + MUI基盤は不要
+
+### Phase 4: ページ実装（完了）
+
+- [x] HTMLモックアップ作成（mockups/VulnerabilityList.html）
+- [x] ユーザーフィードバック収集と反映
+- [x] データモデリング（SQLAlchemy + Pydantic）
+  - src/models/vulnerability.py - Vulnerabilityモデル
+  - src/schemas/vulnerability.py - Pydanticスキーマ
+  - src/database.py - DB接続設定
+  - src/config.py - 環境変数管理
+- [x] FastAPI + Jinja2実装（P-001ページ）
+  - src/main.py - FastAPIアプリケーション
+  - src/api/vulnerabilities.py - APIエンドポイント
+  - src/services/mock_vulnerability_service.py - モックサービス（@MOCK_TO_APIマーク付き）
+  - src/templates/ - Jinja2テンプレート
+  - src/static/ - CSS/JavaScript
+- [x] API統合準備
+  - docs/api-specs/vulnerability-list-api.md - API仕様書生成
+  - @MOCK_TO_APIマーク配置（9箇所）
+- [x] ドキュメント整備
+  - SETUP_GUIDE.md - セットアップ手順
+  - IMPLEMENTATION_SUMMARY.md - 実装サマリー
+
+### Phase 5以降（予定）
+
+- [ ] Phase 5: バックエンドAPI実装（JVN iPedia API統合 + PostgreSQL）
+- [ ] Phase 6: テスト実装（pytest + カバレッジ80%以上）
+- [ ] Phase 7: CI/CD構築（GitHub Actions定期実行）
+- [ ] Phase 8: Docker環境構築
+- [ ] Phase 9: ドキュメント整備
+- [ ] Phase 10: リリース準備
 
 ## 3. 成果目標（Step#1で確定）
 
@@ -140,6 +168,6 @@ JVN iPedia APIから脆弱性情報（直近3年分、全期間対応可能）�
 
 | ID | ページ名 | ルート | 権限レベル | 統合機能 | 着手 | 完了 |
 |----|---------|-------|----------|---------|------|------|
-| P-001 | 脆弱性一覧ページ | `/` | 公開 | 脆弱性一覧表示、検索（CVE ID+タイトル）、詳細表示（モーダル）、ページネーション、ソート機能 | [ ] | [ ] |
+| P-001 | 脆弱性一覧ページ | `/` | 公開 | 脆弱性一覧表示、検索（CVE ID+タイトル）、詳細表示（モーダル）、ページネーション、ソート機能 | [x] | [x] |
 
 **注記**: Phase 1はMVPルートのため1ページのみ。Phase 2以降で詳細ページや高度な機能を追加予定。

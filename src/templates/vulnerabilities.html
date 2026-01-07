@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}脆弱性一覧 - 脆弱性管理システム{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>脆弱性一覧</h1>
+
+    <!-- 検索・ソート -->
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" placeholder="CVE IDまたはタイトルで検索" id="searchInput">
+        </div>
+        <select class="sort-select" id="sortSelect">
+            <option value="modified_date_desc">更新日（新しい順）</option>
+            <option value="modified_date_asc">更新日（古い順）</option>
+            <option value="published_date_desc">公開日（新しい順）</option>
+            <option value="published_date_asc">公開日（古い順）</option>
+            <option value="severity_desc">重要度（高い順）</option>
+            <option value="severity_asc">重要度（低い順）</option>
+            <option value="cvss_score_desc">CVSSスコア（高い順）</option>
+            <option value="cvss_score_asc">CVSSスコア（低い順）</option>
+        </select>
+    </div>
+
+    <!-- 脆弱性一覧テーブル -->
+    <table>
+        <thead>
+            <tr>
+                <th>CVE ID</th>
+                <th>タイトル</th>
+                <th>重要度</th>
+                <th>公開日</th>
+                <th>更新日</th>
+                <th>詳細</th>
+            </tr>
+        </thead>
+        <tbody id="vulnerabilityTableBody">
+            <!-- JavaScript で動的に生成 -->
+            <tr>
+                <td colspan="6" class="loading">読み込み中...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ページネーション -->
+    <div class="pagination" id="pagination">
+        <!-- JavaScript で動的に生成 -->
+    </div>
+</div>
+
+<!-- 詳細表示モーダル -->
+<div class="modal" id="detailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="modalCveId">CVE-XXXX-XXXX</div>
+                <div style="font-size: 14px; color: #666; margin-top: 4px;" id="modalTitle">Loading...</div>
+            </div>
+            <button class="btn-close" onclick="closeModal()">&times;</button>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">重要度</div>
+            <div class="modal-section-content" id="modalSeverity">
+                <span class="severity">Loading...</span>
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">CVSSスコア</div>
+            <div class="modal-section-content" id="modalCvssScore">-</div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">公開日 / 更新日</div>
+            <div class="modal-section-content" id="modalDates">- / -</div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">概要</div>
+            <div class="modal-section-content" id="modalDescription">
+                Loading...
+            </div>
+        </div>
+
+        <div class="modal-section" id="modalAffectedProductsSection">
+            <div class="modal-section-title">影響を受ける製品</div>
+            <div class="modal-section-content" id="modalAffectedProducts">
+                <ul></ul>
+            </div>
+        </div>
+
+        <div class="modal-section" id="modalVendorInfoSection">
+            <div class="modal-section-title">ベンダー情報</div>
+            <div class="modal-section-content" id="modalVendorInfo">
+                <ul></ul>
+            </div>
+        </div>
+
+        <div class="modal-section" id="modalReferencesSection">
+            <div class="modal-section-title">参照情報</div>
+            <div class="modal-section-content" id="modalReferences">
+                <ul></ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
