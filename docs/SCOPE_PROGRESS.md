@@ -38,7 +38,7 @@ BlueLampでの開発は以下のフローに沿って進行します。
 
 - [x] **Phase 3 スキップ理由**: FastAPI + Jinja2による簡易UI実装のため、React + Vite + MUI基盤は不要
 
-### Phase 4: ページ実装（完了）
+### Phase 4: ページ実装（完了 ✅ 2026-01-08）
 
 - [x] HTMLモックアップ作成（mockups/VulnerabilityList.html）
 - [x] ユーザーフィードバック収集と反映
@@ -57,17 +57,41 @@ BlueLampでの開発は以下のフローに沿って進行します。
   - docs/api-specs/vulnerability-list-api.md - API仕様書生成
   - @MOCK_TO_APIマーク配置（9箇所）
 - [x] ドキュメント整備
-  - SETUP_GUIDE.md - セットアップ手順
+  - SETUP_GUIDE.md - セットアップ手順（WSL環境対応）
   - IMPLEMENTATION_SUMMARY.md - 実装サマリー
+  - DATA_MODELS.md - データモデル仕様書
+- [x] バグ修正
+  - ソート機能のパラメータ解析エラー修正（src/static/js/main.js）
 
-### Phase 5以降（予定）
+**成果物**: 25ファイル、3,761行のコード
+**コミット**:
+  - `2486e48` Phase 4完了: FastAPI + Jinja2による脆弱性一覧ページ実装
+  - `b8e2220` バグ修正: ソート機能のパラメータ解析エラーを修正
 
-- [ ] Phase 5: バックエンドAPI実装（JVN iPedia API統合 + PostgreSQL）
-- [ ] Phase 6: テスト実装（pytest + カバレッジ80%以上）
-- [ ] Phase 7: CI/CD構築（GitHub Actions定期実行）
-- [ ] Phase 8: Docker環境構築
-- [ ] Phase 9: ドキュメント整備
-- [ ] Phase 10: リリース準備
+### Phase 5: 環境構築（次のフェーズ）
+
+**実装予定内容**:
+- [ ] PostgreSQL（Neon）セットアップ
+  - Neonアカウント作成
+  - データベース作成
+  - 接続文字列取得と.env設定
+- [ ] データベース初期化
+  - Alembicマイグレーション設定
+  - テーブル作成（Vulnerabilityテーブル）
+  - 接続確認
+- [ ] 環境変数の最終確認
+  - DATABASE_URL設定
+  - JVN_API_ENDPOINT設定
+
+### Phase 6以降（予定）
+
+- [ ] Phase 6: バックエンド計画（JVN iPedia API統合設計）
+- [ ] Phase 7: バックエンドAPI実装
+- [ ] Phase 8: テスト実装（pytest + カバレッジ80%以上）
+- [ ] Phase 9: CI/CD構築（GitHub Actions定期実行）
+- [ ] Phase 10: Docker環境構築
+- [ ] Phase 11: ドキュメント整備
+- [ ] Phase 12: リリース準備
 
 ## 3. 成果目標（Step#1で確定）
 
