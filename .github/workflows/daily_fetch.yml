@@ -28,6 +28,11 @@ on:
           - WARNING
           - ERROR
 
+# M6.3: エラー通知設定 (GitHub Issues作成権限)
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   fetch-vulnerabilities:
     runs-on: ubuntu-latest
@@ -57,6 +62,9 @@ jobs:
           JVN_API_ENDPOINT: https://jvndb.jvn.jp/myjvn
           LOG_LEVEL: ${{ github.event.inputs.log_level || 'INFO' }}
         run: |
+          # Set PYTHONPATH to include project root
+          export PYTHONPATH="${GITHUB_WORKSPACE}:${PYTHONPATH}"
+
           # Execute vulnerability fetch script
           if [ "${{ github.event.inputs.fetch_mode }}" = "full" ]; then
             echo "Running full fetch mode (last 3 years)"
