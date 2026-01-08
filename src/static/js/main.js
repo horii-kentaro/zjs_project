@@ -26,10 +26,10 @@ function setupEventListeners() {
 
     // Sort select
     document.getElementById('sortSelect').addEventListener('change', function(e) {
-        const [sortBy, sortOrder] = e.target.value.split('_');
-        currentSortBy = sortBy === 'modified' ? 'modified_date' :
-                       sortBy === 'published' ? 'published_date' :
-                       sortBy === 'cvss' ? 'cvss_score' : sortBy;
+        const parts = e.target.value.split('_');
+        const sortOrder = parts.pop(); // 最後の要素がソート順序（asc/desc）
+        const sortBy = parts.join('_'); // 残りがソートフィールド
+        currentSortBy = sortBy;
         currentSortOrder = sortOrder;
         currentPage = 1;
         loadVulnerabilities();
