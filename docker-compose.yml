@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (for local development)
+  # Production uses Neon PostgreSQL (external service)
+  postgres:
+    image: postgres:15-alpine
+    container_name: zjs_postgres
+    environment:
+      POSTGRES_DB: vulnerabilities
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"  # Map to port 5434 to avoid conflict with other projects
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zjs_api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vulnerabilities
+      JVN_API_ENDPOINT: https://jvndb.jvn.jp/myjvn
+      LOG_LEVEL: INFO
+      DEBUG: "false"
+      PORT: 8347
+    ports:
+      - "8347:8347"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8347 --reload
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: zjs_network
