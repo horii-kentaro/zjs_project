@@ -3,20 +3,47 @@ name: Daily Vulnerability Fetch
 on:
   schedule:
     # 日本時間 午前3時 (UTC 18時) に毎日実行
+    # M6.1: 定期実行ワークフロー (毎日午前3時 = UTC 18時)
     - cron: '0 18 * * *'
-  workflow_dispatch:  # 手動実行も可能
+
+  # M6.2: 手動実行トリガー (workflow_dispatch)
+  workflow_dispatch:
+    inputs:
+      fetch_mode:
+        description: 'Fetch mode (differential: 差分取得 / full: 全件取得)'
+        required: false
+        default: 'differential'
+        type: choice
+        options:
+          - differential
+          - full
+      log_level:
+        description: 'Log level (DEBUG/INFO/WARNING/ERROR)'
+        required: false
+        default: 'INFO'
+        type: choice
+        options:
+          - DEBUG
+          - INFO
+          - WARNING
+          - ERROR
 
 jobs:
   fetch-vulnerabilities:
     runs-on: ubuntu-latest
 
+    # Set timeout to prevent long-running jobs
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'  # Cache pip dependencies for faster builds
 
       - name: Install dependencies
         run: |
@@ -24,17 +51,68 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Fetch vulnerabilities from JVN iPedia
+        id: fetch
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JVN_API_ENDPOINT: https://jvndb.jvn.jp/myjvn
+          LOG_LEVEL: ${{ github.event.inputs.log_level || 'INFO' }}
         run: |
-          # Phase 5で実装される脆弱性取得スクリプトを実行
-          if [ -f "src/fetchers/jvn_fetcher.py" ]; then
-            python -m src.fetchers.jvn_fetcher
+          # Execute vulnerability fetch script
+          if [ "${{ github.event.inputs.fetch_mode }}" = "full" ]; then
+            echo "Running full fetch mode (last 3 years)"
+            python scripts/fetch_vulnerabilities.py --log-level $LOG_LEVEL
+          else
+            echo "Running differential fetch mode (only new/updated data)"
+            python scripts/fetch_vulnerabilities.py --differential --log-level $LOG_LEVEL
           fi
+        continue-on-error: false
 
-      - name: Notify on failure
+      # M6.3: エラー通知設定 (GitHub Issues作成)
+      - name: Create issue on failure
         if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[自動通知] 脆弱性データ取得失敗 - ${new Date().toISOString().split('T')[0]}`,
+              body: `## 脆弱性データ取得エラー
+
+            **実行日時**: ${new Date().toISOString()}
+            **ワークフロー**: ${context.workflow}
+            **ジョブ**: ${context.job}
+            **実行ID**: ${context.runId}
+            **トリガー**: ${context.eventName}
+
+            ### エラー詳細
+            脆弱性データの定期取得に失敗しました。
+
+            ### 確認事項
+            - [ ] データベース接続情報 (DATABASE_URL) が正しく設定されているか
+            - [ ] JVN iPedia API が正常に応答しているか
+            - [ ] ワークフローログを確認してエラー原因を特定
+
+            ### ログ確認
+            [ワークフロー実行ログ](${context.payload.repository.html_url}/actions/runs/${context.runId})
+
+            ### 次のアクション
+            1. エラー原因を特定し修正
+            2. 手動でワークフローを再実行
+            3. 必要に応じて DATABASE_URL や環境変数を更新
+
+            ---
+            *このIssueは自動生成されました。修正完了後にクローズしてください。*
+            `,
+              labels: ['bug', 'automation', 'vulnerability-fetch']
+            });
+
+            console.log(`Issue created: ${issue.data.html_url}`);
+
+      - name: Notify on success
+        if: success()
         run: |
-          echo "脆弱性情報の定期取得に失敗しました"
-          # 将来的にSlack/Email通知を追加可能
+          echo "✅ 脆弱性データの取得に成功しました"
+          echo "実行日時: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "次回実行: 日本時間 午前3時 (UTC 18時)"

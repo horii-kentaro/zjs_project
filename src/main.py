@@ -53,9 +53,24 @@ async def health_check():
     Returns application status and basic information.
     Response time must be within 5 seconds.
 
+    Checks:
+    - Database connection (SELECT 1 query)
+    - Response time within 5 seconds
+
     Returns:
         dict: Health status information
+            - status: 'healthy' or 'unhealthy'
+            - database: 'connected' or 'disconnected'
+            - timestamp: ISO 8601 format
+            - version: Application version
+            - environment: Debug mode and port
+
+    Raises:
+        HTTPException: 503 Service Unavailable if database connection fails
     """
+    from fastapi import HTTPException
+    from src.database import check_db_connection
+
     logger.info('Health check requested')
 
     health_status = {
@@ -68,16 +83,34 @@ async def health_check():
         },
     }
 
-    # @MOCK_TO_API: Add database connection check in Phase 5
-    # try:
-    #     db_status = check_database_connection()
-    #     health_status['database'] = db_status
-    # except Exception as e:
-    #     logger.error(f'Database health check failed: {str(e)}')
-    #     health_status['status'] = 'unhealthy'
-    #     health_status['database'] = {'status': 'error', 'message': str(e)}
+    # Database connection check (M5.1)
+    try:
+        db_connected = check_db_connection()
 
-    logger.info(f'Health check completed: {health_status["status"]}')
+        if db_connected:
+            health_status['database'] = 'connected'
+            logger.info('Health check completed: database connected')
+        else:
+            health_status['status'] = 'unhealthy'
+            health_status['database'] = 'disconnected'
+            logger.error('Health check failed: database disconnected')
+            raise HTTPException(
+                status_code=503,
+                detail='Database connection failed',
+            )
+
+    except HTTPException:
+        # Re-raise HTTPException for FastAPI to handle
+        raise
+    except Exception as e:
+        logger.error(f'Health check failed: {str(e)}', exc_info=True)
+        health_status['status'] = 'unhealthy'
+        health_status['database'] = 'error'
+        raise HTTPException(
+            status_code=503,
+            detail=f'Health check failed: {str(e)}',
+        )
+
     return health_status
 
 

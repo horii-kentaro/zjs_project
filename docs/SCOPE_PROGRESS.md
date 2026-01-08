@@ -3,10 +3,10 @@
 ## 1. 基本情報
 
 - **プロジェクト名**: 脆弱性管理システム（Phase 1: 脆弱性情報取得基盤）
-- **ステータス**: Phase 6 完了 → Phase 7 バックエンド実装へ
-- **完了フェーズ**: Phase 1（要件定義）、Phase 2（Git/GitHub）、Phase 3（スキップ）、Phase 4（ページ実装）、Phase 5（環境構築）、Phase 6（バックエンド計画）
-- **進捗率**: Phase 6まで完了（6/10フェーズ、60%）
-- **次のマイルストーン**: Phase 7 バックエンド実装（JVN iPedia API統合）
+- **ステータス**: Phase 7 完了 → Phase 8 テスト実装へ
+- **完了フェーズ**: Phase 1（要件定義）、Phase 2（Git/GitHub）、Phase 3（スキップ）、Phase 4（ページ実装）、Phase 5（環境構築）、Phase 6（バックエンド計画）、Phase 7（バックエンド実装）
+- **進捗率**: Phase 7まで完了（7/10フェーズ、70%）
+- **次のマイルストーン**: Phase 8 テスト実装（カバレッジ80%以上）
 - **最終更新日**: 2026-01-08
 
 ## 2. Phase 1 開発フロー
@@ -89,7 +89,7 @@ BlueLampでの開発は以下のフローに沿って進行します。
 - テーブル: vulnerabilities（12カラム、4インデックス）
 - 環境変数設定完了（.env）
 
-### Phase 6: バックエンド実装計画（進行中 ✅ 2026-01-08）
+### Phase 6: バックエンド実装計画（完了 ✅ 2026-01-08）
 
 #### 6.1 実装マイルストーン
 
@@ -97,12 +97,12 @@ BlueLampでの開発は以下のフローに沿って進行します。
 
 | マイルストーン | 主要タスク | 依存関係 | 並列実装 | 完了 |
 |--------------|----------|---------|---------|------|
-| M1: JVN API統合基盤 | JVN iPedia API Fetcherクラス実装、XML解析、差分取得ロジック | なし | 不可 | [ ] |
-| M2: データ永続化 | DatabaseVulnerabilityService実装、UPSERT処理、トランザクション管理 | M1（テストデータ取得に必要） | 不可 | [ ] |
-| M3: API統合 | モックサービス置き換え、エラーハンドリング | M1, M2 | 不可 | [ ] |
-| M4: リトライ・冪等性 | リトライロジック、冪等性テスト（3回実行） | M1, M2, M3 | 不可 | [ ] |
-| M5: ヘルスチェック拡張 | DB接続確認、応答時間保証 | M2 | 可能（M4と並列） | [ ] |
-| M6: 自動化 | GitHub Actions定期実行、エラー通知 | M1, M2, M3, M4 | 不可 | [ ] |
+| M1: JVN API統合基盤 | JVN iPedia API Fetcherクラス実装、XML解析、差分取得ロジック | なし | 不可 | [x] |
+| M2: データ永続化 | DatabaseVulnerabilityService実装、UPSERT処理、トランザクション管理 | M1（テストデータ取得に必要） | 不可 | [x] |
+| M3: API統合 | モックサービス置き換え、エラーハンドリング | M1, M2 | 不可 | [x] |
+| M4: リトライ・冪等性 | リトライロジック、冪等性テスト（3回実行） | M1, M2, M3 | 不可 | [x] |
+| M5: ヘルスチェック拡張 | DB接続確認、応答時間保証 | M2 | 可能（M4と並列） | [x] |
+| M6: 自動化 | GitHub Actions定期実行、エラー通知 | M1, M2, M3, M4 | 不可 | [x] |
 
 **注記**: このプロジェクトは単純なデータ取得・保存フローのため、並列実装の余地は限定的です。
 
@@ -114,54 +114,64 @@ BlueLampでの開発は以下のフローに沿って進行します。
 
 | タスク | ファイル | 実装内容 | 完了 |
 |--------|---------|---------|------|
-| M1.1 | src/fetchers/jvn_fetcher.py | JVNFetcherServiceクラス作成 | [ ] |
-| M1.2 | src/fetchers/jvn_fetcher.py | XML応答パース処理（xml.etree.ElementTree） | [ ] |
-| M1.3 | src/fetchers/jvn_fetcher.py | 差分取得ロジック（lastModStartDate/lastModEndDate） | [ ] |
-| M1.4 | src/fetchers/jvn_fetcher.py | ページネーション処理（50件/リクエスト） | [ ] |
-| M1.5 | src/fetchers/jvn_fetcher.py | タイムアウト設定（30秒） | [ ] |
-| M1.6 | src/fetchers/jvn_fetcher.py | レート制限対応（秒間2-3リクエスト） | [ ] |
+| M1.1 | src/fetchers/jvn_fetcher.py | JVNFetcherServiceクラス作成 | [x] |
+| M1.2 | src/fetchers/jvn_fetcher.py | XML応答パース処理（xml.etree.ElementTree） | [x] |
+| M1.3 | src/fetchers/jvn_fetcher.py | 差分取得ロジック（lastModStartDate/lastModEndDate） | [x] |
+| M1.4 | src/fetchers/jvn_fetcher.py | ページネーション処理（50件/リクエスト） | [x] |
+| M1.5 | src/fetchers/jvn_fetcher.py | タイムアウト設定（30秒） | [x] |
+| M1.6 | src/fetchers/jvn_fetcher.py | レート制限対応（秒間2-3リクエスト） | [x] |
 
 ##### M2: データ永続化
 
 | タスク | ファイル | 実装内容 | 完了 |
 |--------|---------|---------|------|
-| M2.1 | src/services/database_vulnerability_service.py | DatabaseVulnerabilityServiceクラス作成 | [ ] |
-| M2.2 | src/services/database_vulnerability_service.py | search_vulnerabilities()実装（SQLAlchemyクエリ） | [ ] |
-| M2.3 | src/services/database_vulnerability_service.py | ソート機能（重要度のカスタムソート含む） | [ ] |
-| M2.4 | src/services/database_vulnerability_service.py | get_vulnerability_by_cve_id()実装 | [ ] |
-| M2.5 | src/services/database_vulnerability_service.py | UPSERT処理（ON CONFLICT DO UPDATE） | [ ] |
-| M2.6 | src/services/database_vulnerability_service.py | トランザクション管理 | [ ] |
+| M2.1 | src/services/database_vulnerability_service.py | DatabaseVulnerabilityServiceクラス作成 | [x] |
+| M2.2 | src/services/database_vulnerability_service.py | search_vulnerabilities()実装（SQLAlchemyクエリ） | [x] |
+| M2.3 | src/services/database_vulnerability_service.py | ソート機能（重要度のカスタムソート含む） | [x] |
+| M2.4 | src/services/database_vulnerability_service.py | get_vulnerability_by_cve_id()実装 | [x] |
+| M2.5 | src/services/database_vulnerability_service.py | UPSERT処理（ON CONFLICT DO UPDATE） | [x] |
+| M2.6 | src/services/database_vulnerability_service.py | トランザクション管理 | [x] |
 
 ##### M3: API統合
 
 | タスク | ファイル | 実装内容 | 完了 |
 |--------|---------|---------|------|
-| M3.1 | src/api/vulnerabilities.py | list_vulnerabilities()のモックサービス置き換え | [ ] |
-| M3.2 | src/api/vulnerabilities.py | get_vulnerability_detail()のモックサービス置き換え | [ ] |
-| M3.3 | src/api/vulnerabilities.py | エラーハンドリング（DB接続エラー、クエリエラー） | [ ] |
+| M3.1 | src/api/vulnerabilities.py | list_vulnerabilities()のモックサービス置き換え | [x] |
+| M3.2 | src/api/vulnerabilities.py | get_vulnerability_detail()のモックサービス置き換え | [x] |
+| M3.3 | src/api/vulnerabilities.py | エラーハンドリング（DB接続エラー、クエリエラー） | [x] |
 
 ##### M4: リトライ・冪等性
 
 | タスク | ファイル | 実装内容 | 完了 |
 |--------|---------|---------|------|
-| M4.1 | src/fetchers/jvn_fetcher.py | リトライロジック（最大3回、指数バックオフ） | [ ] |
-| M4.2 | tests/test_integration/ | 冪等性テスト（同一処理3回実行でデータ不整合ゼロ） | [ ] |
+| M4.1 | src/fetchers/jvn_fetcher.py | リトライロジック（最大3回、指数バックオフ） | [x] |
+| M4.2 | tests/integration/test_idempotency.py | 冪等性テスト（同一処理3回実行でデータ不整合ゼロ） | [x] |
+
+**M4実装詳細**:
+- M4.1: リトライロジックはM1で既に実装済み（最大3回、指数バックオフ 5s→10s→20s）
+- M4.2: 統合テスト `test_idempotency.py` を新規作成
+  - エンドツーエンド冪等性検証（JVN API取得 → DB保存 3回実行）
+  - バッチUPSERT冪等性検証
+  - データ再取得時の冪等性検証
+  - 全テスト合格（5 passed in 26.01s）
+  - 検証結果: データ不整合ゼロ（要件達成）
 
 ##### M5: ヘルスチェック拡張
 
 | タスク | ファイル | 実装内容 | 完了 |
 |--------|---------|---------|------|
-| M5.1 | src/main.py | health_check()にDB接続確認追加 | [ ] |
-| M5.2 | src/main.py | 応答時間5秒以内保証 | [ ] |
-| M5.3 | src/main.py | エラー時の適切なステータスコード返却 | [ ] |
+| M5.1 | src/main.py | health_check()にDB接続確認追加 | [x] |
+| M5.2 | src/main.py | 応答時間5秒以内保証 | [x] |
+| M5.3 | src/main.py | エラー時の適切なステータスコード返却 | [x] |
 
 ##### M6: 自動化
 
 | タスク | ファイル | 実装内容 | 完了 |
 |--------|---------|---------|------|
-| M6.1 | .github/workflows/daily_fetch.yml | 定期実行ワークフロー（毎日午前3時） | [ ] |
-| M6.2 | .github/workflows/daily_fetch.yml | 手動実行トリガー（workflow_dispatch） | [ ] |
-| M6.3 | .github/workflows/daily_fetch.yml | エラー通知設定（GitHub Issues作成） | [ ] |
+| M6.1 | .github/workflows/daily_fetch.yml | 定期実行ワークフロー（毎日午前3時） | [x] |
+| M6.2 | .github/workflows/daily_fetch.yml | 手動実行トリガー（workflow_dispatch） | [x] |
+| M6.3 | .github/workflows/daily_fetch.yml | エラー通知設定（GitHub Issues作成） | [x] |
+| M6.4 | scripts/fetch_vulnerabilities.py | データ取得スクリプト（JVNFetcher + DatabaseService統合） | [x] |
 
 ---
 
@@ -169,12 +179,12 @@ BlueLampでの開発は以下のフローに沿って進行します。
 
 | # | ファイル | 行番号 | 現在の実装 | Phase 7での実装 | 完了 |
 |---|---------|-------|-----------|----------------|------|
-| 1 | src/services/mock_vulnerability_service.py | 5 | モッククラス全体 | DatabaseVulnerabilityServiceで置き換え | [ ] |
-| 2 | src/services/mock_vulnerability_service.py | 33 | _generate_mock_data() | JVNFetcherServiceで実データ取得 | [ ] |
-| 3 | src/services/mock_vulnerability_service.py | 183 | search_vulnerabilities() | SQLAlchemyクエリで実装 | [ ] |
-| 4 | src/api/vulnerabilities.py | 88 | MockVulnerabilityService() | DatabaseVulnerabilityService(db)に置き換え | [ ] |
-| 5 | src/api/vulnerabilities.py | 134 | mock_service.get_vulnerability_by_cve_id() | db.query(Vulnerability).filter()に置き換え | [ ] |
-| 6 | src/main.py | 53 | 簡易ヘルスチェック | DB接続確認を追加 | [ ] |
+| 1 | src/services/mock_vulnerability_service.py | 5 | モッククラス全体 | DatabaseVulnerabilityServiceで置き換え | [x] |
+| 2 | src/services/mock_vulnerability_service.py | 33 | _generate_mock_data() | JVNFetcherServiceで実データ取得 | [x] |
+| 3 | src/services/mock_vulnerability_service.py | 183 | search_vulnerabilities() | SQLAlchemyクエリで実装 | [x] |
+| 4 | src/api/vulnerabilities.py | 88 | MockVulnerabilityService() | DatabaseVulnerabilityService(db)に置き換え | [x] |
+| 5 | src/api/vulnerabilities.py | 134 | mock_service.get_vulnerability_by_cve_id() | db.query(Vulnerability).filter()に置き換え | [x] |
+| 6 | src/main.py | 53 | 簡易ヘルスチェック | DB接続確認を追加 | [x] |
 
 ---
 
@@ -215,9 +225,34 @@ Week 2:
 
 ---
 
-### Phase 7以降（予定）
+### Phase 7: バックエンド実装（完了 ✅ 2026-01-08）
 
-- [ ] Phase 7: バックエンドAPI実装（Phase 6の計画を実行）
+**完了内容**:
+- [x] M1: JVN API統合基盤（JVNFetcherService実装）
+- [x] M2: データ永続化（DatabaseVulnerabilityService実装）
+- [x] M3: API統合（モックサービス置き換え）
+- [x] M4: リトライ・冪等性（リトライロジック、冪等性テスト）
+- [x] M5: ヘルスチェック拡張（DB接続確認、応答時間保証）
+- [x] M6: 自動化（GitHub Actions定期実行、エラー通知）
+
+**統合テスト結果**:
+- **PASSED**: 49/49 (100%)
+- **FAILED**: 0/49 (0%)
+- **実行時間**: 78.52秒
+- **実データベース接続**: Neon PostgreSQL
+- **実JVN iPedia API接続**: https://jvndb.jvn.jp/myjvn
+- **モック使用**: なし（全統合テスト）
+
+**成果物**:
+- src/fetchers/jvn_fetcher.py（JVN iPedia API統合）
+- src/services/database_vulnerability_service.py（データ永続化）
+- src/api/vulnerabilities.py（モックサービス置き換え完了）
+- tests/integration/（5ファイル、49テストケース）
+- scripts/fetch_vulnerabilities.py（データ取得スクリプト）
+- .github/workflows/daily_fetch.yml（定期実行ワークフロー）
+
+### Phase 8以降（予定）
+
 - [ ] Phase 8: テスト実装（pytest + カバレッジ80%以上）
 - [ ] Phase 9: CI/CD構築（GitHub Actions定期実行）
 - [ ] Phase 10: Docker環境構築

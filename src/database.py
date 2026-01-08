@@ -8,7 +8,7 @@ for FastAPI endpoints.
 import logging
 from typing import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.config import settings
@@ -93,6 +93,8 @@ def check_db_connection() -> bool:
     Check database connection health.
 
     Used by health check endpoint (/api/health).
+    Executes a simple SELECT 1 query to verify connection.
+    Timeout is enforced at the connection level (pool_pre_ping).
 
     Returns:
         bool: True if connection is healthy, False otherwise
@@ -104,9 +106,19 @@ def check_db_connection() -> bool:
         ... else:
         ...     print('Database connection failed')
     """
+    import time
+
     try:
+        start_time = time.time()
         db = SessionLocal()
-        db.execute('SELECT 1')
+
+        # Execute simple query to verify connection (SQLAlchemy 2.0 style)
+        result = db.execute(text('SELECT 1'))
+        result.scalar()
+
+        elapsed = time.time() - start_time
+        logger.debug(f'Database health check completed in {elapsed:.3f}s')
+
         db.close()
         return True
     except Exception as e:

@@ -10,12 +10,15 @@ This module provides REST API endpoints for vulnerability data:
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
+from src.database import get_db
 from src.schemas.vulnerability import VulnerabilityListResponse, VulnerabilityResponse
-from src.services.mock_vulnerability_service import mock_service
+from src.services.database_vulnerability_service import DatabaseVulnerabilityService
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +57,7 @@ async def list_vulnerabilities(
     ),
     sort_order: str = Query('desc', description='Sort order (asc or desc)'),
     search: Optional[str] = Query(None, description='Search keyword (CVE ID or title)'),
+    db: Session = Depends(get_db),
 ):
     """
     Get paginated vulnerability list with search and sort functionality.
@@ -63,14 +67,13 @@ async def list_vulnerabilities(
     - Sorting (sort_by, sort_order)
     - Search (CVE ID or title partial match)
 
-    @MOCK_TO_API: Currently uses mock data. Replace with database queries in Phase 5.
-
     Args:
         page: Page number (1-indexed)
         page_size: Number of items per page (1-100)
         sort_by: Sort field
         sort_order: Sort order (asc or desc)
         search: Search keyword
+        db: Database session (dependency injection)
 
     Returns:
         VulnerabilityListResponse: Paginated vulnerability list
@@ -102,8 +105,9 @@ async def list_vulnerabilities(
             f'sort_by={sort_by}, sort_order={sort_order}, search={search}'
         )
 
-        # @MOCK_TO_API: Replace with database service
-        result = mock_service.search_vulnerabilities(
+        # Use database service for real data
+        service = DatabaseVulnerabilityService(db)
+        result = service.search_vulnerabilities(
             page=page,
             page_size=page_size,
             sort_by=sort_by,
@@ -116,6 +120,9 @@ async def list_vulnerabilities(
 
     except HTTPException:
         raise
+    except SQLAlchemyError as e:
+        logger.error(f'Database error fetching vulnerabilities: {str(e)}', exc_info=True)
+        raise HTTPException(status_code=500, detail='Database connection error')
     except Exception as e:
         logger.error(f'Error fetching vulnerabilities: {str(e)}', exc_info=True)
         raise HTTPException(status_code=500, detail='Internal server error')
@@ -126,17 +133,16 @@ async def list_vulnerabilities(
     response_model=VulnerabilityResponse,
     tags=['API'],
 )
-async def get_vulnerability_detail(cve_id: str):
+async def get_vulnerability_detail(cve_id: str, db: Session = Depends(get_db)):
     """
     Get detailed vulnerability information by CVE ID.
 
     This endpoint returns detailed information for a specific vulnerability.
     Used for modal display in the frontend.
 
-    @MOCK_TO_API: Currently uses mock data. Replace with database query in Phase 5.
-
     Args:
         cve_id: CVE identifier (e.g., CVE-2024-0001)
+        db: Database session (dependency injection)
 
     Returns:
         VulnerabilityResponse: Detailed vulnerability information
@@ -147,8 +153,9 @@ async def get_vulnerability_detail(cve_id: str):
     try:
         logger.info(f'API request for vulnerability detail: {cve_id}')
 
-        # @MOCK_TO_API: Replace with database service
-        vulnerability = mock_service.get_vulnerability_by_cve_id(cve_id)
+        # Use database service for real data
+        service = DatabaseVulnerabilityService(db)
+        vulnerability = service.get_vulnerability_by_cve_id(cve_id)
 
         if not vulnerability:
             logger.warning(f'Vulnerability not found: {cve_id}')
@@ -159,6 +166,9 @@ async def get_vulnerability_detail(cve_id: str):
 
     except HTTPException:
         raise
+    except SQLAlchemyError as e:
+        logger.error(f'Database error fetching vulnerability {cve_id}: {str(e)}', exc_info=True)
+        raise HTTPException(status_code=500, detail='Database connection error')
     except Exception as e:
         logger.error(f'Error fetching vulnerability {cve_id}: {str(e)}', exc_info=True)
         raise HTTPException(status_code=500, detail='Internal server error')

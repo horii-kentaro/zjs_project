@@ -54,6 +54,7 @@ Thumbs.db
 
 # Project Specific
 .appgenius_temp/
+akita_sakepro/
 
 # Testing
 .pytest_cache/
