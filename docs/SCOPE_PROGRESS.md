@@ -3,10 +3,10 @@
 ## 1. 基本情報
 
 - **プロジェクト名**: 脆弱性管理システム（Phase 1: 脆弱性情報取得基盤）
-- **ステータス**: Phase 4 完了 → Phase 5 バックエンドAPI実装へ
-- **完了フェーズ**: Phase 1（要件定義）、Phase 2（Git/GitHub）、Phase 3（スキップ）、Phase 4（ページ実装）
-- **進捗率**: Phase 4まで完了（4/10フェーズ、40%）
-- **次のマイルストーン**: Phase 5 バックエンドAPI実装（JVN iPedia API統合 + PostgreSQL）
+- **ステータス**: Phase 6 完了 → Phase 7 バックエンド実装へ
+- **完了フェーズ**: Phase 1（要件定義）、Phase 2（Git/GitHub）、Phase 3（スキップ）、Phase 4（ページ実装）、Phase 5（環境構築）、Phase 6（バックエンド計画）
+- **進捗率**: Phase 6まで完了（6/10フェーズ、60%）
+- **次のマイルストーン**: Phase 7 バックエンド実装（JVN iPedia API統合）
 - **最終更新日**: 2026-01-08
 
 ## 2. Phase 1 開発フロー
@@ -68,25 +68,156 @@ BlueLampでの開発は以下のフローに沿って進行します。
   - `2486e48` Phase 4完了: FastAPI + Jinja2による脆弱性一覧ページ実装
   - `b8e2220` バグ修正: ソート機能のパラメータ解析エラーを修正
 
-### Phase 5: 環境構築（次のフェーズ）
+### Phase 5: 環境構築（完了 ✅ 2026-01-08）
 
-**実装予定内容**:
-- [ ] PostgreSQL（Neon）セットアップ
+**完了内容**:
+- [x] PostgreSQL（Neon）セットアップ
   - Neonアカウント作成
-  - データベース作成
+  - データベース作成（リージョン: AWS ap-southeast-1 シンガポール）
   - 接続文字列取得と.env設定
-- [ ] データベース初期化
-  - Alembicマイグレーション設定
+- [x] データベース初期化
   - テーブル作成（Vulnerabilityテーブル）
-  - 接続確認
-- [ ] 環境変数の最終確認
-  - DATABASE_URL設定
+  - 接続確認（PostgreSQL 17.7）
+  - インデックス作成（cve_id、published_date、modified_date、severity）
+- [x] 環境変数の最終確認
+  - DATABASE_URL設定（Neon接続文字列）
   - JVN_API_ENDPOINT設定
+  - その他の設定（LOG_LEVEL、DEBUG、PORT、FETCH_ALL_DATA）
 
-### Phase 6以降（予定）
+**成果物**:
+- データベース: neondb（Neon PostgreSQL 17.7）
+- テーブル: vulnerabilities（12カラム、4インデックス）
+- 環境変数設定完了（.env）
 
-- [ ] Phase 6: バックエンド計画（JVN iPedia API統合設計）
-- [ ] Phase 7: バックエンドAPI実装
+### Phase 6: バックエンド実装計画（進行中 ✅ 2026-01-08）
+
+#### 6.1 実装マイルストーン
+
+このプロジェクトは認証なしの公開APIで、エンドポイント数が少ないため、レイヤー別実装マイルストーン方式で進めます。
+
+| マイルストーン | 主要タスク | 依存関係 | 並列実装 | 完了 |
+|--------------|----------|---------|---------|------|
+| M1: JVN API統合基盤 | JVN iPedia API Fetcherクラス実装、XML解析、差分取得ロジック | なし | 不可 | [ ] |
+| M2: データ永続化 | DatabaseVulnerabilityService実装、UPSERT処理、トランザクション管理 | M1（テストデータ取得に必要） | 不可 | [ ] |
+| M3: API統合 | モックサービス置き換え、エラーハンドリング | M1, M2 | 不可 | [ ] |
+| M4: リトライ・冪等性 | リトライロジック、冪等性テスト（3回実行） | M1, M2, M3 | 不可 | [ ] |
+| M5: ヘルスチェック拡張 | DB接続確認、応答時間保証 | M2 | 可能（M4と並列） | [ ] |
+| M6: 自動化 | GitHub Actions定期実行、エラー通知 | M1, M2, M3, M4 | 不可 | [ ] |
+
+**注記**: このプロジェクトは単純なデータ取得・保存フローのため、並列実装の余地は限定的です。
+
+---
+
+#### 6.2 エンドポイント実装タスクリスト
+
+##### M1: JVN API統合基盤
+
+| タスク | ファイル | 実装内容 | 完了 |
+|--------|---------|---------|------|
+| M1.1 | src/fetchers/jvn_fetcher.py | JVNFetcherServiceクラス作成 | [ ] |
+| M1.2 | src/fetchers/jvn_fetcher.py | XML応答パース処理（xml.etree.ElementTree） | [ ] |
+| M1.3 | src/fetchers/jvn_fetcher.py | 差分取得ロジック（lastModStartDate/lastModEndDate） | [ ] |
+| M1.4 | src/fetchers/jvn_fetcher.py | ページネーション処理（50件/リクエスト） | [ ] |
+| M1.5 | src/fetchers/jvn_fetcher.py | タイムアウト設定（30秒） | [ ] |
+| M1.6 | src/fetchers/jvn_fetcher.py | レート制限対応（秒間2-3リクエスト） | [ ] |
+
+##### M2: データ永続化
+
+| タスク | ファイル | 実装内容 | 完了 |
+|--------|---------|---------|------|
+| M2.1 | src/services/database_vulnerability_service.py | DatabaseVulnerabilityServiceクラス作成 | [ ] |
+| M2.2 | src/services/database_vulnerability_service.py | search_vulnerabilities()実装（SQLAlchemyクエリ） | [ ] |
+| M2.3 | src/services/database_vulnerability_service.py | ソート機能（重要度のカスタムソート含む） | [ ] |
+| M2.4 | src/services/database_vulnerability_service.py | get_vulnerability_by_cve_id()実装 | [ ] |
+| M2.5 | src/services/database_vulnerability_service.py | UPSERT処理（ON CONFLICT DO UPDATE） | [ ] |
+| M2.6 | src/services/database_vulnerability_service.py | トランザクション管理 | [ ] |
+
+##### M3: API統合
+
+| タスク | ファイル | 実装内容 | 完了 |
+|--------|---------|---------|------|
+| M3.1 | src/api/vulnerabilities.py | list_vulnerabilities()のモックサービス置き換え | [ ] |
+| M3.2 | src/api/vulnerabilities.py | get_vulnerability_detail()のモックサービス置き換え | [ ] |
+| M3.3 | src/api/vulnerabilities.py | エラーハンドリング（DB接続エラー、クエリエラー） | [ ] |
+
+##### M4: リトライ・冪等性
+
+| タスク | ファイル | 実装内容 | 完了 |
+|--------|---------|---------|------|
+| M4.1 | src/fetchers/jvn_fetcher.py | リトライロジック（最大3回、指数バックオフ） | [ ] |
+| M4.2 | tests/test_integration/ | 冪等性テスト（同一処理3回実行でデータ不整合ゼロ） | [ ] |
+
+##### M5: ヘルスチェック拡張
+
+| タスク | ファイル | 実装内容 | 完了 |
+|--------|---------|---------|------|
+| M5.1 | src/main.py | health_check()にDB接続確認追加 | [ ] |
+| M5.2 | src/main.py | 応答時間5秒以内保証 | [ ] |
+| M5.3 | src/main.py | エラー時の適切なステータスコード返却 | [ ] |
+
+##### M6: 自動化
+
+| タスク | ファイル | 実装内容 | 完了 |
+|--------|---------|---------|------|
+| M6.1 | .github/workflows/daily_fetch.yml | 定期実行ワークフロー（毎日午前3時） | [ ] |
+| M6.2 | .github/workflows/daily_fetch.yml | 手動実行トリガー（workflow_dispatch） | [ ] |
+| M6.3 | .github/workflows/daily_fetch.yml | エラー通知設定（GitHub Issues作成） | [ ] |
+
+---
+
+#### 6.3 @MOCK_TO_API置き換えタスク
+
+| # | ファイル | 行番号 | 現在の実装 | Phase 7での実装 | 完了 |
+|---|---------|-------|-----------|----------------|------|
+| 1 | src/services/mock_vulnerability_service.py | 5 | モッククラス全体 | DatabaseVulnerabilityServiceで置き換え | [ ] |
+| 2 | src/services/mock_vulnerability_service.py | 33 | _generate_mock_data() | JVNFetcherServiceで実データ取得 | [ ] |
+| 3 | src/services/mock_vulnerability_service.py | 183 | search_vulnerabilities() | SQLAlchemyクエリで実装 | [ ] |
+| 4 | src/api/vulnerabilities.py | 88 | MockVulnerabilityService() | DatabaseVulnerabilityService(db)に置き換え | [ ] |
+| 5 | src/api/vulnerabilities.py | 134 | mock_service.get_vulnerability_by_cve_id() | db.query(Vulnerability).filter()に置き換え | [ ] |
+| 6 | src/main.py | 53 | 簡易ヘルスチェック | DB接続確認を追加 | [ ] |
+
+---
+
+#### 6.4 実装スケジュール
+
+```
+Week 1:
+  Day 1-2: |====== M1: JVN API統合基盤 ======|
+  Day 3-4: |==== M2: データ永続化 ====|
+  Day 5:   |== M3: API統合 ==|
+
+Week 2:
+  Day 1-2: |=== M4: リトライ・冪等性 ===|
+  Day 1-2: |== M5: ヘルスチェック ==|  ← M4と並列可能
+  Day 3-4: |==== M6: 自動化 ====|
+  Day 5:   |= 総合テスト =|
+```
+
+**推定工数**:
+- M1: 16時間（JVN API統合基盤）
+- M2: 12時間（データ永続化）
+- M3: 4時間（API統合）
+- M4: 8時間（リトライ・冪等性）
+- M5: 4時間（ヘルスチェック拡張）
+- M6: 8時間（自動化）
+- **合計**: 52時間（約6.5日）
+
+---
+
+#### 6.5 テスト戦略
+
+| テスト種別 | 対象 | カバレッジ目標 | 実施タイミング |
+|----------|------|--------------|-------------|
+| 単体テスト | 各サービスクラス | 80%以上 | 各マイルストーン完了時 |
+| 統合テスト | JVN API + DB | 100%（主要パス） | M2完了時 |
+| 冪等性テスト | データ取得処理 | 3回実行でデータ不整合ゼロ | M4完了時 |
+| E2Eテスト | 全エンドポイント | 100%（全API） | M6完了時 |
+
+---
+
+### Phase 7以降（予定）
+
+- [ ] Phase 7: バックエンドAPI実装（Phase 6の計画を実行）
 - [ ] Phase 8: テスト実装（pytest + カバレッジ80%以上）
 - [ ] Phase 9: CI/CD構築（GitHub Actions定期実行）
 - [ ] Phase 10: Docker環境構築
