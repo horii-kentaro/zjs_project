@@ -5,18 +5,22 @@ This module provides REST API endpoints for vulnerability data:
 - GET / - HTML page rendering (Jinja2 template)
 - GET /api/vulnerabilities - JSON API with search, sort, pagination
 - GET /api/vulnerabilities/{cve_id} - Detailed vulnerability information
+- POST /api/fetch-now - Fetch latest vulnerabilities from JVN iPedia API
 """
 
 import logging
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from src.database import get_db
+from src.fetchers.jvn_fetcher import JVNFetcherService
 from src.schemas.vulnerability import VulnerabilityListResponse, VulnerabilityResponse
 from src.services.database_vulnerability_service import DatabaseVulnerabilityService
 
@@ -172,3 +176,80 @@ async def get_vulnerability_detail(cve_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f'Error fetching vulnerability {cve_id}: {str(e)}', exc_info=True)
         raise HTTPException(status_code=500, detail='Internal server error')
+
+
+class FetchNowResponse(BaseModel):
+    """Response model for fetch-now endpoint"""
+
+    success: bool
+    message: str
+    fetched: int
+    inserted: int
+    updated: int
+    failed: int
+    elapsed_seconds: float
+
+
+@router.post('/api/fetch-now', response_model=FetchNowResponse, tags=['API'])
+async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
+    """
+    Fetch latest vulnerabilities from JVN iPedia API in real-time.
+
+    This endpoint triggers an immediate fetch of vulnerability data from JVN iPedia API
+    and stores it in the database. It fetches data from the last 3 years by default.
+
+    Returns:
+        FetchNowResponse: Result of the fetch operation
+
+    Raises:
+        HTTPException: 500 for server errors
+    """
+    start_time = datetime.now()
+
+    try:
+        logger.info('Manual fetch triggered via API')
+
+        # Initialize JVN fetcher service
+        fetcher = JVNFetcherService()
+
+        # Calculate date range (last 3 years)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=3 * 365)
+
+        # Fetch vulnerabilities from JVN iPedia API
+        logger.info(f'Fetching vulnerabilities from {start_date.date()} to {end_date.date()}')
+        vulnerabilities = await fetcher.fetch_vulnerabilities(
+            start_date=start_date.strftime('%Y-%m-%d'), end_date=end_date.strftime('%Y-%m-%d')
+        )
+
+        fetched_count = len(vulnerabilities)
+        logger.info(f'Fetched {fetched_count} vulnerabilities from JVN iPedia API')
+
+        # Store in database
+        service = DatabaseVulnerabilityService(db)
+        result = service.upsert_vulnerabilities_batch(vulnerabilities)
+
+        elapsed = (datetime.now() - start_time).total_seconds()
+
+        logger.info(
+            f'Fetch completed: fetched={fetched_count}, inserted={result["inserted"]}, '
+            f'updated={result["updated"]}, failed={result["failed"]}, elapsed={elapsed:.2f}s'
+        )
+
+        return FetchNowResponse(
+            success=True,
+            message=f'Successfully fetched {fetched_count} vulnerabilities from JVN iPedia',
+            fetched=fetched_count,
+            inserted=result['inserted'],
+            updated=result['updated'],
+            failed=result['failed'],
+            elapsed_seconds=elapsed,
+        )
+
+    except Exception as e:
+        elapsed = (datetime.now() - start_time).total_seconds()
+        logger.error(f'Error during manual fetch: {str(e)}', exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f'Failed to fetch vulnerabilities: {str(e)}',
+        )

@@ -252,3 +252,52 @@ function showError(message) {
     const tbody = document.getElementById('vulnerabilityTableBody');
     tbody.innerHTML = `<tr><td colspan="6" class="loading" style="color: #d32f2f;">${escapeHtml(message)}</td></tr>`;
 }
+
+// Fetch vulnerabilities from JVN iPedia API now
+async function fetchNow() {
+    const btn = document.getElementById('fetchNowBtn');
+    const btnText = document.getElementById('fetchBtnText');
+    const btnSpinner = document.getElementById('fetchBtnSpinner');
+
+    // Disable button and show spinner
+    btn.disabled = true;
+    btnText.textContent = '取得中...';
+    btnSpinner.style.display = 'inline-block';
+
+    try {
+        const response = await fetch('/api/fetch-now', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Show success message
+        alert(
+            `✅ 脆弱性情報の取得に成功しました！\n\n` +
+            `取得件数: ${data.fetched}件\n` +
+            `新規登録: ${data.inserted}件\n` +
+            `更新: ${data.updated}件\n` +
+            `失敗: ${data.failed}件\n` +
+            `処理時間: ${data.elapsed_seconds.toFixed(2)}秒`
+        );
+
+        // Reload the current page
+        loadVulnerabilities();
+
+    } catch (error) {
+        console.error('Error fetching vulnerabilities:', error);
+        alert('❌ 脆弱性情報の取得に失敗しました。\n\nエラー: ' + error.message);
+    } finally {
+        // Re-enable button
+        btn.disabled = false;
+        btnText.textContent = 'JVN iPediaから取得';
+        btnSpinner.style.display = 'none';
+    }
+}

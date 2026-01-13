@@ -11,6 +11,10 @@
         <div class="search-box">
             <input type="text" placeholder="CVE IDまたはタイトルで検索" id="searchInput">
         </div>
+        <button class="btn-fetch" id="fetchNowBtn" onclick="fetchNow()">
+            <span id="fetchBtnText">JVN iPediaから取得</span>
+            <span id="fetchBtnSpinner" class="spinner" style="display:none;"></span>
+        </button>
         <select class="sort-select" id="sortSelect">
             <option value="modified_date_desc">更新日（新しい順）</option>
             <option value="modified_date_asc">更新日（古い順）</option>
