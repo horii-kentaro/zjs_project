@@ -76,7 +76,7 @@ jobs:
 
       - name: Set up database
         run: |
-          python -c "from src.database import Base, engine; Base.metadata.create_all(bind=engine)"
+          python -c "from src.database import init_db; init_db()"
 
       - name: Test with coverage
         run: |
