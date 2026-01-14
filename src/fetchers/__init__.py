@@ -9,4 +9,4 @@ This package contains modules for fetching vulnerability data from various sourc
 
 from src.fetchers.jvn_fetcher import JVNFetcherService
 
-__all__ = ['JVNFetcherService']
+__all__ = ["JVNFetcherService"]

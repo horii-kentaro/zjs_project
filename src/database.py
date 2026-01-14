@@ -59,7 +59,7 @@ def get_db() -> Generator[Session, None, None]:
     try:
         yield db
     except Exception as e:
-        logger.error(f'Database session error: {e}')
+        logger.error(f"Database session error: {e}")
         db.rollback()
         raise
     finally:
@@ -83,9 +83,9 @@ def init_db() -> None:
     """
     from src.models.vulnerability import Base
 
-    logger.info('Initializing database tables...')
+    logger.info("Initializing database tables...")
     Base.metadata.create_all(bind=engine)
-    logger.info('Database tables initialized successfully')
+    logger.info("Database tables initialized successfully")
 
 
 def check_db_connection() -> bool:
@@ -113,16 +113,16 @@ def check_db_connection() -> bool:
         db = SessionLocal()
 
         # Execute simple query to verify connection (SQLAlchemy 2.0 style)
-        result = db.execute(text('SELECT 1'))
+        result = db.execute(text("SELECT 1"))
         result.scalar()
 
         elapsed = time.time() - start_time
-        logger.debug(f'Database health check completed in {elapsed:.3f}s')
+        logger.debug(f"Database health check completed in {elapsed:.3f}s")
 
         db.close()
         return True
     except Exception as e:
-        logger.error(f'Database health check failed: {e}')
+        logger.error(f"Database health check failed: {e}")
         return False
 
 
@@ -136,6 +136,6 @@ def close_db() -> None:
         >>> from src.database import close_db
         >>> close_db()  # Clean up all connections
     """
-    logger.info('Closing database connections...')
+    logger.info("Closing database connections...")
     engine.dispose()
-    logger.info('Database connections closed')
+    logger.info("Database connections closed")

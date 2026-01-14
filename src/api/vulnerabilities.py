@@ -30,10 +30,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Jinja2 templates configuration
-templates = Jinja2Templates(directory='src/templates')
+templates = Jinja2Templates(directory="src/templates")
 
 
-@router.get('/', response_class=HTMLResponse, tags=['Frontend'])
+@router.get("/", response_class=HTMLResponse, tags=["Frontend"])
 async def get_vulnerabilities_page(request: Request):
     """
     Render vulnerability list page (HTML).
@@ -47,20 +47,20 @@ async def get_vulnerabilities_page(request: Request):
     Returns:
         HTMLResponse: Rendered HTML page
     """
-    logger.info('Rendering vulnerability list page')
-    return templates.TemplateResponse('vulnerabilities.html', {'request': request})
+    logger.info("Rendering vulnerability list page")
+    return templates.TemplateResponse("vulnerabilities.html", {"request": request})
 
 
-@router.get('/api/vulnerabilities', response_model=VulnerabilityListResponse, tags=['API'])
+@router.get("/api/vulnerabilities", response_model=VulnerabilityListResponse, tags=["API"])
 async def list_vulnerabilities(
-    page: int = Query(1, ge=1, description='Page number (1-indexed)'),
-    page_size: int = Query(50, ge=1, le=100, description='Number of items per page'),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(50, ge=1, le=100, description="Number of items per page"),
     sort_by: str = Query(
-        'modified_date',
-        description='Sort field (published_date, modified_date, severity, cvss_score)',
+        "modified_date",
+        description="Sort field (published_date, modified_date, severity, cvss_score)",
     ),
-    sort_order: str = Query('desc', description='Sort order (asc or desc)'),
-    search: Optional[str] = Query(None, description='Search keyword (CVE ID or title)'),
+    sort_order: str = Query("desc", description="Sort order (asc or desc)"),
+    search: Optional[str] = Query(None, description="Search keyword (CVE ID or title)"),
     db: Session = Depends(get_db),
 ):
     """
@@ -87,26 +87,26 @@ async def list_vulnerabilities(
     """
     try:
         # Validate sort_by parameter
-        valid_sort_fields = {'published_date', 'modified_date', 'severity', 'cvss_score'}
+        valid_sort_fields = {"published_date", "modified_date", "severity", "cvss_score"}
         if sort_by not in valid_sort_fields:
-            logger.warning(f'Invalid sort_by parameter: {sort_by}')
+            logger.warning(f"Invalid sort_by parameter: {sort_by}")
             raise HTTPException(
                 status_code=400,
-                detail=f'Invalid sort_by parameter. Must be one of: {valid_sort_fields}',
+                detail=f"Invalid sort_by parameter. Must be one of: {valid_sort_fields}",
             )
 
         # Validate sort_order parameter
-        valid_sort_orders = {'asc', 'desc'}
+        valid_sort_orders = {"asc", "desc"}
         if sort_order not in valid_sort_orders:
-            logger.warning(f'Invalid sort_order parameter: {sort_order}')
+            logger.warning(f"Invalid sort_order parameter: {sort_order}")
             raise HTTPException(
                 status_code=400,
-                detail=f'Invalid sort_order parameter. Must be one of: {valid_sort_orders}',
+                detail=f"Invalid sort_order parameter. Must be one of: {valid_sort_orders}",
             )
 
         logger.info(
-            f'API request: page={page}, page_size={page_size}, '
-            f'sort_by={sort_by}, sort_order={sort_order}, search={search}'
+            f"API request: page={page}, page_size={page_size}, "
+            f"sort_by={sort_by}, sort_order={sort_order}, search={search}"
         )
 
         # Use database service for real data
@@ -119,23 +119,23 @@ async def list_vulnerabilities(
             search=search,
         )
 
-        logger.info(f'Returning {len(result.items)} vulnerabilities (page {page}/{result.total_pages})')
+        logger.info(f"Returning {len(result.items)} vulnerabilities (page {page}/{result.total_pages})")
         return result
 
     except HTTPException:
         raise
     except SQLAlchemyError as e:
-        logger.error(f'Database error fetching vulnerabilities: {str(e)}', exc_info=True)
-        raise HTTPException(status_code=500, detail='Database connection error')
+        logger.error(f"Database error fetching vulnerabilities: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database connection error")
     except Exception as e:
-        logger.error(f'Error fetching vulnerabilities: {str(e)}', exc_info=True)
-        raise HTTPException(status_code=500, detail='Internal server error')
+        logger.error(f"Error fetching vulnerabilities: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get(
-    '/api/vulnerabilities/{cve_id}',
+    "/api/vulnerabilities/{cve_id}",
     response_model=VulnerabilityResponse,
-    tags=['API'],
+    tags=["API"],
 )
 async def get_vulnerability_detail(cve_id: str, db: Session = Depends(get_db)):
     """
@@ -155,27 +155,27 @@ async def get_vulnerability_detail(cve_id: str, db: Session = Depends(get_db)):
         HTTPException: 404 if CVE not found, 500 for server errors
     """
     try:
-        logger.info(f'API request for vulnerability detail: {cve_id}')
+        logger.info(f"API request for vulnerability detail: {cve_id}")
 
         # Use database service for real data
         service = DatabaseVulnerabilityService(db)
         vulnerability = service.get_vulnerability_by_cve_id(cve_id)
 
         if not vulnerability:
-            logger.warning(f'Vulnerability not found: {cve_id}')
-            raise HTTPException(status_code=404, detail=f'Vulnerability not found: {cve_id}')
+            logger.warning(f"Vulnerability not found: {cve_id}")
+            raise HTTPException(status_code=404, detail=f"Vulnerability not found: {cve_id}")
 
-        logger.info(f'Returning vulnerability detail: {cve_id}')
+        logger.info(f"Returning vulnerability detail: {cve_id}")
         return vulnerability
 
     except HTTPException:
         raise
     except SQLAlchemyError as e:
-        logger.error(f'Database error fetching vulnerability {cve_id}: {str(e)}', exc_info=True)
-        raise HTTPException(status_code=500, detail='Database connection error')
+        logger.error(f"Database error fetching vulnerability {cve_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database connection error")
     except Exception as e:
-        logger.error(f'Error fetching vulnerability {cve_id}: {str(e)}', exc_info=True)
-        raise HTTPException(status_code=500, detail='Internal server error')
+        logger.error(f"Error fetching vulnerability {cve_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 class FetchNowResponse(BaseModel):
@@ -190,7 +190,7 @@ class FetchNowResponse(BaseModel):
     elapsed_seconds: float
 
 
-@router.post('/api/fetch-now', response_model=FetchNowResponse, tags=['API'])
+@router.post("/api/fetch-now", response_model=FetchNowResponse, tags=["API"])
 async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
     """
     Fetch latest vulnerabilities from JVN iPedia API in real-time.
@@ -207,7 +207,7 @@ async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
     start_time = datetime.now()
 
     try:
-        logger.info('Manual fetch triggered via API')
+        logger.info("Manual fetch triggered via API")
 
         # Initialize JVN fetcher service
         fetcher = JVNFetcherService()
@@ -217,13 +217,13 @@ async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
         start_date = end_date - timedelta(days=3 * 365)
 
         # Fetch vulnerabilities from JVN iPedia API
-        logger.info(f'Fetching vulnerabilities from {start_date.date()} to {end_date.date()}')
+        logger.info(f"Fetching vulnerabilities from {start_date.date()} to {end_date.date()}")
         vulnerabilities = await fetcher.fetch_vulnerabilities(
-            start_date=start_date.strftime('%Y-%m-%d'), end_date=end_date.strftime('%Y-%m-%d')
+            start_date=start_date.strftime("%Y-%m-%d"), end_date=end_date.strftime("%Y-%m-%d")
         )
 
         fetched_count = len(vulnerabilities)
-        logger.info(f'Fetched {fetched_count} vulnerabilities from JVN iPedia API')
+        logger.info(f"Fetched {fetched_count} vulnerabilities from JVN iPedia API")
 
         # Store in database
         service = DatabaseVulnerabilityService(db)
@@ -238,18 +238,18 @@ async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
 
         return FetchNowResponse(
             success=True,
-            message=f'Successfully fetched {fetched_count} vulnerabilities from JVN iPedia',
+            message=f"Successfully fetched {fetched_count} vulnerabilities from JVN iPedia",
             fetched=fetched_count,
-            inserted=result['inserted'],
-            updated=result['updated'],
-            failed=result['failed'],
+            inserted=result["inserted"],
+            updated=result["updated"],
+            failed=result["failed"],
             elapsed_seconds=elapsed,
         )
 
     except Exception as e:
         elapsed = (datetime.now() - start_time).total_seconds()
-        logger.error(f'Error during manual fetch: {str(e)}', exc_info=True)
+        logger.error(f"Error during manual fetch: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f'Failed to fetch vulnerabilities: {str(e)}',
+            detail=f"Failed to fetch vulnerabilities: {str(e)}",
         )

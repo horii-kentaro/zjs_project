@@ -13,11 +13,11 @@ from src.schemas.vulnerability import (
 )
 
 __all__ = [
-    'VulnerabilityBase',
-    'VulnerabilityCreate',
-    'VulnerabilityUpdate',
-    'VulnerabilityInDB',
-    'VulnerabilityResponse',
-    'VulnerabilityListResponse',
-    'VulnerabilitySearchParams',
+    "VulnerabilityBase",
+    "VulnerabilityCreate",
+    "VulnerabilityUpdate",
+    "VulnerabilityInDB",
+    "VulnerabilityResponse",
+    "VulnerabilityListResponse",
+    "VulnerabilitySearchParams",
 ]

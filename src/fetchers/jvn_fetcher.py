@@ -68,12 +68,12 @@ class JVNFetcherService:
 
     # XML namespace for JVN iPedia API
     NAMESPACES = {
-        'status': 'http://jvndb.jvn.jp/myjvn/Status',
-        'rss': 'http://purl.org/rss/1.0/',
-        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        'sec': 'http://jvn.jp/rss/mod_sec/3.0/',
-        'dc': 'http://purl.org/dc/elements/1.1/',
-        'dcterms': 'http://purl.org/dc/terms/',
+        "status": "http://jvndb.jvn.jp/myjvn/Status",
+        "rss": "http://purl.org/rss/1.0/",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "sec": "http://jvn.jp/rss/mod_sec/3.0/",
+        "dc": "http://purl.org/dc/elements/1.1/",
+        "dcterms": "http://purl.org/dc/terms/",
     }
 
     def __init__(self) -> None:
@@ -86,8 +86,8 @@ class JVNFetcherService:
         self.last_request_time = 0.0
 
         logger.info(
-            f'JVN Fetcher Service initialized: endpoint={self.api_endpoint}, '
-            f'timeout={self.timeout}s, max_retries={self.max_retries}'
+            f"JVN Fetcher Service initialized: endpoint={self.api_endpoint}, "
+            f"timeout={self.timeout}s, max_retries={self.max_retries}"
         )
 
     async def fetch_vulnerabilities(
@@ -122,7 +122,9 @@ class JVNFetcherService:
             >>> len(vulnerabilities)
             150
         """
-        logger.info(f'Starting vulnerability fetch: start_date={start_date}, end_date={end_date}, max_items={max_items}')
+        logger.info(
+            f"Starting vulnerability fetch: start_date={start_date}, end_date={end_date}, max_items={max_items}"
+        )
 
         all_vulnerabilities: List[VulnerabilityCreate] = []
         start_item = 1
@@ -131,7 +133,7 @@ class JVNFetcherService:
         while True:
             # Check if we've reached the maximum items limit
             if max_items and len(all_vulnerabilities) >= max_items:
-                logger.info(f'Reached maximum items limit: {max_items}')
+                logger.info(f"Reached maximum items limit: {max_items}")
                 all_vulnerabilities = all_vulnerabilities[:max_items]
                 break
 
@@ -150,40 +152,40 @@ class JVNFetcherService:
                     max_count=fetch_count,
                 )
             except JVNAPIError as e:
-                logger.error(f'API error during pagination: {e}')
+                logger.error(f"API error during pagination: {e}")
                 raise
             except JVNParseError as e:
-                logger.error(f'Parse error during pagination: {e}')
+                logger.error(f"Parse error during pagination: {e}")
                 raise
 
             if not vulnerabilities:
-                logger.info(f'No more vulnerabilities found at start_item={start_item}')
+                logger.info(f"No more vulnerabilities found at start_item={start_item}")
                 break
 
             all_vulnerabilities.extend(vulnerabilities)
-            logger.info(f'Fetched {len(vulnerabilities)} vulnerabilities (total: {len(all_vulnerabilities)})')
+            logger.info(f"Fetched {len(vulnerabilities)} vulnerabilities (total: {len(all_vulnerabilities)})")
 
             # Check if we've fetched all available items
             if len(vulnerabilities) < items_per_page:
-                logger.info('Fetched all available vulnerabilities (last page was incomplete)')
+                logger.info("Fetched all available vulnerabilities (last page was incomplete)")
                 break
 
             # Move to next page
             start_item += items_per_page
 
-        logger.info(f'Completed vulnerability fetch: total={len(all_vulnerabilities)} items')
+        logger.info(f"Completed vulnerability fetch: total={len(all_vulnerabilities)} items")
         return all_vulnerabilities
 
     def _handle_retry_error(self, error: Exception, attempt: int, error_type: str) -> None:
         """Handle retry errors with consistent logging."""
-        logger.warning(f'{error_type} (attempt {attempt}/{self.max_retries}): {error}')
+        logger.warning(f"{error_type} (attempt {attempt}/{self.max_retries}): {error}")
         if attempt == self.max_retries:
             if isinstance(error, httpx.TimeoutException):
-                raise JVNAPIError(f'API request timed out after {self.max_retries} attempts: {error}')
+                raise JVNAPIError(f"API request timed out after {self.max_retries} attempts: {error}")
             elif isinstance(error, JVNParseError):
                 raise error
             else:
-                raise JVNAPIError(f'API request failed after {self.max_retries} attempts: {error}')
+                raise JVNAPIError(f"API request failed after {self.max_retries} attempts: {error}")
 
     async def _fetch_page(
         self,
@@ -218,7 +220,7 @@ class JVNFetcherService:
         # Retry logic with exponential backoff
         for attempt in range(1, self.max_retries + 1):
             try:
-                logger.debug(f'Fetching page: start_item={start_item}, attempt={attempt}/{self.max_retries}')
+                logger.debug(f"Fetching page: start_item={start_item}, attempt={attempt}/{self.max_retries}")
 
                 # M1.5: Timeout setting (30 seconds)
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -227,20 +229,20 @@ class JVNFetcherService:
 
                 # Parse XML response (M1.2)
                 vulnerabilities = self._parse_xml_response(response.text)
-                logger.debug(f'Successfully parsed {len(vulnerabilities)} vulnerabilities')
+                logger.debug(f"Successfully parsed {len(vulnerabilities)} vulnerabilities")
                 return vulnerabilities
 
             except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.RequestError) as e:
-                error_type = e.__class__.__name__.replace('Exception', ' error').replace('Error', ' error')
+                error_type = e.__class__.__name__.replace("Exception", " error").replace("Error", " error")
                 self._handle_retry_error(e, attempt, error_type)
 
             except JVNParseError as e:
-                self._handle_retry_error(e, attempt, 'XML parsing error')
+                self._handle_retry_error(e, attempt, "XML parsing error")
 
             # Exponential backoff
             if attempt < self.max_retries:
                 delay = self.retry_delay * (2 ** (attempt - 1))
-                logger.info(f'Retrying in {delay} seconds...')
+                logger.info(f"Retrying in {delay} seconds...")
                 await asyncio.sleep(delay)
 
         return []
@@ -250,21 +252,21 @@ class JVNFetcherService:
     ) -> dict:
         """Build request parameters for JVN API."""
         params = {
-            'method': 'getVulnOverviewList',
-            'feed': 'hnd',
-            'startItem': str(start_item),
-            'maxCountItem': str(max_count),
+            "method": "getVulnOverviewList",
+            "feed": "hnd",
+            "startItem": str(start_item),
+            "maxCountItem": str(max_count),
         }
 
         if start_date:
-            params['datePublicStartY'] = start_date.split('-')[0]
-            params['datePublicStartM'] = start_date.split('-')[1]
-            params['datePublicStartD'] = start_date.split('-')[2]
+            params["datePublicStartY"] = start_date.split("-")[0]
+            params["datePublicStartM"] = start_date.split("-")[1]
+            params["datePublicStartD"] = start_date.split("-")[2]
 
         if end_date:
-            params['datePublicEndY'] = end_date.split('-')[0]
-            params['datePublicEndM'] = end_date.split('-')[1]
-            params['datePublicEndD'] = end_date.split('-')[2]
+            params["datePublicEndY"] = end_date.split("-")[0]
+            params["datePublicEndM"] = end_date.split("-")[1]
+            params["datePublicEndD"] = end_date.split("-")[2]
 
         return params
 
@@ -280,7 +282,7 @@ class JVNFetcherService:
 
         if time_since_last_request < self.rate_limit_delay:
             sleep_time = self.rate_limit_delay - time_since_last_request
-            logger.debug(f'Rate limiting: sleeping for {sleep_time:.2f} seconds')
+            logger.debug(f"Rate limiting: sleeping for {sleep_time:.2f} seconds")
             await asyncio.sleep(sleep_time)
 
         self.last_request_time = time.time()
@@ -316,24 +318,24 @@ class JVNFetcherService:
         try:
             root = ET.fromstring(xml_text)
         except ET.ParseError as e:
-            raise JVNParseError(f'Failed to parse XML response: {e}')
+            raise JVNParseError(f"Failed to parse XML response: {e}")
 
         vulnerabilities: List[VulnerabilityCreate] = []
 
         # Find all <item> elements using RSS namespace
-        items = root.findall('.//rss:item', self.NAMESPACES)
+        items = root.findall(".//rss:item", self.NAMESPACES)
 
         if not items:
             # Try without namespace (fallback)
-            items = root.findall('.//item')
+            items = root.findall(".//item")
 
-        logger.debug(f'Found {len(items)} items in XML response')
+        logger.debug(f"Found {len(items)} items in XML response")
 
         for item in items:
             try:
                 # Skip "no results" message item
-                title = self._get_element_text(item, 'rss:title', self.NAMESPACES)
-                if title and 'MyJVN　該当する脆弱性対策情報はありません' in title:
+                title = self._get_element_text(item, "rss:title", self.NAMESPACES)
+                if title and "MyJVN　該当する脆弱性対策情報はありません" in title:
                     logger.debug('Skipping "no results" message item')
                     continue
 
@@ -341,7 +343,7 @@ class JVNFetcherService:
                 vulnerabilities.append(vulnerability)
             except Exception as e:
                 # Log parsing error but continue with other items
-                logger.warning(f'Failed to parse vulnerability item: {e}')
+                logger.warning(f"Failed to parse vulnerability item: {e}")
                 continue
 
         return vulnerabilities
@@ -350,11 +352,11 @@ class JVNFetcherService:
         """Extract CVE ID from vulnerability item."""
         # Extract CVE ID from sec:references elements
         cve_id = None
-        references_elements = item.findall('sec:references', self.NAMESPACES)
+        references_elements = item.findall("sec:references", self.NAMESPACES)
         for ref in references_elements:
-            source = ref.get('source')
-            ref_id = ref.get('id')
-            if source == 'CVE' and ref_id and ref_id.startswith('CVE-'):
+            source = ref.get("source")
+            ref_id = ref.get("id")
+            if source == "CVE" and ref_id and ref_id.startswith("CVE-"):
                 cve_id = ref_id
                 break
 
@@ -362,19 +364,19 @@ class JVNFetcherService:
             cve_id = self._extract_cve_from_title(title)
 
         if not cve_id:
-            jvndb_id = self._get_element_text(item, 'sec:identifier', self.NAMESPACES)
+            jvndb_id = self._get_element_text(item, "sec:identifier", self.NAMESPACES)
             if jvndb_id:
-                raise JVNParseError(f'No CVE ID found for JVNDB entry: {jvndb_id}')
+                raise JVNParseError(f"No CVE ID found for JVNDB entry: {jvndb_id}")
 
         return cve_id  # type: ignore
 
     def _extract_dates(self, item: ET.Element) -> tuple:
         """Extract published and modified dates from vulnerability item."""
-        published_date_str = self._get_element_text(item, 'dc:date', self.NAMESPACES)
-        modified_date_str = self._get_element_text(item, 'dcterms:modified', self.NAMESPACES)
+        published_date_str = self._get_element_text(item, "dc:date", self.NAMESPACES)
+        modified_date_str = self._get_element_text(item, "dcterms:modified", self.NAMESPACES)
 
         if not published_date_str:
-            raise JVNParseError('Missing required field: published date')
+            raise JVNParseError("Missing required field: published date")
 
         published_date = self._parse_date(published_date_str)
         modified_date = self._parse_date(modified_date_str) if modified_date_str else published_date
@@ -383,19 +385,19 @@ class JVNFetcherService:
 
     def _extract_cvss_info(self, item: ET.Element) -> tuple:
         """Extract CVSS score and severity from vulnerability item."""
-        cvss_element = item.find('sec:cvss', self.NAMESPACES)
+        cvss_element = item.find("sec:cvss", self.NAMESPACES)
         cvss_score = None
         severity = None
 
         if cvss_element is not None:
-            cvss_score_str = cvss_element.get('score')
-            severity = cvss_element.get('severity')
+            cvss_score_str = cvss_element.get("score")
+            severity = cvss_element.get("severity")
 
             if cvss_score_str:
                 try:
                     cvss_score = float(cvss_score_str)
                 except ValueError:
-                    logger.warning(f'Invalid CVSS score format: {cvss_score_str}')
+                    logger.warning(f"Invalid CVSS score format: {cvss_score_str}")
 
         return cvss_score, severity
 
@@ -413,13 +415,13 @@ class JVNFetcherService:
             JVNParseError: When required fields are missing
         """
         # Extract required fields
-        title = self._get_element_text(item, 'rss:title', self.NAMESPACES)
+        title = self._get_element_text(item, "rss:title", self.NAMESPACES)
         if not title:
-            raise JVNParseError('Missing required field: title')
+            raise JVNParseError("Missing required field: title")
 
-        description = self._get_element_text(item, 'rss:description', self.NAMESPACES)
+        description = self._get_element_text(item, "rss:description", self.NAMESPACES)
         if not description:
-            raise JVNParseError('Missing required field: description')
+            raise JVNParseError("Missing required field: description")
 
         # Extract CVE ID, dates, and CVSS info using helper methods
         cve_id = self._extract_cve_id(item, title)
@@ -427,8 +429,8 @@ class JVNFetcherService:
         cvss_score, severity = self._extract_cvss_info(item)
 
         # Extract additional information
-        link = self._get_element_text(item, 'rss:link', self.NAMESPACES)
-        references = {'jvn_link': link} if link else None
+        link = self._get_element_text(item, "rss:link", self.NAMESPACES)
+        references = {"jvn_link": link} if link else None
 
         # Create VulnerabilityCreate object
         return VulnerabilityCreate(
@@ -465,10 +467,10 @@ class JVNFetcherService:
         element = parent.find(tag, namespaces) if namespaces else None
 
         # If not found and tag doesn't have namespace prefix, try without namespace
-        if element is None and namespaces and ':' not in tag:
+        if element is None and namespaces and ":" not in tag:
             # Search for element by local name (without namespace)
             for child in parent:
-                local_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                local_name = child.tag.split("}")[-1] if "}" in child.tag else child.tag
                 if local_name == tag:
                     element = child
                     break
@@ -495,7 +497,7 @@ class JVNFetcherService:
         """
         import re
 
-        pattern = r'CVE-\d{4}-\d{4,}'
+        pattern = r"CVE-\d{4}-\d{4,}"
         match = re.search(pattern, title)
         return match.group(0) if match else None
 
@@ -518,7 +520,7 @@ class JVNFetcherService:
             JVNParseError: When date parsing fails
         """
         # Remove timezone info for simplicity (store as naive datetime)
-        date_str = date_str.replace('Z', '+00:00')
+        date_str = date_str.replace("Z", "+00:00")
 
         # Try ISO 8601 format with timezone
         try:
@@ -530,11 +532,11 @@ class JVNFetcherService:
 
         # Try simple date format
         try:
-            return datetime.strptime(date_str, '%Y-%m-%d')
+            return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
             pass
 
-        raise JVNParseError(f'Failed to parse date: {date_str}')
+        raise JVNParseError(f"Failed to parse date: {date_str}")
 
     async def fetch_since_last_update(self, last_update_date: datetime) -> List[VulnerabilityCreate]:
         """
@@ -555,10 +557,10 @@ class JVNFetcherService:
             >>> len(new_vulns)
             50
         """
-        start_date = last_update_date.strftime('%Y-%m-%d')
-        end_date = datetime.now().strftime('%Y-%m-%d')
+        start_date = last_update_date.strftime("%Y-%m-%d")
+        end_date = datetime.now().strftime("%Y-%m-%d")
 
-        logger.info(f'Fetching vulnerabilities updated since: {start_date}')
+        logger.info(f"Fetching vulnerabilities updated since: {start_date}")
 
         return await self.fetch_vulnerabilities(start_date=start_date, end_date=end_date)
 
@@ -578,9 +580,9 @@ class JVNFetcherService:
             >>> len(recent_vulns)
             1500
         """
-        start_date = (datetime.now() - timedelta(days=365 * years)).strftime('%Y-%m-%d')
-        end_date = datetime.now().strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=365 * years)).strftime("%Y-%m-%d")
+        end_date = datetime.now().strftime("%Y-%m-%d")
 
-        logger.info(f'Fetching vulnerabilities from last {years} years: {start_date} to {end_date}')
+        logger.info(f"Fetching vulnerabilities from last {years} years: {start_date} to {end_date}")
 
         return await self.fetch_vulnerabilities(start_date=start_date, end_date=end_date)

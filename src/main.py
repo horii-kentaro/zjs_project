@@ -22,30 +22,30 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI application
 app = FastAPI(
-    title='脆弱性管理システム',
-    description='JVN iPedia API を利用した脆弱性情報管理システム（Phase 1: 脆弱性情報取得基盤）',
-    version='1.0.0',
-    docs_url='/api/docs',
-    redoc_url='/api/redoc',
+    title="脆弱性管理システム",
+    description="JVN iPedia API を利用した脆弱性情報管理システム（Phase 1: 脆弱性情報取得基盤）",
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
 )
 
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],  # In production, specify allowed origins
+    allow_origins=["*"],  # In production, specify allowed origins
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Mount static files
-app.mount('/static', StaticFiles(directory='src/static'), name='static')
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # Include routers
-app.include_router(vulnerabilities_router, tags=['Vulnerabilities'])
+app.include_router(vulnerabilities_router, tags=["Vulnerabilities"])
 
 
-@app.get('/api/health', tags=['System'])
+@app.get("/api/health", tags=["System"])
 async def health_check():
     """
     Health check endpoint.
@@ -71,15 +71,15 @@ async def health_check():
     from fastapi import HTTPException
     from src.database import check_db_connection
 
-    logger.info('Health check requested')
+    logger.info("Health check requested")
 
     health_status = {
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'version': '1.0.0',
-        'environment': {
-            'debug': settings.DEBUG,
-            'port': settings.PORT,
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
+        "environment": {
+            "debug": settings.DEBUG,
+            "port": settings.PORT,
         },
     }
 
@@ -88,63 +88,63 @@ async def health_check():
         db_connected = check_db_connection()
 
         if db_connected:
-            health_status['database'] = 'connected'
-            logger.info('Health check completed: database connected')
+            health_status["database"] = "connected"
+            logger.info("Health check completed: database connected")
         else:
-            health_status['status'] = 'unhealthy'
-            health_status['database'] = 'disconnected'
-            logger.error('Health check failed: database disconnected')
+            health_status["status"] = "unhealthy"
+            health_status["database"] = "disconnected"
+            logger.error("Health check failed: database disconnected")
             raise HTTPException(
                 status_code=503,
-                detail='Database connection failed',
+                detail="Database connection failed",
             )
 
     except HTTPException:
         # Re-raise HTTPException for FastAPI to handle
         raise
     except Exception as e:
-        logger.error(f'Health check failed: {str(e)}', exc_info=True)
-        health_status['status'] = 'unhealthy'
-        health_status['database'] = 'error'
+        logger.error(f"Health check failed: {str(e)}", exc_info=True)
+        health_status["status"] = "unhealthy"
+        health_status["database"] = "error"
         raise HTTPException(
             status_code=503,
-            detail=f'Health check failed: {str(e)}',
+            detail=f"Health check failed: {str(e)}",
         )
 
     return health_status
 
 
-@app.on_event('startup')
+@app.on_event("startup")
 async def startup_event():
     """
     Application startup event handler.
 
     Logs application startup information.
     """
-    logger.info('=' * 80)
-    logger.info('Starting vulnerability management system')
-    logger.info(f'Debug mode: {settings.DEBUG}')
-    logger.info(f'Port: {settings.PORT}')
-    logger.info(f'Log level: {settings.LOG_LEVEL}')
-    logger.info('=' * 80)
+    logger.info("=" * 80)
+    logger.info("Starting vulnerability management system")
+    logger.info(f"Debug mode: {settings.DEBUG}")
+    logger.info(f"Port: {settings.PORT}")
+    logger.info(f"Log level: {settings.LOG_LEVEL}")
+    logger.info("=" * 80)
 
 
-@app.on_event('shutdown')
+@app.on_event("shutdown")
 async def shutdown_event():
     """
     Application shutdown event handler.
 
     Logs application shutdown information.
     """
-    logger.info('Shutting down vulnerability management system')
+    logger.info("Shutting down vulnerability management system")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        'src.main:app',
-        host='0.0.0.0',
+        "src.main:app",
+        host="0.0.0.0",
         port=settings.PORT,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),

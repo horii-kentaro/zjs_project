@@ -28,39 +28,37 @@ class Settings(BaseSettings):
     """
 
     # Database configuration
-    DATABASE_URL: str = os.getenv(
-        'DATABASE_URL', 'postgresql://user:password@localhost:5434/vulnerability_db'
-    )
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5434/vulnerability_db")
 
     # JVN iPedia API configuration
-    JVN_API_ENDPOINT: str = os.getenv('JVN_API_ENDPOINT', 'https://jvndb.jvn.jp/myjvn')
+    JVN_API_ENDPOINT: str = os.getenv("JVN_API_ENDPOINT", "https://jvndb.jvn.jp/myjvn")
     JVN_API_TIMEOUT: int = 30  # Timeout in seconds
     JVN_API_MAX_RETRIES: int = 3  # Maximum retry attempts
     JVN_API_RETRY_DELAY: int = 5  # Delay between retries in seconds
 
     # NVD API configuration (Phase 2 - optional)
-    NVD_API_ENDPOINT: Optional[str] = os.getenv('NVD_API_ENDPOINT', 'https://services.nvd.nist.gov/rest/json/cves/2.0')
-    NVD_API_KEY: Optional[str] = os.getenv('NVD_API_KEY', None)
+    NVD_API_ENDPOINT: Optional[str] = os.getenv("NVD_API_ENDPOINT", "https://services.nvd.nist.gov/rest/json/cves/2.0")
+    NVD_API_KEY: Optional[str] = os.getenv("NVD_API_KEY", None)
 
     # CISA KEV configuration (Phase 2 - optional)
     CISA_KEV_ENDPOINT: Optional[str] = os.getenv(
-        'CISA_KEV_ENDPOINT', 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
+        "CISA_KEV_ENDPOINT", "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
     )
 
     # Logging configuration
-    LOG_LEVEL: str = os.getenv('LOG_LEVEL', 'INFO')
-    LOG_FORMAT: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     # Application configuration
-    DEBUG: bool = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
-    PORT: int = int(os.getenv('PORT', '8347'))
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+    PORT: int = int(os.getenv("PORT", "8347"))
 
     # Data fetch configuration
     FETCH_YEARS: int = 3  # Fetch vulnerabilities from the last N years
-    FETCH_ALL_DATA: bool = os.getenv('FETCH_ALL_DATA', 'False').lower() in (
-        'true',
-        '1',
-        'yes',
+    FETCH_ALL_DATA: bool = os.getenv("FETCH_ALL_DATA", "False").lower() in (
+        "true",
+        "1",
+        "yes",
     )  # If True, fetch all historical data
 
     # Pagination defaults
@@ -68,9 +66,9 @@ class Settings(BaseSettings):
     MAX_PAGE_SIZE: int = 100
 
     model_config = {
-        'env_file': '.env',
-        'env_file_encoding': 'utf-8',
-        'case_sensitive': False,
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
     }
 
     def configure_logging(self) -> None:
@@ -88,7 +86,7 @@ class Settings(BaseSettings):
             format=self.LOG_FORMAT,
         )
         logger = logging.getLogger(__name__)
-        logger.info(f'Logging configured with level: {self.LOG_LEVEL}')
+        logger.info(f"Logging configured with level: {self.LOG_LEVEL}")
 
     def get_fetch_start_date(self) -> Optional[str]:
         """
@@ -108,7 +106,7 @@ class Settings(BaseSettings):
         from datetime import datetime, timedelta
 
         start_date = datetime.now() - timedelta(days=365 * self.FETCH_YEARS)
-        return start_date.strftime('%Y-%m-%d')
+        return start_date.strftime("%Y-%m-%d")
 
     def mask_sensitive_info(self) -> dict:
         """
@@ -127,11 +125,13 @@ class Settings(BaseSettings):
         settings_dict = self.model_dump()
 
         # Mask sensitive fields
-        if 'DATABASE_URL' in settings_dict and settings_dict['DATABASE_URL']:
-            settings_dict['DATABASE_URL'] = settings_dict['DATABASE_URL'].split('@')[0].split('//')[0] + '//***'
+        if "DATABASE_URL" in settings_dict and settings_dict["DATABASE_URL"]:
+            settings_dict["DATABASE_URL"] = settings_dict["DATABASE_URL"].split("@")[0].split("//")[0] + "//***"
 
-        if 'NVD_API_KEY' in settings_dict and settings_dict['NVD_API_KEY']:
-            settings_dict['NVD_API_KEY'] = '***' + settings_dict['NVD_API_KEY'][-4:] if settings_dict['NVD_API_KEY'] else None
+        if "NVD_API_KEY" in settings_dict and settings_dict["NVD_API_KEY"]:
+            settings_dict["NVD_API_KEY"] = (
+                "***" + settings_dict["NVD_API_KEY"][-4:] if settings_dict["NVD_API_KEY"] else None
+            )
 
         return settings_dict
 
