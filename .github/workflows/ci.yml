@@ -10,6 +10,26 @@ jobs:
   quality-check:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      JVN_API_ENDPOINT: https://jvndb.jvn.jp/myjvn
+      LOG_LEVEL: INFO
+
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +73,10 @@ jobs:
           if [ -d "src" ]; then
             isort --check-only --profile=black --line-length=120 src/
           fi
+
+      - name: Set up database
+        run: |
+          python -c "from src.database import Base, engine; Base.metadata.create_all(bind=engine)"
 
       - name: Test with coverage
         run: |
