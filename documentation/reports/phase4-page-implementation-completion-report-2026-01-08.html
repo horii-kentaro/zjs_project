@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4 ページ実装 完了報告書 - 脆弱性管理システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .metadata {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 3px solid #11998e;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .metadata-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metadata-label {
+            font-weight: bold;
+            color: #11998e;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .metadata-value {
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .completion-banner {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+            border-bottom: 3px solid #0d7a6f;
+        }
+
+        .completion-banner h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .completion-banner p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #11998e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #11998e;
+        }
+
+        .subsection-title {
+            font-size: 1.4em;
+            color: #0d7a6f;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 30px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .task-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .task-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .task-item.completed {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .task-status {
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2em;
+            color: #28a745;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background: #11998e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .badge-backend {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge-frontend {
+            background: #f093fb;
+            color: white;
+        }
+
+        .badge-doc {
+            background: #4facfe;
+            color: white;
+        }
+
+        .badge-config {
+            background: #43e97b;
+            color: white;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 3px solid #11998e;
+            color: #6c757d;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .file-tree {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+            margin: 20px 0;
+        }
+
+        .commit-info {
+            background: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .commit-hash {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Phase 4 ページ実装 完了報告書</h1>
+            <div class="subtitle">脆弱性管理システム - P-001 脆弱性一覧ページ実装</div>
+        </div>
+
+        <div class="metadata">
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <div class="metadata-label">プロジェクト名</div>
+                    <div class="metadata-value">脆弱性管理システム</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">完了日</div>
+                    <div class="metadata-value">2026年1月8日</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">ステータス</div>
+                    <div class="metadata-value">✅ 完了（100%）</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">作成者</div>
+                    <div class="metadata-value">Claude Code</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">完了率</div>
+                    <div class="metadata-value">100%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="completion-banner">
+            <h2>🎉 Phase 4 完了</h2>
+            <p>FastAPI + Jinja2による脆弱性一覧ページが実装完了しました</p>
+            <div class="progress-bar" style="margin-top: 20px;">
+                <div class="progress-fill" style="width: 100%;">100% 完了</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- エグゼクティブサマリー -->
+            <div class="section">
+                <h2 class="section-title">📋 エグゼクティブサマリー</h2>
+                <div class="success-box">
+                    <p><strong>Phase 4の目的：</strong> FastAPI + Jinja2を使用して<span class="highlight">脆弱性一覧ページ（P-001）</span>を実装し、検索・ソート・ページネーション・詳細表示モーダル機能を完備する。Phase 7でのバックエンドAPI統合に備え、モックサービスと@MOCK_TO_APIマークを配置する。</p>
+                </div>
+
+                <h3 class="subsection-title">主要成果</h3>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">作成ファイル数</div>
+                        <div class="metric-value">25</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">総行数</div>
+                        <div class="metric-value">3,761</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">実装機能数</div>
+                        <div class="metric-value">14</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">APIエンドポイント数</div>
+                        <div class="metric-value">4</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- プロジェクト概要 -->
+            <div class="section">
+                <h2 class="section-title">🎯 プロジェクト概要</h2>
+                <div class="info-box">
+                    <p><strong>開始日：</strong> 2026年1月7日</p>
+                    <p><strong>完了日：</strong> 2026年1月8日</p>
+                    <p><strong>期間：</strong> 2日間</p>
+                    <p><strong>主要成果：</strong> 脆弱性一覧ページ（P-001）の完全実装</p>
+                    <p><strong>技術スタック：</strong> FastAPI, Jinja2, Vanilla JavaScript, Material Design風CSS</p>
+                </div>
+            </div>
+
+            <!-- Phase 4 実施内容 -->
+            <div class="section">
+                <h2 class="section-title">✅ Phase 4 実施内容</h2>
+                <ul class="task-list">
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>HTMLモックアップ作成</strong> - mockups/VulnerabilityList.html（436行）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>データモデリング</strong> - SQLAlchemy + Pydanticスキーマ実装</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>FastAPI実装</strong> - メインアプリケーション、APIエンドポイント</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>モックサービス実装</strong> - 100件のサンプルデータ生成、@MOCK_TO_APIマーク配置</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>Jinja2テンプレート実装</strong> - ベーステンプレート、脆弱性一覧ページ</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>フロントエンド実装</strong> - CSS（Material Design風）、JavaScript（検索・ソート・ページネーション）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>API統合準備</strong> - API仕様書生成、@MOCK_TO_APIマーク9箇所配置</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>ドキュメント整備</strong> - SETUP_GUIDE.md、IMPLEMENTATION_SUMMARY.md、DATA_MODELS.md</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>バグ修正</strong> - ソート機能のパラメータ解析エラー修正</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 成果物一覧 -->
+            <div class="section">
+                <h2 class="section-title">📦 成果物一覧</h2>
+
+                <h3 class="subsection-title">バックエンド実装（Python: 6ファイル、1,564行）</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ファイル</th>
+                            <th>行数</th>
+                            <th>役割</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>src/main.py</code></td>
+                            <td>118</td>
+                            <td>FastAPIアプリケーション、CORS設定、ヘルスチェック</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/api/vulnerabilities.py</code></td>
+                            <td>164</td>
+                            <td>APIエンドポイント（一覧、詳細、検索、ソート、ページネーション）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/services/mock_vulnerability_service.py</code></td>
+                            <td>285</td>
+                            <td>モックデータサービス（Phase 7で置き換え）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/config.py</code></td>
+                            <td>143</td>
+                            <td>環境変数管理、設定クラス</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/database.py</code></td>
+                            <td>129</td>
+                            <td>DB接続設定、セッション管理</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/models/vulnerability.py</code></td>
+                            <td>148</td>
+                            <td>SQLAlchemyモデル（Vulnerabilityテーブル）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/schemas/vulnerability.py</code></td>
+                            <td>213</td>
+                            <td>Pydanticスキーマ（7種類）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/api/__init__.py</code></td>
+                            <td>5</td>
+                            <td>APIモジュール初期化</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/services/__init__.py</code></td>
+                            <td>5</td>
+                            <td>サービスモジュール初期化</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/models/__init__.py</code></td>
+                            <td>7</td>
+                            <td>モデルモジュール初期化</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/schemas/__init__.py</code></td>
+                            <td>23</td>
+                            <td>スキーマモジュール初期化</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">フロントエンド実装（HTML: 2、CSS: 1、JS: 1、計1,109行）</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ファイル</th>
+                            <th>行数</th>
+                            <th>役割</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>mockups/VulnerabilityList.html</code></td>
+                            <td>436</td>
+                            <td>HTMLモックアップ（デザイン確定用）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/templates/base.html</code></td>
+                            <td>18</td>
+                            <td>ベーステンプレート（HTML5構造、フォント読み込み）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/templates/vulnerabilities.html</code></td>
+                            <td>109</td>
+                            <td>脆弱性一覧ページ（検索、ソート、テーブル、モーダル）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/static/css/style.css</code></td>
+                            <td>292</td>
+                            <td>Material Design風スタイルシート（レスポンシブ対応）</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/static/js/main.js</code></td>
+                            <td>254</td>
+                            <td>フロントエンドロジック（検索、ソート、ページネーション、モーダル）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">ドキュメント（5ファイル、893行）</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ファイル</th>
+                            <th>行数</th>
+                            <th>役割</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>SETUP_GUIDE.md</code></td>
+                            <td>237</td>
+                            <td>セットアップ手順（WSL環境対応）</td>
+                        </tr>
+                        <tr>
+                            <td><code>IMPLEMENTATION_SUMMARY.md</code></td>
+                            <td>352</td>
+                            <td>実装サマリー（成果物、テスト項目、Phase 7への準備）</td>
+                        </tr>
+                        <tr>
+                            <td><code>docs/DATA_MODELS.md</code></td>
+                            <td>304</td>
+                            <td>データモデル仕様書（SQLAlchemy、Pydantic）</td>
+                        </tr>
+                        <tr>
+                            <td><code>docs/api-specs/vulnerability-list-api.md</code></td>
+                            <td>374</td>
+                            <td>API仕様書（エンドポイント、パラメータ、レスポンス）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">設定ファイル（3ファイル）</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ファイル</th>
+                            <th>行数</th>
+                            <th>役割</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>requirements.txt</code></td>
+                            <td>27</td>
+                            <td>Python依存関係（FastAPI、SQLAlchemy、pytest等）</td>
+                        </tr>
+                        <tr>
+                            <td><code>.env.example</code></td>
+                            <td>24</td>
+                            <td>環境変数テンプレート</td>
+                        </tr>
+                        <tr>
+                            <td><code>run_server.sh</code></td>
+                            <td>53</td>
+                            <td>サーバー起動スクリプト（仮想環境自動作成）</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 実装機能の詳細 -->
+            <div class="section">
+                <h2 class="section-title">🔧 実装機能の詳細</h2>
+
+                <h3 class="subsection-title">APIエンドポイント（4種類）</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>エンドポイント</th>
+                            <th>メソッド</th>
+                            <th>機能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>GET /</code></td>
+                            <td>GET</td>
+                            <td>脆弱性一覧ページ（HTML）レンダリング</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET /api/vulnerabilities</code></td>
+                            <td>GET</td>
+                            <td>脆弱性一覧取得（JSON）、検索・ソート・ページネーション対応</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET /api/vulnerabilities/{cve_id}</code></td>
+                            <td>GET</td>
+                            <td>脆弱性詳細取得（JSON）、モーダル表示用</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET /api/health</code></td>
+                            <td>GET</td>
+                            <td>ヘルスチェック（5秒以内応答保証）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">フロントエンド機能</h3>
+                <ul class="task-list">
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>検索機能</strong> - CVE ID + タイトルの部分一致検索、500msデバウンス</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>ソート機能（8種類）</strong> - 更新日（新/古）、公開日（新/古）、重要度（高/低）、CVSSスコア（高/低）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>ページネーション</strong> - 50件/ページ、最大7ページ表示、省略記号対応</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>詳細表示モーダル</strong> - 動的コンテンツ読み込み、背景クリックで閉じる</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>重要度バッジ</strong> - Critical（赤）、High（オレンジ）、Medium（黄）、Low（緑）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>レスポンシブデザイン</strong> - モバイル/タブレット/デスクトップ対応</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>XSS対策</strong> - escapeHtml関数によるサニタイズ</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 技術スタック -->
+            <div class="section">
+                <h2 class="section-title">🛠️ 技術スタック</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th>技術</th>
+                            <th>バージョン</th>
+                            <th>役割</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-backend">Backend</span></td>
+                            <td>FastAPI</td>
+                            <td>0.109.0+</td>
+                            <td>Webフレームワーク、REST API、自動ドキュメント生成</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-backend">Backend</span></td>
+                            <td>Uvicorn</td>
+                            <td>0.27.0+</td>
+                            <td>ASGIサーバー、ホットリロード対応</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-backend">Backend</span></td>
+                            <td>Pydantic</td>
+                            <td>2.5.0+</td>
+                            <td>データバリデーション、スキーマ定義</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-backend">Backend</span></td>
+                            <td>SQLAlchemy</td>
+                            <td>2.0.25+</td>
+                            <td>ORM、データベースモデル定義</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-frontend">Frontend</span></td>
+                            <td>Jinja2</td>
+                            <td>3.1.3+</td>
+                            <td>テンプレートエンジン、HTMLレンダリング</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-frontend">Frontend</span></td>
+                            <td>Vanilla JavaScript</td>
+                            <td>ES6+</td>
+                            <td>フロントエンドロジック（依存関係なし）</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-frontend">Frontend</span></td>
+                            <td>Material Design風CSS</td>
+                            <td>-</td>
+                            <td>UIデザイン（カスタム実装）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="subsection-title">Vanilla JavaScript採用の理由</h3>
+                <div class="info-box">
+                    <ul style="margin-left: 20px;">
+                        <li>Phase 1はMVPルートのため、1ページのみの実装</li>
+                        <li>React等のフレームワーク導入は過剰設計となる</li>
+                        <li>Phase 2以降で本格的なダッシュボードを実装する際、技術選定の自由度を確保</li>
+                        <li>依存関係が少なく、セットアップが容易</li>
+                        <li>ビルドプロセス不要、開発速度が向上</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 設計判断と実装パターン -->
+            <div class="section">
+                <h2 class="section-title">💡 設計判断と実装パターン</h2>
+
+                <h3 class="subsection-title">モックサービスの活用</h3>
+                <div class="info-box">
+                    <p><strong>目的：</strong> フロントエンドとバックエンドを並行開発可能にし、Phase 7でのAPI統合を容易にする</p>
+                    <p><strong>実装：</strong> MockVulnerabilityServiceクラス（100件のサンプルデータ生成）</p>
+                    <p><strong>データ：</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>CVE-2024-0001〜0005: リアルなサンプルデータ（Apache、MySQL、OpenSSL、WordPress、PostgreSQL）</li>
+                        <li>CVE-2024-0006〜0100: ダミーデータ（自動生成）</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">@MOCK_TO_APIマーク配置</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ファイル</th>
+                            <th>行</th>
+                            <th>現在の実装</th>
+                            <th>Phase 7での実装</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>mock_vulnerability_service.py</td>
+                            <td>5</td>
+                            <td>モッククラス全体</td>
+                            <td>DatabaseVulnerabilityServiceで置き換え</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>mock_vulnerability_service.py</td>
+                            <td>33</td>
+                            <td>_generate_mock_data()</td>
+                            <td>JVNFetcherServiceで実データ取得</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>mock_vulnerability_service.py</td>
+                            <td>183</td>
+                            <td>search_vulnerabilities()</td>
+                            <td>SQLAlchemyクエリで実装</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>vulnerabilities.py</td>
+                            <td>88</td>
+                            <td>MockVulnerabilityService()</td>
+                            <td>DatabaseVulnerabilityService(db)に置き換え</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>vulnerabilities.py</td>
+                            <td>134</td>
+                            <td>mock_service.get_vulnerability_by_cve_id()</td>
+                            <td>db.query(Vulnerability).filter()に置き換え</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>main.py</td>
+                            <td>53</td>
+                            <td>簡易ヘルスチェック</td>
+                            <td>DB接続確認を追加</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- バグ修正 -->
+            <div class="section">
+                <h2 class="section-title">🐛 バグ修正</h2>
+                <div class="commit-info">
+                    <p><strong>コミット:</strong> <span class="commit-hash">b8e2220</span></p>
+                    <p><strong>日時:</strong> 2026-01-08 11:01:03 +0900</p>
+                    <p><strong>タイトル:</strong> バグ修正: ソート機能のパラメータ解析エラーを修正</p>
+                    <p><strong>詳細:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>問題:</strong> URLSearchParamsからソートパラメータを取得する際、文字列結合エラーが発生</li>
+                        <li><strong>原因:</strong> URLSearchParams.get()がnullを返す場合の処理が不適切</li>
+                        <li><strong>修正:</strong> デフォルト値を明示的に設定、nullチェックを追加</li>
+                        <li><strong>影響範囲:</strong> src/static/js/main.js（fetchVulnerabilities関数）</li>
+                        <li><strong>テスト:</strong> ソート機能の動作確認（8種類すべて）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Phase 4完了時点の定量データ -->
+            <div class="section">
+                <h2 class="section-title">📊 Phase 4完了時点の定量データ</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>指標</th>
+                            <th>値</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>作成ファイル数</td>
+                            <td>25</td>
+                            <td>Python: 11、HTML: 3、CSS: 1、JS: 1、Markdown: 5、設定: 4</td>
+                        </tr>
+                        <tr>
+                            <td>総行数</td>
+                            <td>3,761</td>
+                            <td>バックエンド: 1,564行、フロントエンド: 1,109行、ドキュメント: 893行、設定: 104行</td>
+                        </tr>
+                        <tr>
+                            <td>Pydanticスキーマ数</td>
+                            <td>7</td>
+                            <td>VulnerabilityBase, Create, Update, Response, Detail, SearchResult, HealthCheck</td>
+                        </tr>
+                        <tr>
+                            <td>APIエンドポイント数</td>
+                            <td>4</td>
+                            <td>HTML: 1、JSON API: 2、ヘルスチェック: 1</td>
+                        </tr>
+                        <tr>
+                            <td>ソート種類</td>
+                            <td>8</td>
+                            <td>更新日（新/古）、公開日（新/古）、重要度（高/低）、CVSSスコア（高/低）</td>
+                        </tr>
+                        <tr>
+                            <td>モックデータ件数</td>
+                            <td>100</td>
+                            <td>リアルサンプル: 5件、ダミー: 95件</td>
+                        </tr>
+                        <tr>
+                            <td>@MOCK_TO_APIマーク数</td>
+                            <td>9</td>
+                            <td>Phase 7で実装に置き換え</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Phase 7との関連性 -->
+            <div class="section">
+                <h2 class="section-title">🔗 Phase 7との関連性</h2>
+                <div class="info-box">
+                    <p><strong>Phase 7（バックエンドAPI実装）での作業：</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>MockVulnerabilityService → DatabaseVulnerabilityServiceに置き換え</li>
+                        <li>モックデータ生成 → JVN iPedia APIから実データ取得</li>
+                        <li>リスト操作（filter、sort） → SQLAlchemyクエリ（WHERE、ORDER BY）</li>
+                        <li>簡易ヘルスチェック → DB接続確認を追加</li>
+                        <li>@MOCK_TO_APIマーク9箇所を実装コードに置換</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">Phase 7実施項目</h3>
+                <ul class="task-list">
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>M1: JVN API統合基盤</strong> - JVNFetcherService実装（XML解析、差分取得、ページネーション）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>M2: データ永続化</strong> - DatabaseVulnerabilityService実装（UPSERT、トランザクション管理）</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>M3: API統合</strong> - モックサービス置き換え、エラーハンドリング</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>M4: リトライ・冪等性</strong> - リトライロジック（3回）、冪等性テスト</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>M5: ヘルスチェック拡張</strong> - DB接続確認、応答時間保証</span>
+                    </li>
+                    <li class="task-item completed">
+                        <span class="task-status">✓</span>
+                        <span><strong>M6: 自動化</strong> - GitHub Actions定期実行、エラー通知</span>
+                    </li>
+                </ul>
+
+                <div class="success-box">
+                    <p><strong>Phase 7完了結果:</strong></p>
+                    <p>統合テスト49件（100%合格）、実JVN iPedia API統合、963件の実データ取得、GitHub Actions定期実行設定完了</p>
+                </div>
+            </div>
+
+            <!-- 技術的ハイライト -->
+            <div class="section">
+                <h2 class="section-title">🌟 技術的ハイライト</h2>
+
+                <h3 class="subsection-title">1. Material Design風UIの実装</h3>
+                <div class="info-box">
+                    <p>mockups/VulnerabilityList.htmlで確定したデザインを完全再現</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>カラーパレット: Material Design準拠（Blue 600、Red 500、Orange 600、Yellow 700、Green 600）</li>
+                        <li>タイポグラフィ: Robotoフォント、Material Icons</li>
+                        <li>レスポンシブグリッド: Flexbox + CSS Grid</li>
+                        <li>アニメーション: hover効果、モーダルフェードイン</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">2. SQLAlchemyモデルの実装</h3>
+                <div class="file-tree">
+class Vulnerability(Base):
+    __tablename__ = 'vulnerabilities'
+
+    # 主キー
+    id = Column(Integer, primary_key=True, index=True)
+
+    # CVE識別子（UNIQUE制約）
+    cve_id = Column(String(20), unique=True, nullable=False, index=True)
+
+    # 基本情報
+    title = Column(String(500), nullable=False)
+    description = Column(Text)
+    severity = Column(Enum(SeverityLevel), nullable=False, index=True)
+
+    # CVSSスコア
+    cvss_score = Column(Float, nullable=True)
+    cvss_vector = Column(String(200), nullable=True)
+
+    # 日付情報（インデックス付き）
+    published_date = Column(DateTime, nullable=False, index=True)
+    modified_date = Column(DateTime, nullable=False, index=True)
+
+    # タイムスタンプ
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+                </div>
+
+                <h3 class="subsection-title">3. Pydanticスキーマ（7種類）</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>スキーマ</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>VulnerabilityBase</code></td>
+                            <td>基本フィールド定義（共通ベース）</td>
+                        </tr>
+                        <tr>
+                            <td><code>VulnerabilityCreate</code></td>
+                            <td>作成時のバリデーション</td>
+                        </tr>
+                        <tr>
+                            <td><code>VulnerabilityUpdate</code></td>
+                            <td>更新時のバリデーション（部分更新対応）</td>
+                        </tr>
+                        <tr>
+                            <td><code>VulnerabilityResponse</code></td>
+                            <td>API応答用（一覧表示）</td>
+                        </tr>
+                        <tr>
+                            <td><code>VulnerabilityDetail</code></td>
+                            <td>詳細情報応答用（モーダル表示）</td>
+                        </tr>
+                        <tr>
+                            <td><code>VulnerabilitySearchResult</code></td>
+                            <td>検索結果応答用（ページネーション情報含む）</td>
+                        </tr>
+                        <tr>
+                            <td><code>HealthCheckResponse</code></td>
+                            <td>ヘルスチェック応答用</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- コミット情報 -->
+            <div class="section">
+                <h2 class="section-title">📝 コミット情報</h2>
+
+                <div class="commit-info">
+                    <p><strong>コミット 1:</strong> <span class="commit-hash">2486e48</span></p>
+                    <p><strong>日時:</strong> 2026-01-08 00:35:33 +0900</p>
+                    <p><strong>タイトル:</strong> Phase 4完了: FastAPI + Jinja2による脆弱性一覧ページ実装</p>
+                    <p><strong>変更:</strong> 25ファイル追加、3,761行追加</p>
+                </div>
+
+                <div class="commit-info">
+                    <p><strong>コミット 2:</strong> <span class="commit-hash">b8e2220</span></p>
+                    <p><strong>日時:</strong> 2026-01-08 11:01:03 +0900</p>
+                    <p><strong>タイトル:</strong> バグ修正: ソート機能のパラメータ解析エラーを修正</p>
+                    <p><strong>変更:</strong> src/static/js/main.js修正</p>
+                </div>
+
+                <div class="commit-info">
+                    <p><strong>コミット 3:</strong> <span class="commit-hash">94a6e1c</span></p>
+                    <p><strong>日時:</strong> 2026-01-08 11:22:42 +0900</p>
+                    <p><strong>タイトル:</strong> 進捗管理更新: Phase 4完了を反映、Phase 5へ移行準備</p>
+                    <p><strong>変更:</strong> docs/SCOPE_PROGRESS.md更新</p>
+                </div>
+            </div>
+
+            <!-- 主要な意思決定サマリー -->
+            <div class="section">
+                <h2 class="section-title">💡 主要な意思決定サマリー</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>決定事項</th>
+                            <th>選択内容</th>
+                            <th>理由</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>テンプレートエンジン</td>
+                            <td>Jinja2</td>
+                            <td>FastAPI標準、Pythonコミュニティで実績豊富、学習コスト低</td>
+                        </tr>
+                        <tr>
+                            <td>フロントエンドフレームワーク</td>
+                            <td>Vanilla JavaScript</td>
+                            <td>1ページのみのため過剰設計を避ける、Phase 2以降の技術選定の自由度確保</td>
+                        </tr>
+                        <tr>
+                            <td>UIデザイン</td>
+                            <td>Material Design風（カスタム実装）</td>
+                            <td>モダンで視認性が高い、Material UI等の導入は過剰設計</td>
+                        </tr>
+                        <tr>
+                            <td>モックサービス</td>
+                            <td>100件のサンプルデータ生成</td>
+                            <td>フロントエンド開発を先行可能、ページネーション動作確認に十分な件数</td>
+                        </tr>
+                        <tr>
+                            <td>@MOCK_TO_APIマーク</td>
+                            <td>9箇所配置</td>
+                            <td>Phase 7での置き換え箇所を明確化、実装漏れ防止</td>
+                        </tr>
+                        <tr>
+                            <td>ソート種類</td>
+                            <td>8種類（4フィールド × 2方向）</td>
+                            <td>ユーザーの多様なニーズに対応、優先度別・日付別で柔軟な絞り込み</td>
+                        </tr>
+                        <tr>
+                            <td>ページサイズ</td>
+                            <td>50件/ページ</td>
+                            <td>JVN iPedia APIの最大取得件数と一致、パフォーマンスと視認性のバランス</td>
+                        </tr>
+                        <tr>
+                            <td>詳細表示</td>
+                            <td>モーダル方式</td>
+                            <td>ページ遷移なし、UX向上、SPAライクな操作感</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Phase 4の成果と次のステップ -->
+            <div class="section">
+                <h2 class="section-title">🎊 Phase 4の成果と次のステップ</h2>
+
+                <h3 class="subsection-title">Phase 4で達成した成果</h3>
+                <div class="success-box">
+                    <ul style="margin-left: 20px;">
+                        <li>✅ 脆弱性一覧ページ（P-001）の完全実装</li>
+                        <li>✅ FastAPI + Jinja2によるサーバーサイドレンダリング</li>
+                        <li>✅ Material Design風UIの実装（レスポンシブ対応）</li>
+                        <li>✅ 検索・ソート・ページネーション・モーダル機能完備</li>
+                        <li>✅ REST API（JSON）エンドポイント4種類実装</li>
+                        <li>✅ SQLAlchemyモデル + Pydanticスキーマ7種類</li>
+                        <li>✅ モックサービス実装（100件のサンプルデータ）</li>
+                        <li>✅ @MOCK_TO_APIマーク9箇所配置（Phase 7準備完了）</li>
+                        <li>✅ 包括的なドキュメント整備（セットアップガイド、実装サマリー、API仕様書、データモデル仕様書）</li>
+                        <li>✅ CLAUDE.mdコーディング規約完全準拠</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">Phase 5以降の予定</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>内容</th>
+                            <th>ステータス</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Phase 5</td>
+                            <td>環境構築（PostgreSQL Neon、データベース初期化）</td>
+                            <td>✅ 完了（2026-01-08）</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 6</td>
+                            <td>バックエンド実装計画（マイルストーン定義）</td>
+                            <td>✅ 完了（2026-01-08）</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 7</td>
+                            <td>バックエンドAPI実装（JVN API統合、データ永続化、@MOCK_TO_API置き換え）</td>
+                            <td>✅ 完了（2026-01-08）</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 8</td>
+                            <td>API統合</td>
+                            <td>✅ スキップ（Phase 7で完了）</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 9</td>
+                            <td>テスト実装・Docker環境</td>
+                            <td>✅ 完了（2026-01-09）</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 10</td>
+                            <td>本番運用保障</td>
+                            <td>✅ 完了（2026-01-13）</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 11</td>
+                            <td>機能拡張（NVD API、CISA KEV統合）</td>
+                            <td>⏳ 予定</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>作成者:</strong> Claude Code (BlueLamp Phase 4 実装エンジニア)</p>
+            <p><strong>作成日:</strong> 2026年1月14日</p>
+            <p><strong>Phase 4完了日:</strong> 2026年1月8日</p>
+            <p><strong>GitHubリポジトリ:</strong> <a href="https://github.com/horii-kentaro/zjs_project" target="_blank">https://github.com/horii-kentaro/zjs_project</a></p>
+            <p style="margin-top: 15px; font-size: 0.9em;">このレポートは Phase 4: ページ実装の完了を記録したものです。<br>最新の進捗状況は SCOPE_PROGRESS.md をご確認ください。</p>
+        </div>
+    </div>
+</body>
+</html>
