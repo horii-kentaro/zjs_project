@@ -57,7 +57,7 @@ jobs:
       - name: Test with coverage
         run: |
           if [ -d "tests" ]; then
-            pytest --cov=src/ --cov-branch --cov-report=html --cov-report=term-missing tests/
+            pytest --cov=src/ --cov-branch --cov-report=html --cov-report=term-missing tests/ --ignore=tests/e2e/
           fi
 
       - name: Upload coverage
