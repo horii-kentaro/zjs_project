@@ -413,6 +413,9 @@ class JVNFetcherService:
         link = self._get_element_text(item, 'rss:link', self.NAMESPACES)
         references = {'jvn_link': link} if link else None
 
+        # Type narrowing: cve_id is guaranteed to be str at this point
+        assert cve_id is not None
+
         # Create VulnerabilityCreate object
         return VulnerabilityCreate(
             cve_id=cve_id,
