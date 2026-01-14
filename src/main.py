@@ -69,6 +69,7 @@ async def health_check():
         HTTPException: 503 Service Unavailable if database connection fails
     """
     from fastapi import HTTPException
+
     from src.database import check_db_connection
 
     logger.info("Health check requested")
