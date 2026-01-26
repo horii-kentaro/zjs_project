@@ -229,11 +229,9 @@ function getSeverityClass(severity) {
 
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // ISO 8601形式の日付文字列から日付部分のみを抽出（UTC基準）
+    // 例: "2026-01-14T12:04:34Z" -> "2026-01-14"
+    return dateString.split('T')[0];
 }
 
 function escapeHtml(text) {
