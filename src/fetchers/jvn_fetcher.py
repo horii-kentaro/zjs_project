@@ -339,8 +339,22 @@ class JVNFetcherService:
                     logger.debug('Skipping "no results" message item')
                     continue
 
-                vulnerability = self._parse_vulnerability_item(item)
-                vulnerabilities.append(vulnerability)
+                # Extract all CVE IDs from this item
+                cve_ids = self._extract_cve_ids(item, title)
+
+                # Create a vulnerability record for each CVE ID
+                for cve_id in cve_ids:
+                    vulnerability = self._parse_vulnerability_item(item, cve_id)
+                    vulnerabilities.append(vulnerability)
+
+                # Log if multiple CVE IDs found
+                if len(cve_ids) > 1:
+                    jvndb_id = self._get_element_text(item, "sec:identifier", self.NAMESPACES)
+                    logger.info(
+                        f"Multiple CVE IDs found for {jvndb_id}: {', '.join(cve_ids)} "
+                        f"(created {len(cve_ids)} records)"
+                    )
+
             except Exception as e:
                 # Log parsing error but continue with other items
                 logger.warning(f"Failed to parse vulnerability item: {e}")
@@ -348,27 +362,32 @@ class JVNFetcherService:
 
         return vulnerabilities
 
-    def _extract_cve_id(self, item: ET.Element, title: str) -> str:
-        """Extract CVE ID from vulnerability item."""
-        # Extract CVE ID from sec:references elements
-        cve_id = None
+    def _extract_cve_ids(self, item: ET.Element, title: str) -> List[str]:
+        """Extract all CVE IDs from vulnerability item (supports multiple CVEs)."""
+        cve_ids = []
+
+        # Extract all CVE IDs from sec:references elements
         references_elements = item.findall("sec:references", self.NAMESPACES)
         for ref in references_elements:
             source = ref.get("source")
             ref_id = ref.get("id")
             if source == "CVE" and ref_id and ref_id.startswith("CVE-"):
-                cve_id = ref_id
-                break
+                if ref_id not in cve_ids:  # Avoid duplicates
+                    cve_ids.append(ref_id)
 
-        if not cve_id:
-            cve_id = self._extract_cve_from_title(title)
+        # If no CVE IDs found in references, try extracting from title
+        if not cve_ids:
+            cve_id_from_title = self._extract_cve_from_title(title)
+            if cve_id_from_title:
+                cve_ids.append(cve_id_from_title)
 
-        if not cve_id:
+        # If still no CVE IDs found, raise error
+        if not cve_ids:
             jvndb_id = self._get_element_text(item, "sec:identifier", self.NAMESPACES)
             if jvndb_id:
                 raise JVNParseError(f"No CVE ID found for JVNDB entry: {jvndb_id}")
 
-        return cve_id  # type: ignore
+        return cve_ids
 
     def _extract_dates(self, item: ET.Element) -> tuple:
         """Extract published and modified dates from vulnerability item."""
@@ -401,12 +420,13 @@ class JVNFetcherService:
 
         return cvss_score, severity
 
-    def _parse_vulnerability_item(self, item: ET.Element) -> VulnerabilityCreate:
+    def _parse_vulnerability_item(self, item: ET.Element, cve_id: str) -> VulnerabilityCreate:
         """
-        Parse a single vulnerability item from XML.
+        Parse a single vulnerability item from XML for a specific CVE ID.
 
         Args:
             item: XML element representing a single vulnerability
+            cve_id: CVE ID to use for this record
 
         Returns:
             VulnerabilityCreate object
@@ -423,8 +443,7 @@ class JVNFetcherService:
         if not description:
             raise JVNParseError("Missing required field: description")
 
-        # Extract CVE ID, dates, and CVSS info using helper methods
-        cve_id = self._extract_cve_id(item, title)
+        # Extract dates and CVSS info using helper methods
         published_date, modified_date = self._extract_dates(item)
         cvss_score, severity = self._extract_cvss_info(item)
 
