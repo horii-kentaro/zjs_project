@@ -15,6 +15,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from src.api.assets import router as assets_router
+from src.api.matching import router as matching_router
 from src.api.vulnerabilities import router as vulnerabilities_router
 from src.config import settings
 
@@ -23,8 +25,8 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI application
 app = FastAPI(
     title="脆弱性管理システム",
-    description="JVN iPedia API を利用した脆弱性情報管理システム（Phase 1: 脆弱性情報取得基盤）",
-    version="1.0.0",
+    description="JVN iPedia API を利用した脆弱性情報管理システム（Phase 2: CPEマッチング機能）",
+    version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
@@ -43,6 +45,8 @@ app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # Include routers
 app.include_router(vulnerabilities_router, tags=["Vulnerabilities"])
+app.include_router(assets_router, tags=["Assets"])
+app.include_router(matching_router, tags=["Matching"])
 
 
 @app.get("/api/health", tags=["System"])

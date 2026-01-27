@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}資産管理 - 脆弱性管理システム{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>資産管理</h1>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="btn-primary" onclick="openCreateModal()">新規登録</button>
+        <button class="btn-secondary" onclick="openUploadModal('composer')">Composerアップロード</button>
+        <button class="btn-secondary" onclick="openUploadModal('npm')">NPMアップロード</button>
+        <button class="btn-secondary" onclick="openUploadModal('docker')">Dockerアップロード</button>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="alertContainer"></div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <div class="filter-group">
+            <label class="filter-label">取得元</label>
+            <select class="form-select" id="sourceFilter">
+                <option value="">全て</option>
+                <option value="manual">手動登録</option>
+                <option value="composer">Composer</option>
+                <option value="npm">NPM</option>
+                <option value="docker">Docker</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Assets Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>資産名</th>
+                <th>ベンダー</th>
+                <th>製品名</th>
+                <th>バージョン</th>
+                <th>CPEコード</th>
+                <th>取得元</th>
+                <th>登録日</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="assetsTableBody">
+            <tr>
+                <td colspan="8" class="loading">読み込み中...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination">
+        <!-- JavaScript で動的に生成 -->
+    </div>
+</div>
+
+<!-- Create/Edit Asset Modal -->
+<div class="modal" id="assetModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">資産の新規登録</div>
+            <button class="btn-close" onclick="closeAssetModal()">&times;</button>
+        </div>
+
+        <form class="modal-form" id="assetForm" onsubmit="saveAsset(event)">
+            <div class="form-group">
+                <label class="form-label">資産名 <span style="color: #d32f2f;">*</span></label>
+                <input type="text" class="form-input" id="assetName" required maxlength="200">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">ベンダー <span style="color: #d32f2f;">*</span></label>
+                <input type="text" class="form-input" id="vendor" required maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">製品名 <span style="color: #d32f2f;">*</span></label>
+                <input type="text" class="form-input" id="product" required maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">バージョン <span style="color: #d32f2f;">*</span></label>
+                <input type="text" class="form-input" id="version" required maxlength="50">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeAssetModal()">キャンセル</button>
+                <button type="submit" class="btn-primary">登録</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- File Upload Modal -->
+<div class="modal" id="uploadModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="uploadModalTitle">ファイルアップロード</div>
+            <button class="btn-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+
+        <form class="modal-form" id="uploadForm" onsubmit="uploadFile(event)">
+            <div class="form-group">
+                <label class="form-label">ファイル <span style="color: #d32f2f;">*</span></label>
+                <input type="file" class="form-input" id="fileInput" required>
+                <p class="file-upload-hint" id="fileHint">composer.json または composer.lock</p>
+            </div>
+
+            <div class="file-upload-area" id="dropZone">
+                <div class="file-upload-icon">📁</div>
+                <div class="file-upload-text">ファイルをドラッグ&ドロップ</div>
+                <div class="file-upload-hint">または クリックして選択</div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeUploadModal()">キャンセル</button>
+                <button type="submit" class="btn-primary" id="uploadBtn">アップロード</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/assets.js"></script>
+{% endblock %}

@@ -3,11 +3,11 @@
 ## 1. 基本情報
 
 - **プロジェクト名**: 脆弱性管理システム（Phase 1: 脆弱性情報取得基盤 → Phase 2: CPEマッチング機能）
-- **ステータス**: Phase 1完了 → Phase 2要件定義完了
-- **完了フェーズ**: Phase 1〜10（Phase 1基盤完了）、Phase 10.5（バグ修正・環境整備）、Phase 11（CPEマッチング要件定義）
-- **進捗率**: Phase 11まで完了（11/12フェーズ、92%）
-- **次のマイルストーン**: Phase 2-1 CPEマッチングデータモデル実装
-- **最終更新日**: 2026-01-26
+- **ステータス**: Phase 1完了 → Phase 2実装中（Phase 2-1, 2-2, 2-3, 2-4, 2-5完了）
+- **完了フェーズ**: Phase 1〜10（Phase 1基盤完了）、Phase 10.5（バグ修正・環境整備）、Phase 11（CPEマッチング要件定義）、Phase 2-1（データモデル実装）、Phase 2-2（CPEコード生成機能）、Phase 2-3（マッチングアルゴリズム実装）、Phase 2-4（API実装）、Phase 2-5（UI実装）
+- **進捗率**: Phase 2-5まで完了（16/17フェーズ、94%）
+- **次のマイルストーン**: Phase 2-6 テスト・統合
+- **最終更新日**: 2026-01-27
 
 ## 2. Phase 1 開発フロー
 
@@ -432,13 +432,212 @@ Week 2:
 **Phase 11完了日**: 2026-01-26
 **次のフェーズ**: Phase 2-1 データモデル実装
 
-### Phase 2（予定）: CPEマッチング機能実装
+### Phase 2: CPEマッチング機能実装（進行中）
 
-- [ ] Phase 2-1: データモデル実装（テーブル作成）
-- [ ] Phase 2-2: CPEコード生成機能（Composer/NPM/Docker）
-- [ ] Phase 2-3: マッチングアルゴリズム実装
-- [ ] Phase 2-4: API実装
-- [ ] Phase 2-5: UI実装
+#### Phase 2-1: データモデル実装（完了 ✅ 2026-01-27）
+
+**完了内容**:
+- [x] Assetモデル作成（src/models/asset.py）
+  - asset_id（UUID主キー）
+  - asset_name, vendor, product, version
+  - cpe_code, source
+  - created_at, updated_at
+  - UNIQUE制約: (vendor, product, version)
+- [x] AssetVulnerabilityMatchモデル作成（src/models/asset.py）
+  - match_id（UUID主キー）
+  - asset_id（外部キー: assets.asset_id、CASCADE）
+  - cve_id（外部キー: vulnerabilities.cve_id、CASCADE）
+  - match_reason, matched_at
+  - UNIQUE制約: (asset_id, cve_id)
+- [x] データベーステーブル作成（init_db()拡張）
+  - assetsテーブル: 9カラム、5インデックス
+  - asset_vulnerability_matchesテーブル: 5カラム、5インデックス
+- [x] インデックス作成確認
+  - assets: vendor, product, cpe_code
+  - asset_vulnerability_matches: asset_id, cve_id, matched_at
+
+**成果物**:
+- src/models/asset.py（209行、Asset + AssetVulnerabilityMatchモデル）
+- PostgreSQLテーブル: assets, asset_vulnerability_matches
+
+**Phase 2-1完了日**: 2026-01-27
+**次のフェーズ**: Phase 2-2 CPEコード生成機能
+
+#### Phase 2-2: CPEコード生成機能（完了 ✅ 2026-01-27）
+
+**完了内容**:
+- [x] CPE生成ユーティリティファイル作成（src/utils/cpe_generator.py）
+  - generate_cpe_from_manual() - 手動入力からCPE生成
+  - generate_cpe_from_composer() - Composer（PHP）からCPE生成
+  - generate_cpe_from_npm() - NPM（JavaScript）からCPE生成
+  - generate_cpe_from_docker() - DockerイメージからCPE生成
+  - normalize_version() - バージョン正規化（^5.4 → 5.4、1.25.3-alpine → 1.25.3）
+  - normalize_name() - 名前正規化（小文字化、スペース→アンダースコア）
+  - extract_cpe_parts() - CPEコードからパーツ抽出
+- [x] ベンダーマッピング
+  - NPM_VENDOR_MAP: 27パッケージ（react→facebook、express→expressjs等）
+  - DOCKER_VENDOR_MAP: 24イメージ（nginx→nginx、postgres→postgresql等）
+- [x] 単体テスト作成（tests/unit/test_cpe_generator.py）
+  - 36テストケース、全パス ✅
+  - カバレッジ: 正規化、CPE生成、エッジケース、ベンダーマッピング
+
+**成果物**:
+- src/utils/cpe_generator.py（273行）
+- tests/unit/test_cpe_generator.py（251行、36テストケース）
+
+**テスト結果**: 36 passed in 0.18s ✅
+
+**Phase 2-2完了日**: 2026-01-27
+**次のフェーズ**: Phase 2-3 マッチングアルゴリズム実装
+
+#### Phase 2-3: マッチングアルゴリズム実装（完了 ✅ 2026-01-27）
+
+**完了内容**:
+- [x] マッチングサービスファイル作成（src/services/matching_service.py、362行）
+  - match_exact() - 完全一致マッチング（CPEコードの最初の8パーツを比較）
+  - match_version_range() - バージョン範囲マッチング（versionStartIncluding/Excluding、versionEndIncluding/Excluding対応）
+  - match_wildcard() - ワイルドカードマッチング（part、vendor、productが一致し、version以降が*）
+  - extract_cpe_from_vulnerability() - 脆弱性からCPEコードリストを抽出
+  - execute_matching() - 1資産と1脆弱性のマッチング実行（優先度: exact > version_range > wildcard）
+  - execute_full_matching() - 全資産・全脆弱性のバッチマッチング実行（UPSERT処理）
+- [x] バージョン比較ロジック（packaging.versionを使用）
+  - セマンティックバージョニング対応（MAJOR.MINOR.PATCH）
+  - 不正なバージョンフォーマットのエラーハンドリング
+- [x] 単体テスト作成（tests/unit/test_matching_service.py、372行）
+  - 34テストケース、全パス ✅
+  - カバレッジ: 完全一致、バージョン範囲、ワイルドカード、個別マッチング、エッジケース
+
+**成果物**:
+- src/services/matching_service.py（362行）
+- tests/unit/test_matching_service.py（372行、34テストケース）
+- requirements.txt更新（packaging>=23.2追加）
+
+**テスト結果**: 34 passed in 0.62s ✅
+
+**Phase 2-3完了日**: 2026-01-27
+**次のフェーズ**: Phase 2-4 API実装
+
+#### Phase 2-4: API実装（完了 ✅ 2026-01-27）
+
+**完了内容**:
+- [x] Pydanticスキーマ作成
+  - src/schemas/asset.py（147行）- AssetCreate, AssetUpdate, AssetResponse, AssetListResponse, FileImportResponse
+  - src/schemas/matching.py（161行）- MatchingExecutionResponse, MatchingResultResponse, DashboardResponse等
+- [x] 資産管理API実装（src/api/assets.py、570行）
+  - POST /api/assets - 手動資産登録（CPE自動生成）
+  - GET /api/assets - 資産一覧取得（ページネーション、フィルタリング）
+  - GET /api/assets/{asset_id} - 資産詳細取得
+  - PUT /api/assets/{asset_id} - 資産更新（CPE再生成）
+  - DELETE /api/assets/{asset_id} - 資産削除（CASCADE）
+  - POST /api/assets/import/composer - Composerファイルインポート
+  - POST /api/assets/import/npm - NPMファイルインポート
+  - POST /api/assets/import/docker - Dockerfileインポート
+- [x] マッチング実行API実装（src/api/matching.py、257行）
+  - POST /api/matching/execute - 全資産・全脆弱性マッチング実行
+  - GET /api/matching/results - マッチング結果一覧（ページネーション、フィルタリング）
+  - GET /api/matching/assets/{asset_id}/vulnerabilities - 資産別脆弱性一覧
+  - GET /api/matching/dashboard - 統計ダッシュボード
+- [x] main.py更新（ルーター登録、バージョン2.0.0）
+- [x] API動作確認テスト（全エンドポイント正常動作確認）
+
+**成果物**:
+- src/schemas/asset.py（147行）
+- src/schemas/matching.py（161行）
+- src/api/assets.py（570行、8エンドポイント）
+- src/api/matching.py（257行、4エンドポイント）
+- requirements.txt更新（python-multipart>=0.0.6追加）
+
+**テスト結果**: 全APIエンドポイント動作確認完了 ✅
+- Health Check: 200 OK
+- Asset CRUD: 201/200/204 正常
+- Asset List: 200 OK
+- Matching Dashboard: 200 OK
+
+**Phase 2-4完了日**: 2026-01-27
+**次のフェーズ**: Phase 2-5 UI実装
+
+#### Phase 2-5: UI実装（完了 ✅ 2026-01-27）
+
+**完了内容**:
+- [x] ナビゲーションメニュー追加（base.html更新）
+  - 脆弱性一覧、資産管理、マッチング結果の3ページへのナビゲーション
+  - アクティブページのハイライト表示
+- [x] 資産管理ページ（src/templates/assets.html）
+  - 資産一覧表示（ページネーション、フィルタリング）
+  - 新規登録モーダル（手動入力フォーム）
+  - ファイルアップロードモーダル（Composer/NPM/Docker）
+  - 編集・削除機能
+- [x] マッチング結果ページ（src/templates/matching_results.html）
+  - マッチング結果一覧（ページネーション、フィルタリング）
+  - 統計ダッシュボード（影響資産数、重要度別件数）
+  - マッチング実行ボタン
+- [x] スタイルシート更新（src/static/css/style.css）
+  - ナビゲーションバーのスタイル
+  - ダッシュボード統計カード
+  - ファイルアップロードエリア
+  - フォーム要素、ボタン、アラート
+- [x] JavaScript実装
+  - src/static/js/assets.js（資産管理ページ、452行）
+    - 資産の一覧表示、作成、編集、削除
+    - ファイルアップロード（ドラッグ&ドロップ対応）
+    - ページネーション、フィルタリング
+  - src/static/js/matching.js（マッチング結果ページ、224行）
+    - マッチング結果表示
+    - ダッシュボード統計表示
+    - マッチング実行
+    - フィルタリング（重要度、資産タイプ）
+- [x] UIルートハンドラー追加
+  - GET /assets → assets.html
+  - GET /matching → matching_results.html
+  - 既存のGET / → vulnerabilities.html（Phase 1）
+
+**成果物**:
+- src/templates/assets.html（140行）
+- src/templates/matching_results.html（102行）
+- src/templates/base.html（ナビゲーション追加）
+- src/static/css/style.css（646行、+264行追加）
+- src/static/js/assets.js（452行）
+- src/static/js/matching.js（224行）
+- src/api/assets.py（UIルート追加）
+- src/api/matching.py（UIルート追加）
+
+**テスト結果**: 全UIページ正常動作確認 ✅
+- GET / → 200 OK（脆弱性一覧）
+- GET /assets → 200 OK（資産管理）
+- GET /matching → 200 OK（マッチング結果）
+- 静的ファイル（CSS/JS）正常ロード確認
+
+**モックアップギャラリー追加** ✅
+- [x] mockups/Assets.html（21,495バイト）- 資産管理ページのモックアップ
+- [x] mockups/MatchingResults.html（17,266バイト）- マッチング結果ページのモックアップ
+- 既存: mockups/VulnerabilityList.html（Phase 1で作成済み）
+- 合計3ページのモックアップを mockups/ ディレクトリで管理
+
+**Phase 2-5完了日**: 2026-01-27
+**次のフェーズ**: Phase 2-6 テスト・統合
+
+#### 要件定義統合（完了 ✅ 2026-01-27）
+
+**完了内容**:
+- [x] requirements.mdとrequirements-cpe-matching.mdを統合管理方式に変更
+- [x] docs/requirements.md（1188行、45KB）にPhase 1とPhase 2の要件を統合
+  - Phase 1: 脆弱性情報取得基盤（330行→統合）
+  - Phase 2: CPEマッチング機能（1270行→統合）
+- [x] プロジェクト概要をPhase 1とPhase 2の両方を含める形に更新
+- [x] 最終更新日を2026-01-27に更新
+- [x] Phase 1とPhase 2実装完了日を明記
+
+**統合方針**:
+- 統合管理方式を採用（Phase 1とPhase 2を1つのrequirements.mdで管理）
+- 今後の要件定義拡張時は進捗状況と同時に更新
+- requirements-cpe-matching.mdは参照用として保持
+
+**統合完了日**: 2026-01-27
+
+---
+
+#### Phase 2-6（予定）
+
 - [ ] Phase 2-6: テスト・統合
 
 ## 3. 成果目標（Step#1で確定）

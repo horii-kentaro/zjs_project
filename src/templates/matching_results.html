@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}マッチング結果 - 脆弱性管理システム{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h1 style="margin-bottom: 0;">マッチング結果</h1>
+        <button class="btn-primary" onclick="executeMatching()" id="executeBtn">
+            <span id="executeBtnText">マッチング実行</span>
+            <span id="executeBtnSpinner" class="spinner" style="display:none;"></span>
+        </button>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="alertContainer"></div>
+
+    <!-- Dashboard Stats -->
+    <div class="dashboard">
+        <div class="dashboard-title">統計ダッシュボード</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="affectedAssetsCount">-</div>
+                <div class="stat-label">影響資産数</div>
+            </div>
+            <div class="stat-card stat-critical">
+                <div class="stat-value" id="criticalCount">-</div>
+                <div class="stat-label">Critical</div>
+            </div>
+            <div class="stat-card stat-high">
+                <div class="stat-value" id="highCount">-</div>
+                <div class="stat-label">High</div>
+            </div>
+            <div class="stat-card stat-medium">
+                <div class="stat-value" id="mediumCount">-</div>
+                <div class="stat-label">Medium</div>
+            </div>
+            <div class="stat-card stat-low">
+                <div class="stat-value" id="lowCount">-</div>
+                <div class="stat-label">Low</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalMatches">-</div>
+                <div class="stat-label">総マッチング数</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; font-size: 14px; color: #666;">
+            最終マッチング: <span id="lastMatchingAt">-</span>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <div class="filter-group">
+            <label class="filter-label">重要度</label>
+            <select class="form-select" id="severityFilter">
+                <option value="">全て</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">資産タイプ</label>
+            <select class="form-select" id="sourceFilter">
+                <option value="">全て</option>
+                <option value="manual">手動登録</option>
+                <option value="composer">Composer</option>
+                <option value="npm">NPM</option>
+                <option value="docker">Docker</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Matching Results Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>資産名</th>
+                <th>CVE ID</th>
+                <th>タイトル</th>
+                <th>重要度</th>
+                <th>CVSS</th>
+                <th>マッチング理由</th>
+                <th>マッチング日時</th>
+            </tr>
+        </thead>
+        <tbody id="matchingTableBody">
+            <tr>
+                <td colspan="7" class="loading">読み込み中...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination">
+        <!-- JavaScript で動的に生成 -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/matching.js"></script>
+{% endblock %}

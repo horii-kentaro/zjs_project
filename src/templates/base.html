@@ -10,6 +10,24 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">脆弱性管理システム</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">脆弱性一覧</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/assets" class="nav-link {% if request.path == '/assets' %}active{% endif %}">資産管理</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/matching" class="nav-link {% if request.path == '/matching' %}active{% endif %}">マッチング結果</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
     {% block content %}{% endblock %}
 
     <script src="/static/js/main.js"></script>

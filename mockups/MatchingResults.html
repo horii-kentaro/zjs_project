@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マッチング結果 - モックアップ</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            padding: 24px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            color: #333;
+        }
+        .dashboard {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .dashboard-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+        .btn-execute {
+            padding: 8px 16px;
+            background-color: #2e7d32;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+        }
+        .btn-execute:hover {
+            background-color: #1b5e20;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            background-color: #f5f5f5;
+            padding: 16px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 500;
+            color: #333;
+        }
+        .stat-value.critical {
+            color: #d32f2f;
+        }
+        .stat-value.high {
+            color: #f57c00;
+        }
+        .stat-value.medium {
+            color: #fbc02d;
+        }
+        .stat-value.low {
+            color: #388e3c;
+        }
+        .results-section {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        thead {
+            background-color: #f5f5f5;
+        }
+        th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        td {
+            padding: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #333;
+        }
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .cve-id {
+            font-weight: 500;
+            color: #1976d2;
+        }
+        .severity {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .severity-critical {
+            background-color: #d32f2f;
+            color: #fff;
+        }
+        .severity-high {
+            background-color: #f57c00;
+            color: #fff;
+        }
+        .severity-medium {
+            background-color: #fbc02d;
+            color: #333;
+        }
+        .severity-low {
+            background-color: #388e3c;
+            color: #fff;
+        }
+        .source-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .source-manual {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        .source-composer {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .source-npm {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .source-docker {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+        }
+        .page-btn:hover {
+            background-color: #f5f5f5;
+        }
+        .page-btn.active {
+            background-color: #1976d2;
+            color: #fff;
+            border-color: #1976d2;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .match-reason {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        .last-update {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>マッチング結果</h1>
+
+        <!-- ダッシュボード -->
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <div class="dashboard-title">ダッシュボード</div>
+                <button class="btn-execute" onclick="executeMatching()">マッチング実行</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">影響を受ける資産</div>
+                    <div class="stat-value">42</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">総マッチング数</div>
+                    <div class="stat-value">156</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Critical</div>
+                    <div class="stat-value critical">23</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">High</div>
+                    <div class="stat-value high">48</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Medium</div>
+                    <div class="stat-value medium">67</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Low</div>
+                    <div class="stat-value low">18</div>
+                </div>
+            </div>
+
+            <div class="last-update">最終マッチング実行: 2024-01-20 14:30:00</div>
+        </div>
+
+        <!-- マッチング結果 -->
+        <div class="results-section">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">マッチング結果一覧</h2>
+
+            <!-- フィルター -->
+            <div class="controls">
+                <select class="filter-select" id="severityFilter" onchange="filterBySeverity()">
+                    <option value="">すべての重要度</option>
+                    <option value="Critical">Critical</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+                <select class="filter-select" id="sourceFilter" onchange="filterBySource()">
+                    <option value="">すべてのソース</option>
+                    <option value="manual">手動登録</option>
+                    <option value="composer">Composer</option>
+                    <option value="npm">NPM</option>
+                    <option value="docker">Docker</option>
+                </select>
+            </div>
+
+            <!-- マッチング結果テーブル -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>資産名</th>
+                        <th>CVE ID</th>
+                        <th>脆弱性タイトル</th>
+                        <th>重要度</th>
+                        <th>CVSSスコア</th>
+                        <th>マッチング理由</th>
+                        <th>マッチング日時</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            Apache HTTP Server
+                            <div class="source-badge source-manual">manual</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0001</td>
+                        <td>Apache HTTP Server における任意のコード実行の脆弱性</td>
+                        <td><span class="severity severity-critical">Critical</span></td>
+                        <td>9.8</td>
+                        <td><span class="match-reason">完全一致: apache:http_server:2.4.58</span></td>
+                        <td>2024-01-20 14:30:15</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            symfony/symfony
+                            <div class="source-badge source-composer">composer</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0010</td>
+                        <td>Symfony における認証バイパスの脆弱性</td>
+                        <td><span class="severity severity-high">High</span></td>
+                        <td>8.1</td>
+                        <td><span class="match-reason">バージョン範囲一致: 6.0.0-6.4.5</span></td>
+                        <td>2024-01-20 14:30:16</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            express
+                            <div class="source-badge source-npm">npm</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0015</td>
+                        <td>Express.js におけるXSSの脆弱性</td>
+                        <td><span class="severity severity-high">High</span></td>
+                        <td>7.5</td>
+                        <td><span class="match-reason">完全一致: npmjs:express:4.18.2</span></td>
+                        <td>2024-01-20 14:30:17</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Docker: node:20-alpine
+                            <div class="source-badge source-docker">docker</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0020</td>
+                        <td>Node.js における権限昇格の脆弱性</td>
+                        <td><span class="severity severity-medium">Medium</span></td>
+                        <td>6.5</td>
+                        <td><span class="match-reason">ワイルドカード一致: nodejs:node:20.*</span></td>
+                        <td>2024-01-20 14:30:18</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            WordPress
+                            <div class="source-badge source-manual">manual</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0002</td>
+                        <td>WordPress におけるクロスサイトスクリプティングの脆弱性</td>
+                        <td><span class="severity severity-high">High</span></td>
+                        <td>7.2</td>
+                        <td><span class="match-reason">完全一致: wordpress:wordpress:6.4.2</span></td>
+                        <td>2024-01-20 14:30:19</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Apache HTTP Server
+                            <div class="source-badge source-manual">manual</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0025</td>
+                        <td>Apache HTTP Server におけるDoSの脆弱性</td>
+                        <td><span class="severity severity-medium">Medium</span></td>
+                        <td>5.3</td>
+                        <td><span class="match-reason">バージョン範囲一致: 2.4.0-2.4.59</span></td>
+                        <td>2024-01-20 14:30:20</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            symfony/symfony
+                            <div class="source-badge source-composer">composer</div>
+                        </td>
+                        <td class="cve-id">CVE-2024-0030</td>
+                        <td>Symfony における情報漏洩の脆弱性</td>
+                        <td><span class="severity severity-low">Low</span></td>
+                        <td>3.7</td>
+                        <td><span class="match-reason">ワイルドカード一致: symfony:symfony:6.4.*</span></td>
+                        <td>2024-01-20 14:30:21</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- ページネーション -->
+            <div class="pagination">
+                <button class="page-btn" disabled>&lt;</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">&gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function executeMatching() {
+            if (confirm('マッチング処理を実行しますか？\n\n全資産と全脆弱性のマッチングを行います。\n処理には数分かかる場合があります。')) {
+                alert('マッチング処理を開始しました（デモ）\n\n完了までお待ちください...');
+
+                // デモ: 2秒後に完了メッセージ
+                setTimeout(() => {
+                    alert('マッチング処理が完了しました\n\n総マッチング数: 156件\n- Critical: 23件\n- High: 48件\n- Medium: 67件\n- Low: 18件\n\n処理時間: 2.45秒');
+
+                    // デモ: 統計更新
+                    document.querySelectorAll('.stat-value')[0].textContent = '42';
+                    document.querySelectorAll('.stat-value')[1].textContent = '156';
+                    document.querySelector('.last-update').textContent =
+                        '最終マッチング実行: ' + new Date().toLocaleString('ja-JP');
+                }, 2000);
+            }
+        }
+
+        function filterBySeverity() {
+            const severity = document.getElementById('severityFilter').value;
+            console.log('重要度フィルタ:', severity);
+            alert(`重要度 "${severity || 'すべて'}" でフィルタリング（デモ）`);
+        }
+
+        function filterBySource() {
+            const source = document.getElementById('sourceFilter').value;
+            console.log('ソースフィルタ:', source);
+            alert(`ソース "${source || 'すべて'}" でフィルタリング（デモ）`);
+        }
+
+        // ページネーション（デモ）
+        document.querySelectorAll('.page-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.disabled && !this.classList.contains('active')) {
+                    document.querySelector('.page-btn.active')?.classList.remove('active');
+                    if (this.textContent !== '<' && this.textContent !== '>') {
+                        this.classList.add('active');
+                    }
+                    console.log('ページ移動:', this.textContent);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
