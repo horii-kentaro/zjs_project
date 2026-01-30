@@ -1181,8 +1181,334 @@ def execute_full_matching():
 
 ---
 
+# Phase 3: Reactダッシュボード機能
+
+## 10. システム全体像（Phase 3）
+
+### 10.1 Phase 3の目的
+既存のFastAPI + Jinja2ベースの3ページ（脆弱性一覧、資産管理、マッチング結果）をReact + TypeScriptで完全に書き換え、ウィジェット方式のモダンなダッシュボードUIを実装する。すべての既存機能を維持しながら、一貫したUI/UX、高速なSPA体験、柔軟なウィジェット管理を実現する。
+
+### 10.2 主要機能一覧
+- **Reactアプリケーション**: Vite + React + TypeScriptによるモダンなSPA
+- **既存3ページのReact化**: 脆弱性一覧、資産管理、マッチング結果を完全にReactコンポーネント化
+- **ウィジェット方式ダッシュボード**: サマリーカード、トレンドチャート、重要度分布などの独立したウィジェット
+- **設定ファイル方式**: JSON/DBでウィジェットの追加・削除・並び替えを管理
+- **統一されたUI/UX**: Catppuccin風ダークテーマ、一貫したデザインシステム
+- **状態管理**: Zustandによるグローバル状態管理
+- **ルーティング**: React Router v6によるクライアントサイドルーティング
+
+### 10.3 成功指標
+
+#### 定量的指標
+- **パフォーマンス**: Lighthouseスコア90以上（Performance、Accessibility、Best Practices）
+- **バンドルサイズ**: 初期ロード500KB以下（gzip圧縮後）
+- **レスポンス時間**: 画面遷移200ms以内
+- **テストカバレッジ**: 80%以上（既存テストを全てパス）
+- **既存機能の互換性**: 100%（既存の226テストを全てパス）
+
+#### 定性的指標
+- **保守性**: 新規メンバーがコンポーネント構造を1時間以内に理解可能
+- **拡張性**: 新しいウィジェット追加がコンポーネント作成+レジストリ登録のみで完結
+- **一貫性**: 全ページで統一されたデザインシステム（色、タイポグラフィ、スペーシング）
+- **視認性**: ダークテーマでの視認性向上、アクセシビリティ対応
+
+---
+
+## 3. ページ詳細仕様（Phase 3）
+
+### 3.4 P-004: ダッシュボードホームページ
+
+#### 目的
+脆弱性管理システムの全体像を即座に把握可能な、ウィジェット方式のダッシュボード。重要度別の脆弱性件数、トレンド、資産ランキング、最近のアクティビティを1画面で確認できる。
+
+#### 主要機能
+- **ウィジェットグリッド**: 4カラムのレスポンシブグリッドレイアウト
+- **サマリーカード**: Critical/High/Medium/Lowの件数表示（前週比の増減表示）
+- **トレンドチャート**: 過去30日間の検出数推移（折れ線グラフ）
+- **重要度分布**: 円グラフ/ドーナツチャートで重要度割合を可視化
+- **脆弱性一覧**: Critical/High脆弱性のTOP10をテーブル表示
+- **資産ランキング**: 脆弱性の多い資産TOP10
+- **KEVアラート**: CISA KEV登録の脆弱性一覧（将来実装）
+- **期間選択**: 直近7日/30日/90日/全期間のフィルタリング
+- **ウィジェット管理**: 追加・削除・並び替え（設定ファイルで管理）
+
+#### 必要な操作
+| 操作種別 | 操作内容 | 必要な入力 | 期待される出力 |
+|---------|---------|-----------|---------------|
+| 取得 | ダッシュボードサマリーを取得 | 期間（任意） | 重要度別件数、前週比、ステータス別件数 |
+| 取得 | トレンドデータを取得 | 日数（7/30/90/全期間） | 日別の検出数・対応完了数 |
+| 取得 | 重要度分布を取得 | なし | Critical/High/Medium/Lowの割合 |
+| 取得 | 脆弱性TOP10を取得 | 重要度フィルタ（任意） | 最新のCritical/High脆弱性リスト |
+| 取得 | 資産ランキングを取得 | なし | 脆弱性が多い資産TOP10 |
+| 更新 | ウィジェット設定を保存 | ウィジェット配置・表示設定 | 設定保存完了 |
+
+#### 処理フロー
+
+**ダッシュボード表示フロー**:
+1. ユーザーが `/dashboard` にアクセス
+2. バックエンドから以下のデータを並列取得:
+   - サマリーデータ（GET /api/dashboard/summary）
+   - トレンドデータ（GET /api/dashboard/trend）
+   - 重要度分布（GET /api/dashboard/severity-distribution）
+   - 脆弱性TOP10（GET /api/vulnerabilities?severity=Critical,High&limit=10）
+   - 資産ランキング（GET /api/dashboard/asset-ranking）
+3. 各ウィジェットにデータを配信
+4. レスポンシブグリッドでレイアウト表示
+5. ローディング状態の管理（Suspense/ErrorBoundary）
+
+**ウィジェット管理フロー**:
+1. ユーザーが「+ ウィジェット追加」ボタンをクリック
+2. ウィジェットカタログモーダルを表示
+3. ユーザーがウィジェットを選択
+4. 新しいウィジェットをグリッドに追加
+5. 設定をローカルストレージ/DBに保存
+
+**ウィジェット削除フロー**:
+1. ユーザーがウィジェット右上の「⋮」メニューをクリック
+2. 「削除」を選択
+3. 確認ダイアログ表示
+4. ウィジェットを削除
+5. 設定を更新
+
+#### データ構造（概念）
+```yaml
+DashboardSummary:
+  重要度別件数:
+    - Critical: 整数
+    - High: 整数
+    - Medium: 整数
+    - Low: 整数
+  前週比:
+    - Critical: 整数（差分）
+    - High: 整数（差分）
+    - Medium: 整数（差分）
+    - Low: 整数（差分）
+  ステータス別件数:
+    - 未対応: 整数
+    - 対応中: 整数
+    - 対応完了: 整数
+
+TrendData:
+  データポイント:
+    - 日付: 日付型（YYYY-MM-DD）
+    - 検出数: 整数
+    - 対応完了数: 整数
+
+WidgetConfig:
+  ウィジェット設定:
+    - id: 文字列（一意識別子）
+    - type: 文字列（summary/trend_chart/severity_pie等）
+    - title: 文字列（表示タイトル）
+    - enabled: ブール値（表示/非表示）
+    - position: 整数（表示順序）
+    - size: 文字列（small/medium/wide/full）
+    - settings: オブジェクト（ウィジェット固有設定）
+```
+
+### 3.5 既存ページのReact化
+
+#### P-001（React版）: 脆弱性一覧ページ
+**目的**: 既存のJinja2版と同じ機能をReactで実装。検索、ソート、ページネーション、詳細表示モーダルを提供。
+
+**主要機能**:
+- 脆弱性一覧表示（テーブル形式）
+- 検索機能（CVE ID + タイトルで部分一致検索）
+- ソート機能（公開日、更新日、重要度）
+- ページネーション（50件/ページ）
+- 詳細表示モーダル（概要、CVSS、影響製品、ベンダー情報、参照情報）
+- リアルタイム取得ボタン（JVN iPedia APIから即座に取得）
+
+**React実装の特徴**:
+- `useVulnerabilities` カスタムフックでデータ取得・状態管理
+- `VulnerabilityTable` コンポーネントでテーブル表示
+- `VulnerabilityDetailModal` でモーダル表示
+- React Query（TanStack Query）によるキャッシング・リフェッチ
+
+#### P-002（React版）: 資産管理ページ
+**目的**: 既存のJinja2版と同じ機能をReactで実装。資産の登録、編集、削除、ファイルインポートを提供。
+
+**主要機能**:
+- 資産一覧表示（テーブル形式）
+- 新規登録モーダル（手動入力フォーム）
+- ファイルアップロードモーダル（Composer/NPM/Docker、ドラッグ&ドロップ対応）
+- 編集・削除機能
+- ページネーション（50件/ページ）
+- フィルタリング（取得元: manual/composer/npm/docker）
+
+**React実装の特徴**:
+- `useAssets` カスタムフックでデータ取得・状態管理
+- `AssetTable` コンポーネントでテーブル表示
+- `AssetFormModal` で新規登録・編集
+- `FileUploadModal` でファイルアップロード
+- React Hook Form によるフォームバリデーション
+
+#### P-003（React版）: マッチング結果ページ
+**目的**: 既存のJinja2版と同じ機能をReactで実装。マッチング結果一覧、統計ダッシュボード、マッチング実行を提供。
+
+**主要機能**:
+- マッチング結果一覧表示（テーブル形式）
+- 統計ダッシュボード（影響資産数、Critical/High脆弱性数、最新マッチング日時）
+- マッチング実行ボタン
+- フィルタリング（重要度、資産タイプ）
+- ページネーション（50件/ページ）
+
+**React実装の特徴**:
+- `useMatching` カスタムフックでデータ取得・状態管理
+- `MatchingDashboard` コンポーネントで統計表示
+- `MatchingTable` コンポーネントでテーブル表示
+- `executeMatching` による非同期マッチング実行
+
+---
+
+## 4. ウィジェットカタログ（Phase 3）
+
+### 4.1 利用可能なウィジェット
+
+| ウィジェットID | 名称 | サイズ | 説明 | 必要API |
+|-------------|------|-------|------|--------|
+| `summary-critical` | 🔴 Critical サマリー | small | Critical脆弱性件数、前週比 | GET /api/dashboard/summary |
+| `summary-high` | 🟠 High サマリー | small | High脆弱性件数、前週比 | GET /api/dashboard/summary |
+| `summary-medium` | 🔵 Medium サマリー | small | Medium脆弱性件数、前週比 | GET /api/dashboard/summary |
+| `summary-low` | 🟢 Low サマリー | small | Low脆弱性件数、前週比 | GET /api/dashboard/summary |
+| `trend-chart` | 📈 トレンドチャート | wide | 過去30日の検出数推移 | GET /api/dashboard/trend |
+| `severity-pie` | 📊 重要度分布 | wide | 円グラフで重要度割合 | GET /api/dashboard/severity-distribution |
+| `vuln-list` | 📋 脆弱性一覧 | full | Critical/High TOP10 | GET /api/vulnerabilities |
+| `asset-ranking` | 🖥️ 資産ランキング | wide | 脆弱性の多い資産TOP10 | GET /api/dashboard/asset-ranking |
+| `kev-alert` | ⚠️ KEVアラート | wide | CISA KEV登録脆弱性 | GET /api/kev/alerts（将来実装） |
+| `activity-feed` | 🔔 アクティビティ | medium | 最近の検出・対応履歴 | GET /api/dashboard/activity（将来実装） |
+
+### 4.2 ウィジェットサイズ仕様
+
+| サイズ | グリッド幅 | 用途 | 例 |
+|------|----------|------|-----|
+| `small` | 1カラム | 単一の数値表示 | サマリーカード |
+| `medium` | 2カラム | 中規模のチャート・リスト | アクティビティフィード |
+| `wide` | 2カラム | 横長のチャート | トレンドチャート、重要度分布 |
+| `full` | 4カラム | テーブル表示 | 脆弱性一覧 |
+
+---
+
+## 7. 技術スタック（Phase 3）
+
+### フロントエンド
+- **フレームワーク**: React 18+ + TypeScript 5+
+- **ビルドツール**: Vite 5+
+- **ルーティング**: React Router v6
+- **状態管理**: Zustand 4+
+- **データフェッチング**: TanStack Query v5（React Query）
+- **フォーム**: React Hook Form + Zod
+- **UIライブラリ**: Tailwind CSS 3+ + shadcn/ui
+- **チャート**: Recharts 2+
+- **アイコン**: Lucide React
+- **ドラッグ&ドロップ**: dnd-kit（将来実装）
+
+### バックエンド（変更なし）
+- **言語**: Python 3.11+
+- **フレームワーク**: FastAPI
+- **ORM**: SQLAlchemy
+- **データベース**: PostgreSQL 15+ (Neon)
+
+### 新規APIエンドポイント（Phase 3）
+
+| エンドポイント | メソッド | 機能 |
+|-------------|---------|------|
+| `/api/dashboard/summary` | GET | サマリーデータ取得（重要度別件数、前週比） |
+| `/api/dashboard/trend` | GET | トレンドデータ取得（日別検出数・対応完了数） |
+| `/api/dashboard/severity-distribution` | GET | 重要度分布取得 |
+| `/api/dashboard/asset-ranking` | GET | 資産ランキング取得 |
+| `/api/dashboard/config` | GET | ユーザーのダッシュボード設定取得 |
+| `/api/dashboard/config` | PUT | ダッシュボード設定保存 |
+
+---
+
+## 8. 実装フェーズ計画（Phase 3）
+
+### Phase 3-1: React プロジェクトセットアップ（完了予定）
+- Vite + React + TypeScript プロジェクト作成
+- Tailwind CSS + shadcn/ui セットアップ
+- React Router v6 セットアップ
+- Zustand、TanStack Query セットアップ
+- ESLint、Prettier 設定
+
+### Phase 3-2: 既存3ページのReact化 - 脆弱性一覧（完了予定）
+- `VulnerabilityListPage` コンポーネント作成
+- `useVulnerabilities` カスタムフック実装
+- `VulnerabilityTable` コンポーネント実装
+- `VulnerabilityDetailModal` 実装
+- 検索、ソート、ページネーション実装
+
+### Phase 3-3: 既存3ページのReact化 - 資産管理（完了予定）
+- `AssetManagementPage` コンポーネント作成
+- `useAssets` カスタムフック実装
+- `AssetTable` コンポーネント実装
+- `AssetFormModal` 実装（新規登録・編集）
+- `FileUploadModal` 実装（ドラッグ&ドロップ対応）
+
+### Phase 3-4: 既存3ページのReact化 - マッチング結果（完了予定）
+- `MatchingResultsPage` コンポーネント作成
+- `useMatching` カスタムフック実装
+- `MatchingDashboard` コンポーネント実装
+- `MatchingTable` コンポーネント実装
+- マッチング実行機能実装
+
+### Phase 3-5: ウィジェット方式ダッシュボード実装（完了予定）
+- `Dashboard` コンポーネント作成
+- `WidgetWrapper` 共通ラッパー実装
+- ウィジェットレジストリ実装
+- サマリーカード実装（Critical/High/Medium/Low）
+- トレンドチャート実装（Recharts）
+- 重要度分布チャート実装
+- 脆弱性一覧ウィジェット実装
+- 資産ランキングウィジェット実装
+
+### Phase 3-6: ウィジェット管理機能（完了予定）
+- `useWidgetConfig` カスタムフック実装
+- ウィジェット追加・削除機能
+- 設定ファイル（JSON）による管理
+- ローカルストレージ連携
+
+### Phase 3-7: バックエンドAPI実装（完了予定）
+- `/api/dashboard/summary` 実装
+- `/api/dashboard/trend` 実装
+- `/api/dashboard/severity-distribution` 実装
+- `/api/dashboard/asset-ranking` 実装
+- `/api/dashboard/config` 実装（GET/PUT）
+
+### Phase 3-8: テスト・統合（完了予定）
+- 既存の226テストを全てパス
+- 新規Reactコンポーネントのテスト
+- E2Eテスト（Playwright）
+- パフォーマンステスト（Lighthouse）
+- カバレッジ目標: 80%以上
+
+---
+
+## 9. 非機能要件（Phase 3追加）
+
+### 9.1 パフォーマンス
+- **初期ロード時間**: 3秒以内（3G回線）
+- **バンドルサイズ**: 500KB以下（gzip圧縮後）
+- **Lighthouseスコア**: 90以上（Performance、Accessibility、Best Practices）
+- **画面遷移**: 200ms以内
+- **APIレスポンス**: 95パーセンタイルで2秒以内
+
+### 9.2 アクセシビリティ
+- **WCAG 2.1 レベルAA**: 準拠
+- **キーボードナビゲーション**: 全機能で対応
+- **スクリーンリーダー**: ARIA属性による対応
+- **色覚異常対応**: カラーブラインドモード対応
+
+### 9.3 セキュリティ要件（Phase 3追加）
+- **HTTPS強制**: 本番環境で必須
+- **CSP（Content Security Policy）**: 設定済み
+- **XSS対策**: React標準のエスケープ処理
+- **CSRF対策**: FastAPI標準のCSRF保護
+
+---
+
 **要件定義書 作成日**: 2026-01-07
-**最終更新日**: 2026-01-27
+**最終更新日**: 2026-01-30
 **作成者**: BlueLamp 要件定義エージェント
 **Phase 1実装完了**: 2026-01-08
-**Phase 2実装完了**: 2026-01-27（Phase 2-5まで完了、94%）
+**Phase 2実装完了**: 2026-01-27
+**Phase 3実装予定**: 2026-01-30〜（Reactダッシュボード）
