@@ -1,11 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { DashboardPage } from './pages/DashboardPage';
 import { VulnerabilityListPage } from './pages/VulnerabilityListPage';
-
-// プレースホルダーコンポーネント（後で実装）
-const DashboardPage = () => <div className="p-8 text-text">Dashboard (実装予定)</div>;
-const AssetManagementPage = () => <div className="p-8 text-text">Asset Management (実装予定)</div>;
-const MatchingResultsPage = () => <div className="p-8 text-text">Matching Results (実装予定)</div>;
+import { AssetManagementPage } from './pages/AssetManagementPage';
+import { MatchingResultsPage } from './pages/MatchingResultsPage';
 
 function App() {
   return (

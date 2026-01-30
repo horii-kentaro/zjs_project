@@ -45,7 +45,7 @@ export interface AssetListResponse {
   total: number;
   page: number;
   limit: number;
-  assets: Asset[];
+  items: Asset[];
 }
 
 export interface AssetCreateInput {
@@ -58,9 +58,8 @@ export interface AssetCreateInput {
 export interface AssetUpdateInput extends Partial<AssetCreateInput> {}
 
 export interface FileImportResponse {
-  success: boolean;
-  inserted: number;
-  skipped: number;
+  imported_count: number;
+  skipped_count: number;
   errors: string[];
 }
 
@@ -71,35 +70,40 @@ export interface FileImportResponse {
 export interface MatchingResult {
   match_id: string;
   asset_id: string;
+  asset_name: string;
   cve_id: string;
+  vulnerability_title: string;
+  severity?: 'Critical' | 'High' | 'Medium' | 'Low';
+  cvss_score?: number;
   match_reason: 'exact_match' | 'version_range' | 'wildcard_match';
   matched_at: string;
-  // 結合データ
-  asset?: Asset;
-  vulnerability?: Vulnerability;
 }
 
 export interface MatchingResultListResponse {
   total: number;
   page: number;
   limit: number;
-  results: MatchingResult[];
+  items: MatchingResult[];
 }
 
 export interface MatchingExecutionResponse {
-  success: boolean;
+  total_assets: number;
+  total_vulnerabilities: number;
   total_matches: number;
   exact_matches: number;
   version_range_matches: number;
   wildcard_matches: number;
-  execution_time: number;
+  execution_time_seconds?: number;
 }
 
-export interface DashboardResponse {
-  total_assets: number;
+export interface MatchingDashboardResponse {
+  affected_assets_count: number;
+  total_matches: number;
   critical_vulnerabilities: number;
   high_vulnerabilities: number;
-  latest_matching_date: string | null;
+  medium_vulnerabilities: number;
+  low_vulnerabilities: number;
+  last_matching_at: string | null;
 }
 
 // ========================================

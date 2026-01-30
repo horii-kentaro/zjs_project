@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from src.api.assets import router as assets_router
+from src.api.dashboard import router as dashboard_router
 from src.api.matching import router as matching_router
 from src.api.vulnerabilities import router as vulnerabilities_router
 from src.config import settings
@@ -47,6 +48,7 @@ app.mount("/static", StaticFiles(directory="src/static"), name="static")
 app.include_router(vulnerabilities_router, tags=["Vulnerabilities"])
 app.include_router(assets_router, tags=["Assets"])
 app.include_router(matching_router, tags=["Matching"])
+app.include_router(dashboard_router, tags=["Dashboard"])
 
 
 @app.get("/api/health", tags=["System"])

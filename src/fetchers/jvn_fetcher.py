@@ -605,3 +605,223 @@ class JVNFetcherService:
         logger.info(f"Fetching vulnerabilities from last {years} years: {start_date} to {end_date}")
 
         return await self.fetch_vulnerabilities(start_date=start_date, end_date=end_date)
+
+    @staticmethod
+    def extract_jvndb_id_from_url(url: str) -> Optional[str]:
+        """
+        Extract JVNDB ID from JVN URL.
+
+        Args:
+            url: JVN URL (e.g., "https://jvndb.jvn.jp/ja/contents/2025/JVNDB-2025-025359.html")
+
+        Returns:
+            JVNDB ID (e.g., "JVNDB-2025-025359") or None
+
+        Examples:
+            >>> JVNFetcherService.extract_jvndb_id_from_url("https://jvndb.jvn.jp/ja/contents/2025/JVNDB-2025-025359.html")
+            'JVNDB-2025-025359'
+        """
+        import re
+
+        pattern = r"JVNDB-\d{4}-\d+"
+        match = re.search(pattern, url)
+        return match.group(0) if match else None
+
+    async def fetch_vulnerability_detail(self, jvndb_id: str) -> Optional[Dict]:
+        """
+        Fetch detailed vulnerability information including CPE data.
+
+        Args:
+            jvndb_id: JVNDB ID (e.g., "JVNDB-2025-025359")
+
+        Returns:
+            Dictionary with affected_products data or None if failed
+
+        Example:
+            >>> service = JVNFetcherService()
+            >>> detail = await service.fetch_vulnerability_detail("JVNDB-2025-025359")
+            >>> detail["cpe"]
+            ['cpe:2.3:a:themegoods:photography:*:*:*:*:*:*:*:*']
+        """
+        await self._apply_rate_limit()
+
+        params = {
+            "method": "getVulnDetailInfo",
+            "feed": "hnd",
+            "vulnId": jvndb_id,
+            "lang": "ja"
+        }
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                logger.debug(f"Fetching detail for {jvndb_id}, attempt={attempt}/{self.max_retries}")
+
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    response = await client.get(self.api_endpoint, params=params)
+                    response.raise_for_status()
+
+                # Parse XML and extract affected products
+                affected_products = self._parse_detail_xml(response.text)
+                logger.debug(f"Extracted affected_products for {jvndb_id}: {affected_products}")
+                return affected_products
+
+            except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.RequestError) as e:
+                error_type = e.__class__.__name__
+                logger.warning(f"{error_type} (attempt {attempt}/{self.max_retries}): {e}")
+
+                if attempt == self.max_retries:
+                    logger.error(f"Failed to fetch detail for {jvndb_id} after {self.max_retries} attempts")
+                    return None
+
+                # Exponential backoff
+                if attempt < self.max_retries:
+                    delay = self.retry_delay * (2 ** (attempt - 1))
+                    await asyncio.sleep(delay)
+
+        return None
+
+    def _parse_detail_xml(self, xml_text: str) -> Dict:
+        """
+        Parse detail XML response and extract affected products with CPE data.
+
+        Args:
+            xml_text: Raw XML response text
+
+        Returns:
+            Dictionary with structure:
+            {
+                "cpe": ["cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*", ...],
+                "version_ranges": {
+                    "product": {"versionEndIncluding": "1.0", ...},
+                    ...
+                }
+            }
+        """
+        import re
+
+        try:
+            root = ET.fromstring(xml_text)
+        except ET.ParseError as e:
+            logger.error(f"Failed to parse detail XML: {e}")
+            return {"cpe": [], "version_ranges": {}}
+
+        ns = {'vuldef': 'http://jvn.jp/vuldef/'}
+
+        affected_products = {
+            "cpe": [],
+            "version_ranges": {}
+        }
+
+        affected_items = root.findall('.//vuldef:AffectedItem', ns)
+
+        for item in affected_items:
+            name = item.find('vuldef:Name', ns)
+            product_name = item.find('vuldef:ProductName', ns)
+            cpe = item.find('vuldef:Cpe', ns)
+            version_number = item.find('vuldef:VersionNumber', ns)
+
+            vendor = name.text if name is not None else "unknown"
+            product = product_name.text if product_name is not None else "unknown"
+            cpe_text = cpe.text.strip() if cpe is not None and cpe.text else None
+            version_text = version_number.text.strip() if version_number is not None and version_number.text else None
+
+            # Convert CPE 2.2 to CPE 2.3
+            if cpe_text:
+                cpe_23 = self._convert_cpe_22_to_23(cpe_text, vendor, product)
+                if cpe_23:
+                    affected_products["cpe"].append(cpe_23)
+
+                    # Extract version range if available
+                    if version_text:
+                        product_key = cpe_23.split(':')[4]  # Extract product from CPE
+                        version_range = self._extract_version_range(version_text)
+                        if version_range:
+                            affected_products["version_ranges"][product_key] = version_range
+
+        return affected_products
+
+    @staticmethod
+    def _convert_cpe_22_to_23(cpe_22: str, vendor: str, product: str) -> Optional[str]:
+        """
+        Convert CPE 2.2 format to CPE 2.3 format.
+
+        Args:
+            cpe_22: CPE 2.2 string (e.g., "cpe:/a:themegoods:photography")
+            vendor: Vendor name (fallback)
+            product: Product name (fallback)
+
+        Returns:
+            CPE 2.3 string (e.g., "cpe:2.3:a:themegoods:photography:*:*:*:*:*:*:*:*")
+
+        Examples:
+            >>> JVNFetcherService._convert_cpe_22_to_23("cpe:/a:nginx:nginx", "nginx", "nginx")
+            'cpe:2.3:a:nginx:nginx:*:*:*:*:*:*:*:*'
+        """
+        # Remove leading "cpe:/" or "cpe::"
+        cpe_clean = cpe_22.replace("cpe:/", "").replace("cpe::", "")
+
+        parts = cpe_clean.split(':')
+
+        if len(parts) >= 3:
+            part = parts[0] if parts[0] in ['a', 'h', 'o'] else 'a'
+            vendor_clean = parts[1] if len(parts) > 1 else vendor.lower().replace(' ', '_')
+            product_clean = parts[2] if len(parts) > 2 else product.lower().replace(' ', '_')
+
+            return f"cpe:2.3:{part}:{vendor_clean}:{product_clean}:*:*:*:*:*:*:*:*"
+
+        return None
+
+    @staticmethod
+    def _extract_version_range(version_text: str) -> Optional[Dict[str, str]]:
+        """
+        Extract version range from Japanese version text.
+
+        Args:
+            version_text: Japanese version description (e.g., "7.7.2 およびそれ以前")
+
+        Returns:
+            Dictionary with version range keys (versionStartIncluding, etc.) or None
+
+        Examples:
+            >>> JVNFetcherService._extract_version_range("7.7.2 およびそれ以前")
+            {'versionEndIncluding': '7.7.2'}
+            >>> JVNFetcherService._extract_version_range("1.0.0 以上 2.0.0 未満")
+            {'versionStartIncluding': '1.0.0', 'versionEndExcluding': '2.0.0'}
+        """
+        import re
+
+        version_range = {}
+
+        # Pattern 1: "X.X.X 以上 Y.Y.Y 未満" or "X.X.X から Y.Y.Y より前"
+        match = re.search(r"([\d.]+)\s*以上\s*([\d.]+)\s*未満", version_text)
+        if match:
+            version_range["versionStartIncluding"] = match.group(1)
+            version_range["versionEndExcluding"] = match.group(2)
+            return version_range
+
+        # Pattern 2: "X.X.X 以上 Y.Y.Y 以前" or "X.X.X から Y.Y.Y まで"
+        match = re.search(r"([\d.]+)\s*以上\s*([\d.]+)\s*以前", version_text)
+        if match:
+            version_range["versionStartIncluding"] = match.group(1)
+            version_range["versionEndIncluding"] = match.group(2)
+            return version_range
+
+        # Pattern 3: "X.X.X およびそれ以前" or "X.X.X 以前"
+        match = re.search(r"([\d.]+)\s*(?:およびそれ)?以前", version_text)
+        if match:
+            version_range["versionEndIncluding"] = match.group(1)
+            return version_range
+
+        # Pattern 4: "X.X.X 未満"
+        match = re.search(r"([\d.]+)\s*未満", version_text)
+        if match:
+            version_range["versionEndExcluding"] = match.group(1)
+            return version_range
+
+        # Pattern 5: "X.X.X 以降" or "X.X.X より後"
+        match = re.search(r"([\d.]+)\s*(?:以降|より後)", version_text)
+        if match:
+            version_range["versionStartIncluding"] = match.group(1)
+            return version_range
+
+        return None
