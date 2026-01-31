@@ -149,7 +149,7 @@ export function MatchingResultsPage() {
         </div>
 
         {/* 検索結果サマリー */}
-        {resultsData && (
+        {resultsData?.items && (
           <div className="flex items-center justify-between text-sm text-subtext-0">
             <p>
               全{resultsData.total.toLocaleString()}件中{' '}
@@ -180,12 +180,12 @@ export function MatchingResultsPage() {
         )}
 
         {/* テーブル */}
-        {!isResultsLoading && !resultsError && resultsData && (
+        {!isResultsLoading && !resultsError && resultsData?.items && (
           <MatchingTable results={resultsData.items} />
         )}
 
         {/* ページネーション */}
-        {!isResultsLoading && !resultsError && resultsData && totalPages > 1 && (
+        {!isResultsLoading && !resultsError && resultsData?.items && totalPages > 1 && (
           <div className="flex items-center justify-center gap-4">
             <Button variant="secondary" size="sm" onClick={goToPrevPage} disabled={!canGoPrev}>
               <ChevronLeft size={16} />

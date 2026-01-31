@@ -115,7 +115,7 @@ export function DashboardPage() {
             )}
 
             {/* トレンドチャート（2カラム） */}
-            {trendQuery.data && (
+            {trendQuery.data?.dataPoints && (
               <div className="col-span-1 md:col-span-2">
                 <TrendChart dataPoints={trendQuery.data.dataPoints} />
               </div>
@@ -129,14 +129,14 @@ export function DashboardPage() {
             )}
 
             {/* 資産ランキング（2カラム） */}
-            {rankingQuery.data && (
+            {rankingQuery.data?.ranking && (
               <div className="col-span-1 md:col-span-2">
                 <AssetRankingWidget ranking={rankingQuery.data.ranking} />
               </div>
             )}
 
             {/* 脆弱性一覧（4カラム・フルワイド） */}
-            {vulnerabilitiesQuery.data && (
+            {vulnerabilitiesQuery.data?.vulnerabilities && (
               <div className="col-span-1 md:col-span-2 lg:col-span-4">
                 <div className="bg-surface-0 border border-surface-1 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-text mb-4">

@@ -191,7 +191,7 @@ export function AssetManagementPage() {
         </div>
 
         {/* 検索結果サマリー */}
-        {data && (
+        {data?.items && (
           <div className="flex items-center justify-between text-sm text-subtext-0">
             <p>
               全{data.total.toLocaleString()}件中 {((currentPage - 1) * limit + 1).toLocaleString()}〜
@@ -220,7 +220,7 @@ export function AssetManagementPage() {
         )}
 
         {/* テーブル */}
-        {!isLoading && !error && data && (
+        {!isLoading && !error && data?.items && (
           <AssetTable
             assets={data.items}
             onEdit={openEditModal}
@@ -229,7 +229,7 @@ export function AssetManagementPage() {
         )}
 
         {/* ページネーション */}
-        {!isLoading && !error && data && totalPages > 1 && (
+        {!isLoading && !error && data?.items && totalPages > 1 && (
           <div className="flex items-center justify-center gap-4">
             <Button
               variant="secondary"
