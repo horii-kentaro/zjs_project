@@ -21,8 +21,9 @@ export interface Vulnerability {
 export interface VulnerabilityListResponse {
   total: number;
   page: number;
-  limit: number;
-  vulnerabilities: Vulnerability[];
+  page_size: number;
+  total_pages: number;
+  items: Vulnerability[];
 }
 
 // ========================================

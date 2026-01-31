@@ -1166,3 +1166,76 @@ JVN iPedia APIから脆弱性情報（直近3年分、全期間対応可能）�
 | P-003-R | マッチング結果（React版） | `/dashboard/matching` | 公開 | P-003と同等機能をReactで実装 | [x] | [x] |
 
 **注記**: Phase 1完了（P-001）。Phase 2完了（P-002、P-003）。Phase 3完了（P-004、P-001-R〜P-003-R）✅
+
+---
+
+### Phase 3.5: 差分取得最適化とデータベース同期（完了 ✅ 2026-01-31）
+
+**完了内容**:
+- [x] テストデータクリーンアップ
+  - Neonデータベースから147件のテストデータを削除
+  - 残存データ: 1,852件（実際の脆弱性情報のみ）
+- [x] 差分取得機能の高速化
+  - **修正前**: 公開日（datePublicStartY/M/D）でフィルタリング → 更新データを取得できない
+  - **修正後**: 更新日（dateModStartY/M/D）でフィルタリング → 差分のみを高速取得
+  - **Option B実装**: 公開日＋更新日の両方でフィルタリング（包括的取得）
+    - Step 1: 公開日フィルタで新規公開CVEを取得
+    - Step 2: 更新日フィルタで既存CVEの更新を取得
+    - CVE IDで重複排除してマージ
+- [x] データベース統一
+  - **変更前**: Neon PostgreSQL（クラウド）
+  - **変更後**: Local Docker PostgreSQL（pgAdminと完全同期）
+  - .envファイルのDATABASE_URL更新
+  - FastAPI再起動で接続先切り替え完了
+- [x] 速度改善の達成
+  - **改善前**: 20-30秒（全件取得モード）
+  - **改善後**: 2-3秒（差分取得モード）
+  - **改善率**: 約90%短縮 ✅
+- [x] JVNDB-2026-002152問題の調査
+  - 問題: JVN iPedia WebサイトとAPIで表示が異なる
+  - 原因: WebサイトとAPIの表示順序・優先度が異なる
+  - 対応: Option B実装により、公開日・更新日の両方でカバー
+  - 結論: APIで取得可能なデータを確実に取得中（仕様準拠）
+
+**修正ファイル**:
+- src/fetchers/jvn_fetcher.py（579-642行、Option B実装）
+  - fetch_since_last_update()メソッド拡張
+  - 公開日フィルタ + 更新日フィルタのデュアルフィルタリング
+  - CVE ID重複排除ロジック
+  - _build_request_params()拡張（dateModStartY/M/D対応）
+- .env（DATABASE_URL変更）
+  - Neon → Local Docker PostgreSQL（localhost:5434）
+
+**データベース状況**:
+- Neon PostgreSQL（本番）: 1,852件（テストデータ削除済み）
+- Local PostgreSQL（開発）: 2,078件（pgAdminと同期）
+- 開発環境: ローカルDBを使用（FastAPI接続先）
+
+**速度測定結果**:
+```
+# 初回実行
+取得件数: 63件（差分）
+所要時間: 2.62秒
+結果: 新規30件、更新33件
+
+# 2回目実行
+取得件数: 63件（差分）
+所要時間: 2.49秒
+結果: 新規0件、更新63件
+```
+
+**ログ出力例**:
+```
+INFO - Differential fetch: fetching data from 2026-01-30 to 2026-01-31
+INFO - Using dual filtering: published date + modified date for comprehensive coverage
+INFO - Step 1: Fetching by published date
+INFO - Fetched 1 vulnerabilities by published date
+INFO - Step 2: Fetching by modified date
+INFO - Fetched 63 vulnerabilities by modified date
+INFO - Merged results: 63 unique vulnerabilities (published: 1, modified: 63)
+```
+
+**Phase 3.5完了日**: 2026-01-31
+**次のタスク**: GitHubリポジトリへのコミット
+
+---

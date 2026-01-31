@@ -54,7 +54,8 @@ async def get_vulnerabilities_page(request: Request):
 @router.get("/api/vulnerabilities", response_model=VulnerabilityListResponse, tags=["API"])
 async def list_vulnerabilities(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
-    page_size: int = Query(50, ge=1, le=100, description="Number of items per page"),
+    page_size: Optional[int] = Query(None, ge=1, le=100, description="Number of items per page (deprecated, use limit)"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Number of items per page"),
     sort_by: str = Query(
         "modified_date",
         description="Sort field (published_date, modified_date, severity, cvss_score)",
@@ -87,7 +88,7 @@ async def list_vulnerabilities(
     """
     try:
         # Validate sort_by parameter
-        valid_sort_fields = {"published_date", "modified_date", "severity", "cvss_score"}
+        valid_sort_fields = {"cve_id", "title", "published_date", "modified_date", "severity", "cvss_score"}
         if sort_by not in valid_sort_fields:
             logger.warning(f"Invalid sort_by parameter: {sort_by}")
             raise HTTPException(
@@ -104,8 +105,11 @@ async def list_vulnerabilities(
                 detail=f"Invalid sort_order parameter. Must be one of: {valid_sort_orders}",
             )
 
+        # Support both 'limit' and 'page_size' parameters (limit takes precedence)
+        items_per_page = limit or page_size or 50
+
         logger.info(
-            f"API request: page={page}, page_size={page_size}, "
+            f"API request: page={page}, limit={items_per_page}, "
             f"sort_by={sort_by}, sort_order={sort_order}, search={search}"
         )
 
@@ -113,7 +117,7 @@ async def list_vulnerabilities(
         service = DatabaseVulnerabilityService(db)
         result = service.search_vulnerabilities(
             page=page,
-            page_size=page_size,
+            page_size=items_per_page,
             sort_by=sort_by,
             sort_order=sort_order,
             search=search,
@@ -196,7 +200,8 @@ async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
     Fetch latest vulnerabilities from JVN iPedia API in real-time.
 
     This endpoint triggers an immediate fetch of vulnerability data from JVN iPedia API
-    and stores it in the database. It fetches data from the last 3 years by default.
+    and stores it in the database. It uses differential fetching (fetches only new/updated
+    data since last fetch) for better performance.
 
     Returns:
         FetchNowResponse: Result of the fetch operation
@@ -209,24 +214,34 @@ async def fetch_vulnerabilities_now(db: Session = Depends(get_db)):
     try:
         logger.info("Manual fetch triggered via API")
 
-        # Initialize JVN fetcher service
+        # Initialize services
         fetcher = JVNFetcherService()
+        service = DatabaseVulnerabilityService(db)
 
-        # Calculate date range (last 3 years)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=3 * 365)
+        # Get latest modified date from database for differential fetching
+        latest_modified = service.get_latest_modified_date()
 
-        # Fetch vulnerabilities from JVN iPedia API
-        logger.info(f"Fetching vulnerabilities from {start_date.date()} to {end_date.date()}")
-        vulnerabilities = await fetcher.fetch_vulnerabilities(
-            start_date=start_date.strftime("%Y-%m-%d"), end_date=end_date.strftime("%Y-%m-%d")
-        )
+        # Determine fetch strategy
+        if latest_modified:
+            # Differential fetch: only fetch data modified since last update
+            logger.info(f"Differential fetch: fetching data since {latest_modified}")
+            latest_date = datetime.fromisoformat(latest_modified)
+            # Fetch from last modified date to now
+            vulnerabilities = await fetcher.fetch_since_last_update(latest_date)
+        else:
+            # Initial fetch: fetch last 3 years of data
+            logger.info("Initial fetch: no existing data, fetching last 3 years")
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=3 * 365)
+            logger.info(f"Fetching vulnerabilities from {start_date.date()} to {end_date.date()}")
+            vulnerabilities = await fetcher.fetch_vulnerabilities(
+                start_date=start_date.strftime("%Y-%m-%d"), end_date=end_date.strftime("%Y-%m-%d")
+            )
 
         fetched_count = len(vulnerabilities)
         logger.info(f"Fetched {fetched_count} vulnerabilities from JVN iPedia API")
 
-        # Store in database
-        service = DatabaseVulnerabilityService(db)
+        # Store in database (service already initialized above)
         result = service.upsert_vulnerabilities_batch(vulnerabilities)
 
         elapsed = (datetime.now() - start_time).total_seconds()

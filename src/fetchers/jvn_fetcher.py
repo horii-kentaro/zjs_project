@@ -95,6 +95,7 @@ class JVNFetcherService:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         max_items: Optional[int] = None,
+        use_modified_date: bool = False,
     ) -> List[VulnerabilityCreate]:
         """
         Fetch vulnerabilities from JVN iPedia API with pagination.
@@ -105,6 +106,7 @@ class JVNFetcherService:
             start_date: Start date for differential fetching (ISO 8601: YYYY-MM-DD)
             end_date: End date for differential fetching (ISO 8601: YYYY-MM-DD)
             max_items: Maximum number of items to fetch (None = fetch all)
+            use_modified_date: If True, filter by modified date; if False, filter by published date
 
         Returns:
             List of VulnerabilityCreate objects
@@ -150,6 +152,7 @@ class JVNFetcherService:
                     end_date=end_date,
                     start_item=start_item,
                     max_count=fetch_count,
+                    use_modified_date=use_modified_date,
                 )
             except JVNAPIError as e:
                 logger.error(f"API error during pagination: {e}")
@@ -193,6 +196,7 @@ class JVNFetcherService:
         end_date: Optional[str],
         start_item: int,
         max_count: int,
+        use_modified_date: bool = False,
     ) -> List[VulnerabilityCreate]:
         """
         Fetch a single page of vulnerabilities from JVN iPedia API.
@@ -204,6 +208,7 @@ class JVNFetcherService:
             end_date: End date for differential fetching
             start_item: Starting item index (1-indexed)
             max_count: Maximum items to fetch per request
+            use_modified_date: If True, filter by modified date; if False, filter by published date
 
         Returns:
             List of VulnerabilityCreate objects for this page
@@ -215,7 +220,7 @@ class JVNFetcherService:
         await self._apply_rate_limit()
 
         # Build request parameters
-        params = self._build_request_params(start_date, end_date, start_item, max_count)
+        params = self._build_request_params(start_date, end_date, start_item, max_count, use_modified_date)
 
         # Retry logic with exponential backoff
         for attempt in range(1, self.max_retries + 1):
@@ -248,7 +253,7 @@ class JVNFetcherService:
         return []
 
     def _build_request_params(
-        self, start_date: Optional[str], end_date: Optional[str], start_item: int, max_count: int
+        self, start_date: Optional[str], end_date: Optional[str], start_item: int, max_count: int, use_modified_date: bool = False
     ) -> dict:
         """Build request parameters for JVN API."""
         params = {
@@ -259,14 +264,28 @@ class JVNFetcherService:
         }
 
         if start_date:
-            params["datePublicStartY"] = start_date.split("-")[0]
-            params["datePublicStartM"] = start_date.split("-")[1]
-            params["datePublicStartD"] = start_date.split("-")[2]
+            if use_modified_date:
+                # Use modified date for differential fetching
+                params["dateModStartY"] = start_date.split("-")[0]
+                params["dateModStartM"] = start_date.split("-")[1]
+                params["dateModStartD"] = start_date.split("-")[2]
+            else:
+                # Use published date for initial fetching
+                params["datePublicStartY"] = start_date.split("-")[0]
+                params["datePublicStartM"] = start_date.split("-")[1]
+                params["datePublicStartD"] = start_date.split("-")[2]
 
         if end_date:
-            params["datePublicEndY"] = end_date.split("-")[0]
-            params["datePublicEndM"] = end_date.split("-")[1]
-            params["datePublicEndD"] = end_date.split("-")[2]
+            if use_modified_date:
+                # Use modified date for differential fetching
+                params["dateModEndY"] = end_date.split("-")[0]
+                params["dateModEndM"] = end_date.split("-")[1]
+                params["dateModEndD"] = end_date.split("-")[2]
+            else:
+                # Use published date for initial fetching
+                params["datePublicEndY"] = end_date.split("-")[0]
+                params["datePublicEndM"] = end_date.split("-")[1]
+                params["datePublicEndD"] = end_date.split("-")[2]
 
         return params
 
@@ -562,6 +581,7 @@ class JVNFetcherService:
         Fetch vulnerabilities updated since the last update date.
 
         This method implements M1.3: Differential fetching logic.
+        Uses BOTH published date and modified date filtering to ensure comprehensive coverage.
 
         Args:
             last_update_date: Last update timestamp from database
@@ -579,9 +599,47 @@ class JVNFetcherService:
         start_date = last_update_date.strftime("%Y-%m-%d")
         end_date = datetime.now().strftime("%Y-%m-%d")
 
-        logger.info(f"Fetching vulnerabilities updated since: {start_date}")
+        logger.info(f"Differential fetch: fetching data from {start_date} to {end_date}")
+        logger.info("Using dual filtering: published date + modified date for comprehensive coverage")
 
-        return await self.fetch_vulnerabilities(start_date=start_date, end_date=end_date)
+        # Fetch using published date filter (catches newly published CVEs)
+        logger.info("Step 1: Fetching by published date")
+        published_vulns = await self.fetch_vulnerabilities(
+            start_date=start_date, end_date=end_date, use_modified_date=False
+        )
+        logger.info(f"Fetched {len(published_vulns)} vulnerabilities by published date")
+
+        # Fetch using modified date filter (catches updated CVEs)
+        logger.info("Step 2: Fetching by modified date")
+        modified_vulns = await self.fetch_vulnerabilities(
+            start_date=start_date, end_date=end_date, use_modified_date=True
+        )
+        logger.info(f"Fetched {len(modified_vulns)} vulnerabilities by modified date")
+
+        # Merge and deduplicate by CVE ID
+        all_vulns_dict = {}
+
+        # Add published date results
+        for vuln in published_vulns:
+            all_vulns_dict[vuln.cve_id] = vuln
+
+        # Add modified date results (overwrites if newer)
+        for vuln in modified_vulns:
+            if vuln.cve_id in all_vulns_dict:
+                # Keep the one with newer modified_date
+                existing = all_vulns_dict[vuln.cve_id]
+                if vuln.modified_date > existing.modified_date:
+                    all_vulns_dict[vuln.cve_id] = vuln
+            else:
+                all_vulns_dict[vuln.cve_id] = vuln
+
+        merged_vulns = list(all_vulns_dict.values())
+        logger.info(
+            f"Merged results: {len(merged_vulns)} unique vulnerabilities "
+            f"(published: {len(published_vulns)}, modified: {len(modified_vulns)})"
+        )
+
+        return merged_vulns
 
     async def fetch_recent_years(self, years: int = 3) -> List[VulnerabilityCreate]:
         """

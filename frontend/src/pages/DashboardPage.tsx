@@ -136,19 +136,19 @@ export function DashboardPage() {
             )}
 
             {/* 脆弱性一覧（4カラム・フルワイド） */}
-            {vulnerabilitiesQuery.data?.vulnerabilities && (
+            {vulnerabilitiesQuery.data?.items && (
               <div className="col-span-1 md:col-span-2 lg:col-span-4">
                 <div className="bg-surface-0 border border-surface-1 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-text mb-4">
                     Critical/High脆弱性 TOP10
                   </h3>
-                  {vulnerabilitiesQuery.data.vulnerabilities.length === 0 ? (
+                  {vulnerabilitiesQuery.data.items.length === 0 ? (
                     <div className="py-8 text-center text-subtext-0">
                       Critical/High脆弱性はありません
                     </div>
                   ) : (
                     <VulnerabilityTable
-                      vulnerabilities={vulnerabilitiesQuery.data.vulnerabilities}
+                      vulnerabilities={vulnerabilitiesQuery.data.items}
                       sortBy="cvss_score"
                       sortOrder="desc"
                       onSort={handleSort}
