@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # NVD API configuration (Phase 2 - optional)
     NVD_API_ENDPOINT: Optional[str] = os.getenv("NVD_API_ENDPOINT", "https://services.nvd.nist.gov/rest/json/cves/2.0")
     NVD_API_KEY: Optional[str] = os.getenv("NVD_API_KEY", None)
+    NVD_API_TIMEOUT: int = int(os.getenv("NVD_API_TIMEOUT", "30"))
+    NVD_API_MAX_RETRIES: int = int(os.getenv("NVD_API_MAX_RETRIES", "3"))
+    NVD_API_RETRY_DELAY: int = int(os.getenv("NVD_API_RETRY_DELAY", "5"))
 
     # CISA KEV configuration (Phase 2 - optional)
     CISA_KEV_ENDPOINT: Optional[str] = os.getenv(

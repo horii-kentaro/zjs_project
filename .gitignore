@@ -64,3 +64,10 @@ htmlcov/
 # Docker
 *.dockerfile.swp
 docker-compose.override.yml
+
+# Debug/Test Scripts
+check_*.py
+debug_*.py
+test_detail_api*.py
+test_output.txt
+update_vulnerability_details*.py

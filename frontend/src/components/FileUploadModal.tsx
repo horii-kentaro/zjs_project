@@ -31,8 +31,8 @@ export function FileUploadModal({ isOpen, onClose, onUpload, uploadType, isUploa
     },
     docker: {
       title: 'Dockerfileのアップロード',
-      hint: 'Dockerfile',
-      accept: { 'text/plain': [''], '*/*': [''] },
+      hint: 'Dockerfile（拡張子なし）',
+      accept: undefined, // Dockerfileは拡張子がないため、すべてのファイルを受け入れる
     },
   };
 

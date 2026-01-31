@@ -1236,6 +1236,62 @@ INFO - Merged results: 63 unique vulnerabilities (published: 1, modified: 63)
 ```
 
 **Phase 3.5完了日**: 2026-01-31
+
+---
+
+### Phase 3.6: NVD API 2.0統合（完了 ✅ 2026-01-31）
+
+**完了内容**:
+- [x] NVD API 2.0要件定義書作成（docs/requirements-nvd-api.md、502行）
+  - API仕様、データモデル設計、CPE抽出ロジック、120日間制限対応
+- [x] NVD Fetcherサービス実装（src/fetchers/nvd_fetcher.py、480行）
+  - JSON APIパース、ページネーション（2,000件/リクエスト）
+  - レート制限（APIキーなし: 6秒/req、あり: 0.6秒/req）
+  - リトライロジック（指数バックオフ）
+  - CPEデータ抽出（version_ranges含む）
+- [x] デュアルソース取得実装（scripts/fetch_vulnerabilities.py拡張）
+  - JVN iPedia + NVD API 2.0の並行取得
+  - 重複除外機能（get_all_cve_ids()）
+  - `--nvd-only` / `--jvn-only` オプション追加
+- [x] データベースサービス拡張（src/services/database_vulnerability_service.py）
+  - get_all_cve_ids()メソッド追加（重複除外用）
+- [x] 環境変数設定（.env更新）
+  - NVD_API_ENDPOINT、NVD_API_TIMEOUT、NVD_API_MAX_RETRIES、NVD_API_RETRY_DELAY
+- [x] Config設定拡張（src/config.py）
+  - NVD API設定フィールド追加（Pydanticバリデーション）
+- [x] NVD API動作確認
+  - 2024年11月データ: 2,000件取得（2.66秒）
+  - 2024年11月（500件）: 6.05秒
+  - 2025年1月データ: 4,998件取得（35.57秒）
+  - 2024年11月20-22日: 3,000件取得（33.60秒）
+- [x] マッチング動作確認
+  - **マッチ数**: 6件（NVD統合前は1件のみ）
+    - version_range_match: 1件
+    - wildcard_match: 5件
+  - **具体例**:
+    - jQuery 3.3.1 → CVE-2012-6708（Medium）、CVE-2015-9251（Medium）
+    - Python 3.11（Docker） → CVE-2025-13836（Critical）、CVE-2018-1000117（Medium）他3件
+
+**データ取得実績**:
+- **総レコード数**: 12,086 CVE（JVN: 2,088 + NVD: 9,998）
+- **NVD取得期間**: 2024年11月（5,000件） + 2025年1月（4,998件）
+- **マッチング実行時間**: 8.51秒（37資産 × 12,086脆弱性）
+
+**成果物**:
+- docs/requirements-nvd-api.md（502行）
+- src/fetchers/nvd_fetcher.py（480行）
+- scripts/fetch_vulnerabilities.py（拡張、217-260行追加）
+- src/services/database_vulnerability_service.py（get_all_cve_ids()追加、374-395行）
+- src/config.py（NVD設定追加、42-44行）
+- .env（NVD設定追加）
+
+**技術詳細**:
+- NVD APIバージョン: 2.0
+- データ形式: JSON（JVNはXML）
+- CPE抽出: version_ranges（versionStartIncluding/Excluding、versionEndIncluding/Excluding）
+- エラーハンドリング: NVD API失敗時もJVNデータは保存続行
+
+**Phase 3.6完了日**: 2026-01-31
 **次のタスク**: GitHubリポジトリへのコミット
 
 ---

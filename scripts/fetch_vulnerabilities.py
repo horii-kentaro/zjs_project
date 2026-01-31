@@ -40,6 +40,7 @@ sys.path.insert(0, '/home/horii-kentaro/projects/zjs_project')
 from src.config import settings
 from src.database import SessionLocal, check_db_connection
 from src.fetchers.jvn_fetcher import JVNAPIError, JVNFetcherService, JVNParseError
+from src.fetchers.nvd_fetcher import NVDAPIError, NVDFetcherService, NVDParseError
 from src.services.database_vulnerability_service import DatabaseVulnerabilityService
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,18 @@ def parse_arguments() -> argparse.Namespace:
         help=f'Logging level (default: {settings.LOG_LEVEL})',
     )
 
+    parser.add_argument(
+        '--nvd-only',
+        action='store_true',
+        help='Fetch from NVD API only (skip JVN iPedia)',
+    )
+
+    parser.add_argument(
+        '--jvn-only',
+        action='store_true',
+        help='Fetch from JVN iPedia API only (skip NVD)',
+    )
+
     return parser.parse_args()
 
 
@@ -103,25 +116,33 @@ async def fetch_and_store(
     end_date: Optional[str] = None,
     max_items: Optional[int] = None,
     differential: bool = False,
+    nvd_only: bool = False,
+    jvn_only: bool = False,
 ) -> dict:
     """
-    Fetch vulnerabilities from JVN iPedia API and store in database.
+    Fetch vulnerabilities from JVN iPedia API and/or NVD API 2.0 and store in database.
 
     Args:
         start_date: Start date for fetching (ISO 8601: YYYY-MM-DD)
         end_date: End date for fetching (ISO 8601: YYYY-MM-DD)
         max_items: Maximum number of items to fetch (None = fetch all)
         differential: If True, fetch only data updated since last database update
+        nvd_only: If True, fetch from NVD API only (skip JVN iPedia)
+        jvn_only: If True, fetch from JVN iPedia API only (skip NVD)
 
     Returns:
         dict: Statistics with keys 'fetched', 'inserted', 'updated', 'failed'
 
     Raises:
-        JVNAPIError: When API request fails
-        JVNParseError: When XML parsing fails
+        JVNAPIError: When JVN API request fails
+        JVNParseError: When JVN XML parsing fails
+        NVDAPIError: When NVD API request fails
+        NVDParseError: When NVD JSON parsing fails
         SQLAlchemyError: When database operation fails
     """
     stats = {
+        'jvn_fetched': 0,
+        'nvd_fetched': 0,
         'fetched': 0,
         'inserted': 0,
         'updated': 0,
@@ -169,30 +190,84 @@ async def fetch_and_store(
 
         logger.info(f'Fetch date range: {fetch_start_date} to {fetch_end_date}')
 
-        # Fetch vulnerabilities from JVN iPedia API
-        logger.info('Starting data fetch from JVN iPedia API...')
-        vulnerabilities = await fetcher.fetch_vulnerabilities(
-            start_date=fetch_start_date, end_date=fetch_end_date, max_items=max_items
-        )
+        all_vulnerabilities = []
 
-        stats['fetched'] = len(vulnerabilities)
-        logger.info(f'Fetched {stats["fetched"]} vulnerabilities from API')
+        # Fetch from JVN iPedia API (unless nvd_only is set)
+        if not nvd_only:
+            logger.info('Starting data fetch from JVN iPedia API...')
+            jvn_fetcher = JVNFetcherService()
+            jvn_vulnerabilities = await jvn_fetcher.fetch_vulnerabilities(
+                start_date=fetch_start_date, end_date=fetch_end_date, max_items=max_items
+            )
 
-        if not vulnerabilities:
-            logger.warning('No vulnerabilities fetched from API')
+            stats['jvn_fetched'] = len(jvn_vulnerabilities)
+            logger.info(f'Fetched {stats["jvn_fetched"]} vulnerabilities from JVN iPedia API')
+            all_vulnerabilities.extend(jvn_vulnerabilities)
+
+            # Store JVN data first
+            if jvn_vulnerabilities:
+                logger.info('Storing JVN vulnerabilities in database...')
+                jvn_db_stats = db_service.upsert_vulnerabilities_batch(jvn_vulnerabilities)
+                logger.info(
+                    f'JVN data stored: inserted={jvn_db_stats["inserted"]}, '
+                    f'updated={jvn_db_stats["updated"]}, failed={jvn_db_stats["failed"]}'
+                )
+
+        # Fetch from NVD API 2.0 (unless jvn_only is set)
+        if not jvn_only:
+            logger.info('Starting data fetch from NVD API 2.0...')
+            nvd_fetcher = NVDFetcherService()
+
+            # Convert date format for NVD API (ISO 8601 with time)
+            nvd_start_date = f"{fetch_start_date}T00:00:00.000" if fetch_start_date else None
+            nvd_end_date = f"{fetch_end_date}T23:59:59.999" if fetch_end_date else None
+
+            try:
+                nvd_vulnerabilities = await nvd_fetcher.fetch_vulnerabilities(
+                    start_date=nvd_start_date,
+                    end_date=nvd_end_date,
+                    max_items=max_items,
+                )
+
+                stats['nvd_fetched'] = len(nvd_vulnerabilities)
+                logger.info(f'Fetched {stats["nvd_fetched"]} vulnerabilities from NVD API 2.0')
+
+                # Filter out duplicates (CVE IDs already in database)
+                existing_cve_ids = db_service.get_all_cve_ids()
+                new_vulnerabilities = [v for v in nvd_vulnerabilities if v.cve_id not in existing_cve_ids]
+
+                logger.info(
+                    f'NVD filtering: {len(nvd_vulnerabilities)} total, '
+                    f'{len(new_vulnerabilities)} new (skipped {len(nvd_vulnerabilities) - len(new_vulnerabilities)} duplicates)'
+                )
+
+                all_vulnerabilities.extend(new_vulnerabilities)
+
+                # Store NVD data
+                if new_vulnerabilities:
+                    logger.info('Storing NVD vulnerabilities in database...')
+                    nvd_db_stats = db_service.upsert_vulnerabilities_batch(new_vulnerabilities)
+                    logger.info(
+                        f'NVD data stored: inserted={nvd_db_stats["inserted"]}, '
+                        f'updated={nvd_db_stats["updated"]}, failed={nvd_db_stats["failed"]}'
+                    )
+                    stats['inserted'] += nvd_db_stats['inserted']
+                    stats['updated'] += nvd_db_stats['updated']
+                    stats['failed'] += nvd_db_stats['failed']
+
+            except (NVDAPIError, NVDParseError) as e:
+                logger.error(f'NVD API error (continuing with JVN data only): {e}')
+                # Continue with JVN data even if NVD fails
+
+        stats['fetched'] = len(all_vulnerabilities)
+
+        if not all_vulnerabilities:
+            logger.warning('No vulnerabilities fetched from any API')
             return stats
 
-        # Store in database (batch UPSERT)
-        logger.info('Storing vulnerabilities in database...')
-        db_stats = db_service.upsert_vulnerabilities_batch(vulnerabilities)
-
-        stats['inserted'] = db_stats['inserted']
-        stats['updated'] = db_stats['updated']
-        stats['failed'] = db_stats['failed']
-
         logger.info(
-            f'Database operation completed: '
-            f'inserted={stats["inserted"]}, updated={stats["updated"]}, failed={stats["failed"]}'
+            f'Total vulnerabilities processed: {stats["fetched"]} '
+            f'(JVN: {stats["jvn_fetched"]}, NVD: {stats["nvd_fetched"]})'
         )
 
         return stats
@@ -254,6 +329,8 @@ def main() -> int:
                 end_date=end_date,
                 max_items=max_items,
                 differential=differential,
+                nvd_only=args.nvd_only,
+                jvn_only=args.jvn_only,
             )
         )
 
@@ -262,7 +339,9 @@ def main() -> int:
 
         # Display summary
         logger.info('=== Vulnerability Data Fetch Completed ===')
-        logger.info(f'Fetched: {stats["fetched"]} vulnerabilities')
+        logger.info(f'JVN fetched: {stats["jvn_fetched"]} vulnerabilities')
+        logger.info(f'NVD fetched: {stats["nvd_fetched"]} vulnerabilities')
+        logger.info(f'Total fetched: {stats["fetched"]} vulnerabilities')
         logger.info(f'Inserted: {stats["inserted"]} new records')
         logger.info(f'Updated: {stats["updated"]} existing records')
         logger.info(f'Failed: {stats["failed"]} errors')

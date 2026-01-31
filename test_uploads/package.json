@@ -1,0 +1,36 @@
+{
+  "name": "vulnerable-node-app",
+  "version": "1.0.0",
+  "description": "テスト用Node.jsアプリケーション（意図的に脆弱性のあるバージョンを含む）",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.16.0",
+    "lodash": "^4.17.11",
+    "axios": "^0.19.0",
+    "minimist": "^1.2.0",
+    "node-fetch": "^2.6.0",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
+    "jquery": "^3.3.1",
+    "moment": "^2.24.0",
+    "request": "^2.88.0",
+    "debug": "^2.6.9",
+    "body-parser": "^1.18.0"
+  },
+  "devDependencies": {
+    "webpack": "^4.41.0",
+    "babel-core": "^6.26.0",
+    "jest": "^24.9.0"
+  },
+  "keywords": [
+    "test",
+    "vulnerability",
+    "security"
+  ],
+  "author": "Test Team",
+  "license": "MIT"
+}
