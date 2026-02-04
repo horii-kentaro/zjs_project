@@ -7,7 +7,7 @@
 - **完了フェーズ**: Phase 1〜2（基盤・CPEマッチング）、Phase 3-1〜3-8（Reactダッシュボード）
 - **進捗率**: Phase 3完了（8/8フェーズ、100%）
 - **次のマイルストーン**: 本番デプロイ準備、または Phase 4以降の開発
-- **最終更新日**: 2026-01-31
+- **最終更新日**: 2026-02-04
 
 ## 2. Phase 1 開発フロー
 
@@ -1165,7 +1165,7 @@ JVN iPedia APIから脆弱性情報（直近3年分、全期間対応可能）�
 | P-002-R | 資産管理（React版） | `/dashboard/assets` | 公開 | P-002と同等機能をReactで実装 | [x] | [x] |
 | P-003-R | マッチング結果（React版） | `/dashboard/matching` | 公開 | P-003と同等機能をReactで実装 | [x] | [x] |
 
-**注記**: Phase 1完了（P-001）。Phase 2完了（P-002、P-003）。Phase 3完了（P-004、P-001-R〜P-003-R）✅
+**注記**: Phase 1完了（P-001）。Phase 2完了（P-002、P-003）。Phase 3完了（P-004、P-001-R〜P-003-R + UI改善・ドキュメンテーション）✅
 
 ---
 
@@ -1292,6 +1292,52 @@ INFO - Merged results: 63 unique vulnerabilities (published: 1, modified: 63)
 - エラーハンドリング: NVD API失敗時もJVNデータは保存続行
 
 **Phase 3.6完了日**: 2026-01-31
-**次のタスク**: GitHubリポジトリへのコミット
+
+---
+
+### Phase 3.7: UI改善とドキュメンテーション（完了 ✅ 2026-02-04）
+
+**完了内容**:
+- [x] 資産編集モーダルのUI改善
+  - vendor/product フィールドを編集不可に設定
+  - 編集モード時の視覚的フィードバック追加（グレーアウト、"編集不可"ラベル）
+  - **理由**: vendor/productはCPEコードの本質的要素であり、変更は別製品を意味するため編集禁止
+- [x] 削除機能のバグ修正
+  - 204 No Content レスポンスのJSON パースエラー修正
+  - frontend/src/lib/api.ts: レスポンスステータス204の場合はJSONパース不要
+  - **効果**: 削除後のエラーメッセージ表示を解消
+- [x] インポート処理の原理説明（ドキュメンテーション）
+  - Composer.json: `require`/`require-dev` から vendor/product を `/` で分割、バージョン正規化
+  - Package.json: `dependencies`/`devDependencies` + NPM_VENDOR_MAP（27パッケージ）でベンダー決定
+  - Dockerfile: `FROM` 命令のみ処理、DOCKER_VENDOR_MAP（22パッケージ）、バージョンサフィックス削除
+- [x] マッチング処理の原理説明（ドキュメンテーション）
+  - 3段階マッチングアルゴリズム: Exact Match → Version Range → Wildcard Match
+  - CPEコード照合フロー: 資産データ × 脆弱性データ → マッチング結果
+  - 実例: jQuery（CVE-2015-9251、CVE-2012-6708）のワイルドカードマッチ
+
+**修正ファイル**:
+- frontend/src/components/AssetFormModal.tsx（98-136行）
+  - vendor/product入力フィールドに `disabled={isSubmitting || !!asset}` 追加
+  - 条件付きスタイリング: `bg-surface-1 opacity-60 cursor-not-allowed`
+  - "(編集不可)" ラベル追加
+- frontend/src/lib/api.ts（24-37行）
+  - 204 No Content レスポンス処理追加
+  - `if (response.status === 204) return undefined as T;`
+
+**技術詳細**:
+- **編集制限の根拠**: src/schemas/asset.py の AssetUpdate スキーマが `asset_name` と `version` のみ許可
+- **CPEコード整合性**: vendor/product変更 = 異なる製品 → 新規登録が適切
+- **インポート処理**: 各ファイル形式に応じたベンダーマッピング辞書（NPM_VENDOR_MAP、DOCKER_VENDOR_MAP）
+- **マッチングロジック**: src/services/matching_service.py の execute_matching() 関数
+
+**ユーザーフィードバック対応**:
+- ❓ 資産編集で404エラー → キャッシュクリアで解決
+- ❓ vendor/product編集が反映されない → 編集不可であることを明示
+- ❓ 削除時にエラーメッセージ → 204 No Content 対応で解消
+- ❓ Composer/NPM/Dockerの処理原理 → 詳細説明完了
+- ❓ マッチング処理の原理 → 3段階アルゴリズム説明完了
+
+**Phase 3.7完了日**: 2026-02-04
+**次のタスク**: Phase 4（追加機能検討）またはデプロイ準備
 
 ---

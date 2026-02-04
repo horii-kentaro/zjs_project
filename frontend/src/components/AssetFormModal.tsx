@@ -99,13 +99,16 @@ export function AssetFormModal({ isOpen, onClose, onSubmit, asset, isSubmitting 
           <div>
             <label className="block text-sm font-medium text-text mb-1">
               ベンダー <span className="text-red">*</span>
+              {asset && <span className="ml-2 text-xs text-subtext-0">(編集不可)</span>}
             </label>
             <input
               type="text"
               {...register('vendor')}
-              className="w-full px-3 py-2 bg-surface-0 border border-surface-1 rounded-lg text-text placeholder:text-subtext-0 focus:outline-none focus:ring-2 focus:ring-blue"
+              className={`w-full px-3 py-2 border border-surface-1 rounded-lg text-text placeholder:text-subtext-0 focus:outline-none focus:ring-2 focus:ring-blue ${
+                asset ? 'bg-surface-1 opacity-60 cursor-not-allowed' : 'bg-surface-0'
+              }`}
               placeholder="例: laravel"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!asset}
             />
             {errors.vendor && (
               <p className="mt-1 text-sm text-red">{errors.vendor.message}</p>
@@ -116,13 +119,16 @@ export function AssetFormModal({ isOpen, onClose, onSubmit, asset, isSubmitting 
           <div>
             <label className="block text-sm font-medium text-text mb-1">
               製品名 <span className="text-red">*</span>
+              {asset && <span className="ml-2 text-xs text-subtext-0">(編集不可)</span>}
             </label>
             <input
               type="text"
               {...register('product')}
-              className="w-full px-3 py-2 bg-surface-0 border border-surface-1 rounded-lg text-text placeholder:text-subtext-0 focus:outline-none focus:ring-2 focus:ring-blue"
+              className={`w-full px-3 py-2 border border-surface-1 rounded-lg text-text placeholder:text-subtext-0 focus:outline-none focus:ring-2 focus:ring-blue ${
+                asset ? 'bg-surface-1 opacity-60 cursor-not-allowed' : 'bg-surface-0'
+              }`}
               placeholder="例: laravel"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!asset}
             />
             {errors.product && (
               <p className="mt-1 text-sm text-red">{errors.product.message}</p>
