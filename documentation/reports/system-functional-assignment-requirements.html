@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脆弱性管理システム 機能分担要件定義書</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #24292f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .header .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .header .meta {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .content {
+            padding: 40px;
+        }
+
+        /* 目次 */
+        .toc {
+            background: #f6f8fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border-left: 5px solid #667eea;
+        }
+        .toc h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+        }
+        .toc ol li {
+            counter-increment: toc-counter;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        .toc ol li::before {
+            content: counter(toc-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .toc a {
+            color: #24292f;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .toc a:hover {
+            color: #667eea;
+        }
+
+        /* セクション */
+        .section {
+            margin-bottom: 50px;
+        }
+        .section h2 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #667eea;
+        }
+        .section h3 {
+            color: #24292f;
+            font-size: 22px;
+            margin: 30px 0 15px;
+        }
+        .section h4 {
+            color: #57606a;
+            font-size: 18px;
+            margin: 20px 0 10px;
+        }
+
+        /* インフォボックス */
+        .info-box {
+            background: #ddf4ff;
+            border: 2px solid #54aeff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-box.success {
+            background: #dafbe1;
+            border-color: #2da44e;
+        }
+        .info-box.warning {
+            background: #fff8c5;
+            border-color: #d4a72c;
+        }
+        .info-box.error {
+            background: #ffebe9;
+            border-color: #cf222e;
+        }
+        .info-box.purple {
+            background: #fbefff;
+            border-color: #8250df;
+        }
+        .info-box h4 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #d0d7de;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        tr:hover {
+            background: #f6f8fa;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 機能カード */
+        .function-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .function-card {
+            background: white;
+            border: 2px solid #d0d7de;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .function-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .function-card.backend {
+            border-left: 5px solid #cf222e;
+        }
+        .function-card.frontend {
+            border-left: 5px solid #2da44e;
+        }
+        .function-card.infra {
+            border-left: 5px solid #bf8700;
+        }
+        .function-card.integration {
+            border-left: 5px solid #8250df;
+        }
+        .function-card h4 {
+            color: #24292f;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        .function-card .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .badge.backend { background: #ffebe9; color: #cf222e; }
+        .badge.frontend { background: #dafbe1; color: #1a7f37; }
+        .badge.infra { background: #fff8c5; color: #9a6700; }
+        .badge.integration { background: #fbefff; color: #8250df; }
+
+        /* アーキテクチャ図 */
+        .architecture {
+            background: #f6f8fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .architecture-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .arch-layer {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .arch-layer h4 {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+        .arch-layer.frontend h4 { border-color: #2da44e; color: #2da44e; }
+        .arch-layer.backend h4 { border-color: #cf222e; color: #cf222e; }
+        .arch-layer.database h4 { border-color: #0969da; color: #0969da; }
+        .arch-layer.external h4 { border-color: #8250df; color: #8250df; }
+        .arch-components {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .arch-component {
+            background: #f6f8fa;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid #d0d7de;
+        }
+
+        /* データフロー図 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .flow-step {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        /* 統計カード */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* リスト */
+        ul, ol {
+            margin-left: 25px;
+            margin-top: 10px;
+        }
+        li {
+            margin: 8px 0;
+        }
+
+        /* コード */
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #cf222e;
+        }
+
+        /* フッター */
+        .footer {
+            background: #24292f;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        /* 印刷用 */
+        @media print {
+            body { background: white; }
+            .header { background: #667eea; }
+            .function-card:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ 脆弱性管理システム</h1>
+            <p class="subtitle">機能分担要件定義書</p>
+            <div class="meta">
+                プロジェクト名: zjs_project | バージョン: 1.0 | 最終更新: 2026-02-04
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 目次 -->
+            <div class="toc">
+                <h2>📋 目次</h2>
+                <ol>
+                    <li><a href="#overview">プロジェクト概要</a></li>
+                    <li><a href="#architecture">システムアーキテクチャ</a></li>
+                    <li><a href="#functions">実装済み機能一覧</a></li>
+                    <li><a href="#assignment">機能分担案</a></li>
+                    <li><a href="#backend">バックエンド機能詳細</a></li>
+                    <li><a href="#frontend">フロントエンド機能詳細</a></li>
+                    <li><a href="#infra">インフラ・DevOps機能詳細</a></li>
+                    <li><a href="#dataflow">データフロー</a></li>
+                    <li><a href="#tech-stack">技術スタック</a></li>
+                    <li><a href="#development">開発体制・プロセス</a></li>
+                </ol>
+            </div>
+
+            <!-- 1. プロジェクト概要 -->
+            <div class="section" id="overview">
+                <h2>1. プロジェクト概要</h2>
+
+                <div class="info-box purple">
+                    <h4>🎯 システムの目的</h4>
+                    <p>JVN iPedia、NVD等の公開脆弱性情報を自動収集し、自組織の資産情報とCPE（Common Platform Enumeration）ベースでマッチング。影響を受ける資産を特定し、CVSS・KEV・資産重要度を考慮した優先度判定により、脆弱性対応の迅速化と漏れ防止を実現する。</p>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="number">3</div>
+                        <div class="label">実装完了フェーズ</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">100%</div>
+                        <div class="label">Phase 3 進捗</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">81%</div>
+                        <div class="label">テストカバレッジ</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">226</div>
+                        <div class="label">総テスト数</div>
+                    </div>
+                </div>
+
+                <h3>実装完了状況</h3>
+                <table>
+                    <tr>
+                        <th>フェーズ</th>
+                        <th>内容</th>
+                        <th>状態</th>
+                        <th>完了日</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Phase 1</strong></td>
+                        <td>脆弱性情報取得基盤</td>
+                        <td>✅ 完了</td>
+                        <td>2026-01-08</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Phase 2</strong></td>
+                        <td>CPEマッチング機能</td>
+                        <td>✅ 完了</td>
+                        <td>2026-01-27</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Phase 3</strong></td>
+                        <td>Reactダッシュボード</td>
+                        <td>✅ 完了</td>
+                        <td>2026-01-31</td>
+                    </tr>
+                </table>
+
+                <h3>成功指標</h3>
+                <div class="info-box success">
+                    <h4>✅ 定量的指標</h4>
+                    <ul>
+                        <li><strong>データ取得成功率:</strong> 99.9%以上（JVN iPedia API、リトライ3回）</li>
+                        <li><strong>差分取得精度:</strong> 100%（新規・更新分を漏れなく取得）</li>
+                        <li><strong>マッチング精度:</strong> 95%以上（CPEベース）</li>
+                        <li><strong>テストカバレッジ:</strong> 80%以上（現在81%達成）</li>
+                        <li><strong>冪等性:</strong> 同一処理3回実行でデータ不整合ゼロ</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>📊 定性的指標</h4>
+                    <ul>
+                        <li><strong>保守性:</strong> 新規メンバーが1時間以内にコード構造を理解可能</li>
+                        <li><strong>拡張性:</strong> 設定変更のみで「3年分→全期間」に拡張可能</li>
+                        <li><strong>運用性:</strong> エラー発生時、ログから5分以内に原因特定可能</li>
+                        <li><strong>視認性:</strong> ダッシュボードで影響資産数・重要度を即座に把握可能</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. システムアーキテクチャ -->
+            <div class="section" id="architecture">
+                <h2>2. システムアーキテクチャ</h2>
+
+                <div class="architecture">
+                    <h3 style="text-align: center; margin-bottom: 20px;">レイヤー構成図</h3>
+                    <div class="architecture-diagram">
+                        <!-- フロントエンド層 -->
+                        <div class="arch-layer frontend">
+                            <h4>🌐 フロントエンド層</h4>
+                            <div class="arch-components">
+                                <div class="arch-component">React 18 + TypeScript</div>
+                                <div class="arch-component">Vite</div>
+                                <div class="arch-component">React Router v6</div>
+                                <div class="arch-component">Zustand (状態管理)</div>
+                                <div class="arch-component">TanStack Query (データフェッチ)</div>
+                                <div class="arch-component">Tailwind CSS + shadcn/ui</div>
+                                <div class="arch-component">Recharts (チャート)</div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; font-size: 24px; color: #667eea;">⬇️ REST API</div>
+
+                        <!-- バックエンド層 -->
+                        <div class="arch-layer backend">
+                            <h4>🔧 バックエンド層</h4>
+                            <div class="arch-components">
+                                <div class="arch-component">FastAPI</div>
+                                <div class="arch-component">SQLAlchemy (ORM)</div>
+                                <div class="arch-component">Pydantic (バリデーション)</div>
+                                <div class="arch-component">httpx (API連携)</div>
+                                <div class="arch-component">JVN Fetcher</div>
+                                <div class="arch-component">NVD Fetcher</div>
+                                <div class="arch-component">CPE Matching Service</div>
+                                <div class="arch-component">Dashboard Service</div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; font-size: 24px; color: #667eea;">⬇️ SQL</div>
+
+                        <!-- データベース層 -->
+                        <div class="arch-layer database">
+                            <h4>🗄️ データベース層</h4>
+                            <div class="arch-components">
+                                <div class="arch-component">PostgreSQL 15+</div>
+                                <div class="arch-component">Neon (本番)</div>
+                                <div class="arch-component">Docker (ローカル)</div>
+                                <div class="arch-component">pgAdmin 4</div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; font-size: 24px; color: #667eea;">⬅️ API連携 ➡️</div>
+
+                        <!-- 外部API層 -->
+                        <div class="arch-layer external">
+                            <h4>🌍 外部API・サービス</h4>
+                            <div class="arch-components">
+                                <div class="arch-component">JVN iPedia API</div>
+                                <div class="arch-component">NVD API 2.0</div>
+                                <div class="arch-component">CISA KEV (将来)</div>
+                                <div class="arch-component">GitHub Actions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>ディレクトリ構造</h3>
+                <div class="info-box">
+                    <pre style="background: #24292f; color: #f0f6fc; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.6;">
+zjs_project/
+├── src/                          # バックエンド
+│   ├── api/                      # APIエンドポイント
+│   │   ├── vulnerabilities.py    # 脆弱性API
+│   │   ├── assets.py             # 資産管理API
+│   │   ├── matching.py           # マッチングAPI
+│   │   └── dashboard.py          # ダッシュボードAPI
+│   ├── models/                   # SQLAlchemyモデル
+│   │   ├── vulnerability.py      # 脆弱性モデル
+│   │   └── asset.py              # 資産・マッチングモデル
+│   ├── schemas/                  # Pydanticスキーマ
+│   │   ├── vulnerability.py
+│   │   ├── asset.py
+│   │   ├── matching.py
+│   │   └── dashboard.py
+│   ├── services/                 # ビジネスロジック
+│   │   ├── database_vulnerability_service.py
+│   │   └── matching_service.py
+│   ├── fetchers/                 # 外部API連携
+│   │   ├── jvn_fetcher.py        # JVN iPedia
+│   │   └── nvd_fetcher.py        # NVD API
+│   ├── utils/                    # ユーティリティ
+│   │   └── cpe_generator.py     # CPE生成
+│   ├── templates/                # Jinja2テンプレート
+│   ├── static/                   # 静的ファイル
+│   ├── database.py               # DB接続
+│   ├── config.py                 # 設定管理
+│   └── main.py                   # FastAPIアプリ
+│
+├── frontend/                     # フロントエンド
+│   ├── src/
+│   │   ├── pages/                # ページコンポーネント
+│   │   ├── components/           # 共通コンポーネント
+│   │   ├── hooks/                # カスタムフック
+│   │   ├── lib/                  # ユーティリティ
+│   │   ├── types/                # TypeScript型定義
+│   │   ├── config/               # 設定
+│   │   └── App.tsx               # ルートコンポーネント
+│   ├── public/
+│   └── vite.config.ts
+│
+├── tests/                        # テスト
+│   ├── unit/                     # 単体テスト
+│   ├── integration/              # 統合テスト
+│   └── e2e/                      # E2Eテスト
+│
+├── scripts/                      # 運用スクリプト
+├── docs/                         # ドキュメント
+├── .github/workflows/            # CI/CD
+├── docker-compose.yml
+└── requirements.txt
+                    </pre>
+                </div>
+            </div>
+
+            <!-- 3. 実装済み機能一覧 -->
+            <div class="section" id="functions">
+                <h2>3. 実装済み機能一覧</h2>
+
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>機能名</th>
+                        <th>説明</th>
+                        <th>状態</th>
+                    </tr>
+                    <tr>
+                        <td><strong>F1</strong></td>
+                        <td>脆弱性情報自動取得</td>
+                        <td>JVN iPedia APIから脆弱性情報を定期的に自動取得（GitHub Actions定期実行）</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F2</strong></td>
+                        <td>NVD API統合</td>
+                        <td>NVD API 2.0からCVSS詳細・CPE情報を補完取得</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F3</strong></td>
+                        <td>差分取得・冪等性保証</td>
+                        <td>最終更新日時ベースの差分取得、UPSERT処理による冪等性保証</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F4</strong></td>
+                        <td>資産管理</td>
+                        <td>手動登録、Composer/NPM/Dockerfileからのインポート、CPE自動生成</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F5</strong></td>
+                        <td>CPEマッチング</td>
+                        <td>完全一致・バージョン範囲・ワイルドカードマッチング、影響資産の自動特定</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F6</strong></td>
+                        <td>脆弱性一覧表示</td>
+                        <td>検索、ソート、ページネーション、詳細モーダル表示</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F7</strong></td>
+                        <td>ダッシュボードUI</td>
+                        <td>サマリーカード、トレンドチャート、重要度分布、ウィジェット方式</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F8</strong></td>
+                        <td>マッチング結果表示</td>
+                        <td>影響資産一覧、統計ダッシュボード、フィルタリング</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F9</strong></td>
+                        <td>リアルタイム取得</td>
+                        <td>Web UIから手動でJVN iPedia APIから最新情報を即座に取得</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F10</strong></td>
+                        <td>統合テスト・E2E</td>
+                        <td>226テスト（単体・統合・E2E）、カバレッジ81%</td>
+                        <td>✅ 完了</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F11</strong></td>
+                        <td>優先度計算</td>
+                        <td>CVSS、KEV、資産重要度を考慮した対応優先度自動算出</td>
+                        <td>📋 計画中</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F12</strong></td>
+                        <td>通知システム</td>
+                        <td>Slack/Teams/メールでアラート送信</td>
+                        <td>📋 計画中</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F13</strong></td>
+                        <td>レポート生成</td>
+                        <td>HTML/CSV/PDF形式でレポート出力</td>
+                        <td>📋 計画中</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 4. 機能分担案 -->
+            <div class="section" id="assignment">
+                <h2>4. 機能分担案</h2>
+
+                <div class="info-box warning">
+                    <h4>⚠️ 分担のポイント</h4>
+                    <ul>
+                        <li><strong>得意分野を活かす:</strong> 経験・興味に応じて担当を決定</li>
+                        <li><strong>負荷を分散:</strong> 1人に担当が集中しないように調整</li>
+                        <li><strong>依存関係を考慮:</strong> DB担当とAPI担当は密に連携が必要</li>
+                        <li><strong>兼務OK:</strong> 関連する領域は同じ人が担当してもよい</li>
+                    </ul>
+                </div>
+
+                <h3>推奨担当パターン</h3>
+                <table>
+                    <tr>
+                        <th>担当</th>
+                        <th>担当領域</th>
+                        <th>主要機能</th>
+                        <th>推定工数</th>
+                    </tr>
+                    <tr>
+                        <td><strong>担当A</strong></td>
+                        <td>外部API連携・データ収集</td>
+                        <td>
+                            • JVN iPedia API連携<br>
+                            • NVD API 2.0統合<br>
+                            • CISA KEV統合（将来）<br>
+                            • データ取得スケジューラー
+                        </td>
+                        <td>40時間</td>
+                    </tr>
+                    <tr>
+                        <td><strong>担当B</strong></td>
+                        <td>データベース・資産管理</td>
+                        <td>
+                            • PostgreSQL設計・管理<br>
+                            • 資産管理API<br>
+                            • CPE生成ロジック<br>
+                            • マイグレーション管理
+                        </td>
+                        <td>35時間</td>
+                    </tr>
+                    <tr>
+                        <td><strong>担当C</strong></td>
+                        <td>コアロジック・品質保証</td>
+                        <td>
+                            • CPEマッチングエンジン<br>
+                            • 優先度計算ロジック<br>
+                            • 統合テスト・E2Eテスト<br>
+                            • テストカバレッジ管理
+                        </td>
+                        <td>45時間</td>
+                    </tr>
+                    <tr>
+                        <td><strong>担当D</strong></td>
+                        <td>通知・レポート・自動化</td>
+                        <td>
+                            • 通知システム（Slack/Teams/メール）<br>
+                            • レポート生成（HTML/CSV/PDF）<br>
+                            • CI/CDパイプライン<br>
+                            • ドキュメント自動化
+                        </td>
+                        <td>38時間</td>
+                    </tr>
+                    <tr>
+                        <td><strong>担当E</strong></td>
+                        <td>フロントエンド・UI/UX</td>
+                        <td>
+                            • Reactダッシュボード<br>
+                            • ウィジェット実装<br>
+                            • チャート・グラフ<br>
+                            • UI/UXデザイン
+                        </td>
+                        <td>30時間</td>
+                    </tr>
+                </table>
+
+                <h3>機能別担当マトリクス</h3>
+                <table>
+                    <tr>
+                        <th>機能</th>
+                        <th>主担当</th>
+                        <th>副担当</th>
+                        <th>レビュー担当</th>
+                    </tr>
+                    <tr>
+                        <td>JVN iPedia API連携</td>
+                        <td>担当A</td>
+                        <td>担当B</td>
+                        <td>担当C</td>
+                    </tr>
+                    <tr>
+                        <td>NVD API統合</td>
+                        <td>担当A</td>
+                        <td>-</td>
+                        <td>担当B</td>
+                    </tr>
+                    <tr>
+                        <td>資産管理DB</td>
+                        <td>担当B</td>
+                        <td>担当A</td>
+                        <td>担当C</td>
+                    </tr>
+                    <tr>
+                        <td>CPEマッチング</td>
+                        <td>担当C</td>
+                        <td>担当B</td>
+                        <td>担当A</td>
+                    </tr>
+                    <tr>
+                        <td>優先度計算</td>
+                        <td>担当C</td>
+                        <td>-</td>
+                        <td>担当D</td>
+                    </tr>
+                    <tr>
+                        <td>通知システム</td>
+                        <td>担当D</td>
+                        <td>-</td>
+                        <td>担当A</td>
+                    </tr>
+                    <tr>
+                        <td>レポート生成</td>
+                        <td>担当D</td>
+                        <td>担当E</td>
+                        <td>担当C</td>
+                    </tr>
+                    <tr>
+                        <td>ダッシュボードUI</td>
+                        <td>担当E</td>
+                        <td>担当D</td>
+                        <td>担当B</td>
+                    </tr>
+                    <tr>
+                        <td>CI/CD</td>
+                        <td>担当D</td>
+                        <td>担当B</td>
+                        <td>担当A</td>
+                    </tr>
+                    <tr>
+                        <td>統合テスト</td>
+                        <td>担当C</td>
+                        <td>全員</td>
+                        <td>担当D</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 5. バックエンド機能詳細 -->
+            <div class="section" id="backend">
+                <h2>5. バックエンド機能詳細</h2>
+
+                <div class="function-cards">
+                    <div class="function-card backend">
+                        <span class="badge backend">バックエンド</span>
+                        <h4>1. JVN iPedia API連携</h4>
+                        <p><strong>担当:</strong> 担当A</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>REST API（HND形式）でCVE情報を取得</li>
+                            <li>XML応答のパース（xml.etree.ElementTree）</li>
+                            <li>差分取得（lastModStartDate/lastModEndDate）</li>
+                            <li>ページネーション処理（50件/リクエスト）</li>
+                            <li>リトライロジック（最大3回、指数バックオフ）</li>
+                            <li>レート制限対応（秒間2-3リクエスト）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/fetchers/jvn_fetcher.py</code></p>
+                    </div>
+
+                    <div class="function-card backend">
+                        <span class="badge backend">バックエンド</span>
+                        <h4>2. NVD API 2.0統合</h4>
+                        <p><strong>担当:</strong> 担当A</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>NVD API 2.0でCVSS詳細・CPE情報を補完</li>
+                            <li>APIキー管理（50req/30s）</li>
+                            <li>日付範囲指定（最大120日間）</li>
+                            <li>JSON応答パース</li>
+                            <li>JVN iPedia情報との統合</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/fetchers/nvd_fetcher.py</code></p>
+                    </div>
+
+                    <div class="function-card backend">
+                        <span class="badge backend">バックエンド</span>
+                        <h4>3. 資産管理API</h4>
+                        <p><strong>担当:</strong> 担当B</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>資産CRUD操作</li>
+                            <li>Composer/NPM/Dockerfileインポート</li>
+                            <li>CPE自動生成</li>
+                            <li>バージョン正規化</li>
+                            <li>ページネーション・フィルタリング</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/api/assets.py</code></p>
+                    </div>
+
+                    <div class="function-card backend">
+                        <span class="badge backend">バックエンド</span>
+                        <h4>4. CPEマッチングエンジン</h4>
+                        <p><strong>担当:</strong> 担当C</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>CPE 2.3形式の解析・正規化</li>
+                            <li>完全一致マッチング</li>
+                            <li>バージョン範囲マッチング（packaging.version）</li>
+                            <li>ワイルドカードマッチング</li>
+                            <li>マッチング結果のスコアリング</li>
+                            <li>パフォーマンス最適化</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/services/matching_service.py</code></p>
+                    </div>
+
+                    <div class="function-card backend">
+                        <span class="badge backend">バックエンド</span>
+                        <h4>5. ダッシュボードAPI</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>サマリーデータ取得（重要度別件数、前週比）</li>
+                            <li>トレンドデータ取得（日別検出数）</li>
+                            <li>重要度分布取得</li>
+                            <li>資産ランキング取得</li>
+                            <li>ウィジェット設定管理</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/api/dashboard.py</code></p>
+                    </div>
+
+                    <div class="function-card backend">
+                        <span class="badge backend">バックエンド</span>
+                        <h4>6. データベース管理</h4>
+                        <p><strong>担当:</strong> 担当B</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>PostgreSQL設計・管理</li>
+                            <li>SQLAlchemyモデル定義</li>
+                            <li>インデックス最適化</li>
+                            <li>Alembicマイグレーション</li>
+                            <li>UPSERT処理（冪等性保証）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/models/</code>, <code>src/database.py</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. フロントエンド機能詳細 -->
+            <div class="section" id="frontend">
+                <h2>6. フロントエンド機能詳細</h2>
+
+                <div class="function-cards">
+                    <div class="function-card frontend">
+                        <span class="badge frontend">フロントエンド</span>
+                        <h4>1. ダッシュボードページ</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>ウィジェットグリッドレイアウト（4カラム）</li>
+                            <li>サマリーカード（Critical/High/Medium/Low）</li>
+                            <li>トレンドチャート（Recharts）</li>
+                            <li>重要度分布（円グラフ）</li>
+                            <li>ウィジェット管理（追加・削除・並び替え）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>frontend/src/pages/Dashboard.tsx</code></p>
+                    </div>
+
+                    <div class="function-card frontend">
+                        <span class="badge frontend">フロントエンド</span>
+                        <h4>2. 脆弱性一覧ページ</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>テーブル表示（CVE ID、タイトル、重要度、日付）</li>
+                            <li>検索機能（CVE ID + タイトル部分一致）</li>
+                            <li>ソート機能（公開日、更新日、重要度）</li>
+                            <li>ページネーション（50件/ページ）</li>
+                            <li>詳細モーダル表示</li>
+                            <li>リアルタイム取得ボタン</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>frontend/src/pages/Vulnerabilities.tsx</code></p>
+                    </div>
+
+                    <div class="function-card frontend">
+                        <span class="badge frontend">フロントエンド</span>
+                        <h4>3. 資産管理ページ</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>資産一覧テーブル表示</li>
+                            <li>新規登録モーダル（手動入力フォーム）</li>
+                            <li>ファイルアップロードモーダル（ドラッグ&ドロップ）</li>
+                            <li>編集・削除機能</li>
+                            <li>フィルタリング（取得元）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>frontend/src/pages/Assets.tsx</code></p>
+                    </div>
+
+                    <div class="function-card frontend">
+                        <span class="badge frontend">フロントエンド</span>
+                        <h4>4. マッチング結果ページ</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>マッチング結果一覧表示</li>
+                            <li>統計ダッシュボード（影響資産数、重要度別件数）</li>
+                            <li>マッチング実行ボタン</li>
+                            <li>フィルタリング（重要度、資産タイプ）</li>
+                            <li>詳細表示（資産別・脆弱性別）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>frontend/src/pages/Matching.tsx</code></p>
+                    </div>
+
+                    <div class="function-card frontend">
+                        <span class="badge frontend">フロントエンド</span>
+                        <h4>5. 共通コンポーネント</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>ウィジェットラッパー</li>
+                            <li>データテーブル</li>
+                            <li>チャートコンポーネント</li>
+                            <li>モーダルコンポーネント</li>
+                            <li>ローディングスピナー</li>
+                            <li>エラーバウンダリ</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>frontend/src/components/</code></p>
+                    </div>
+
+                    <div class="function-card frontend">
+                        <span class="badge frontend">フロントエンド</span>
+                        <h4>6. 状態管理・データフェッチ</h4>
+                        <p><strong>担当:</strong> 担当E</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>Zustandストア設定</li>
+                            <li>TanStack Query設定</li>
+                            <li>カスタムフック（useVulnerabilities、useAssets等）</li>
+                            <li>APIクライアント</li>
+                            <li>キャッシング戦略</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>frontend/src/hooks/</code>, <code>frontend/src/lib/</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. インフラ・DevOps機能詳細 -->
+            <div class="section" id="infra">
+                <h2>7. インフラ・DevOps機能詳細</h2>
+
+                <div class="function-cards">
+                    <div class="function-card infra">
+                        <span class="badge infra">インフラ</span>
+                        <h4>1. CI/CDパイプライン</h4>
+                        <p><strong>担当:</strong> 担当D</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>PR時の自動テスト（pytest + カバレッジ）</li>
+                            <li>ブランチ保護ルール設定</li>
+                            <li>mainブランチへのマージで自動デプロイ</li>
+                            <li>定期実行（毎日午前3時）</li>
+                            <li>エラー通知（GitHub Issues）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>.github/workflows/</code></p>
+                    </div>
+
+                    <div class="function-card infra">
+                        <span class="badge infra">インフラ</span>
+                        <h4>2. Docker環境</h4>
+                        <p><strong>担当:</strong> 担当B</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>Docker Compose設定（PostgreSQL、API、pgAdmin）</li>
+                            <li>マルチステージビルド</li>
+                            <li>環境変数管理</li>
+                            <li>ボリューム設定</li>
+                            <li>ネットワーク設定</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>docker-compose.yml</code>, <code>Dockerfile</code></p>
+                    </div>
+
+                    <div class="function-card infra">
+                        <span class="badge infra">インフラ</span>
+                        <h4>3. 統合テスト</h4>
+                        <p><strong>担当:</strong> 担当C</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>単体テスト（pytest）</li>
+                            <li>統合テスト（DB接続、API連携）</li>
+                            <li>E2Eテスト（Playwright）</li>
+                            <li>テストデータ生成（Factory Boy）</li>
+                            <li>カバレッジ測定（pytest-cov）</li>
+                            <li>並列実行（pytest-xdist）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>tests/</code></p>
+                    </div>
+
+                    <div class="function-card infra">
+                        <span class="badge infra">インフラ</span>
+                        <h4>4. ドキュメント自動化</h4>
+                        <p><strong>担当:</strong> 担当D</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>FastAPI OpenAPI（Swagger UI自動生成）</li>
+                            <li>MkDocs + mkdocstrings（docstringから生成）</li>
+                            <li>Mermaid図（アーキテクチャ図）</li>
+                            <li>GitHub Pages自動デプロイ</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>docs/</code>, <code>mkdocs.yml</code></p>
+                    </div>
+
+                    <div class="function-card integration">
+                        <span class="badge integration">統合</span>
+                        <h4>5. 通知システム（将来実装）</h4>
+                        <p><strong>担当:</strong> 担当D</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>Slack Incoming Webhook</li>
+                            <li>Microsoft Teams Adaptive Cards</li>
+                            <li>メール（SMTP/SendGrid/SES）</li>
+                            <li>通知条件フィルター</li>
+                            <li>レート制限・重複防止</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/services/notification_service.py</code></p>
+                    </div>
+
+                    <div class="function-card integration">
+                        <span class="badge integration">統合</span>
+                        <h4>6. レポート生成（将来実装）</h4>
+                        <p><strong>担当:</strong> 担当D</p>
+                        <hr style="margin: 12px 0; border: none; border-top: 1px solid #d0d7de;">
+                        <p><strong>主要機能:</strong></p>
+                        <ul>
+                            <li>HTML（Jinja2テンプレート）</li>
+                            <li>CSV（pandas DataFrame）</li>
+                            <li>PDF（WeasyPrint/ReportLab）</li>
+                            <li>グラフ（matplotlib/Plotly）</li>
+                            <li>定期レポート（週次/月次）</li>
+                        </ul>
+                        <p><strong>ファイル:</strong> <code>src/services/report_service.py</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. データフロー -->
+            <div class="section" id="dataflow">
+                <h2>8. データフロー</h2>
+
+                <h3>脆弱性情報取得フロー</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <strong>GitHub Actions</strong>
+                        <small>定期実行<br>（毎日午前3時）</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>JVN Fetcher</strong>
+                        <small>JVN iPedia<br>API連携</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>NVD Fetcher</strong>
+                        <small>NVD API<br>補完取得</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>DB Service</strong>
+                        <small>UPSERT処理<br>（冪等性保証）</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>PostgreSQL</strong>
+                        <small>データ永続化</small>
+                    </div>
+                </div>
+
+                <h3>CPEマッチングフロー</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <strong>資産登録</strong>
+                        <small>手動/インポート</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>CPE生成</strong>
+                        <small>自動生成<br>正規化</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>マッチング実行</strong>
+                        <small>完全一致<br>バージョン範囲<br>ワイルドカード</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>結果保存</strong>
+                        <small>影響資産特定</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>ダッシュボード表示</strong>
+                        <small>統計・一覧</small>
+                    </div>
+                </div>
+
+                <h3>ユーザー操作フロー</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <strong>React UI</strong>
+                        <small>ユーザー操作</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>TanStack Query</strong>
+                        <small>データフェッチ<br>キャッシング</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>FastAPI</strong>
+                        <small>REST API<br>バリデーション</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>Service Layer</strong>
+                        <small>ビジネスロジック</small>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <strong>PostgreSQL</strong>
+                        <small>データ取得/更新</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. 技術スタック -->
+            <div class="section" id="tech-stack">
+                <h2>9. 技術スタック</h2>
+
+                <h3>バックエンド</h3>
+                <table>
+                    <tr>
+                        <th>技術</th>
+                        <th>バージョン</th>
+                        <th>用途</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Python</strong></td>
+                        <td>3.11+</td>
+                        <td>プログラミング言語</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FastAPI</strong></td>
+                        <td>0.104+</td>
+                        <td>Webフレームワーク</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SQLAlchemy</strong></td>
+                        <td>2.0+</td>
+                        <td>ORM</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pydantic</strong></td>
+                        <td>2.0+</td>
+                        <td>データバリデーション</td>
+                    </tr>
+                    <tr>
+                        <td><strong>httpx</strong></td>
+                        <td>0.25+</td>
+                        <td>HTTP客户端（非同期対応）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Alembic</strong></td>
+                        <td>1.12+</td>
+                        <td>データベースマイグレーション</td>
+                    </tr>
+                </table>
+
+                <h3>フロントエンド</h3>
+                <table>
+                    <tr>
+                        <th>技術</th>
+                        <th>バージョン</th>
+                        <th>用途</th>
+                    </tr>
+                    <tr>
+                        <td><strong>React</strong></td>
+                        <td>18+</td>
+                        <td>UIフレームワーク</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TypeScript</strong></td>
+                        <td>5+</td>
+                        <td>型安全性</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vite</strong></td>
+                        <td>5+</td>
+                        <td>ビルドツール</td>
+                    </tr>
+                    <tr>
+                        <td><strong>React Router</strong></td>
+                        <td>v6</td>
+                        <td>ルーティング</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Zustand</strong></td>
+                        <td>4+</td>
+                        <td>状態管理</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TanStack Query</strong></td>
+                        <td>v5</td>
+                        <td>データフェッチング・キャッシング</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tailwind CSS</strong></td>
+                        <td>3+</td>
+                        <td>スタイリング</td>
+                    </tr>
+                    <tr>
+                        <td><strong>shadcn/ui</strong></td>
+                        <td>-</td>
+                        <td>UIコンポーネント</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recharts</strong></td>
+                        <td>2+</td>
+                        <td>チャート・グラフ</td>
+                    </tr>
+                </table>
+
+                <h3>データベース</h3>
+                <table>
+                    <tr>
+                        <th>技術</th>
+                        <th>バージョン</th>
+                        <th>用途</th>
+                    </tr>
+                    <tr>
+                        <td><strong>PostgreSQL</strong></td>
+                        <td>15+</td>
+                        <td>リレーショナルデータベース</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Neon</strong></td>
+                        <td>-</td>
+                        <td>サーバーレスPostgreSQL（本番環境）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>pgAdmin 4</strong></td>
+                        <td>-</td>
+                        <td>データベース管理ツール</td>
+                    </tr>
+                </table>
+
+                <h3>インフラ・DevOps</h3>
+                <table>
+                    <tr>
+                        <th>技術</th>
+                        <th>バージョン</th>
+                        <th>用途</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Docker</strong></td>
+                        <td>-</td>
+                        <td>コンテナ化</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Docker Compose</strong></td>
+                        <td>-</td>
+                        <td>マルチコンテナ管理</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GitHub Actions</strong></td>
+                        <td>-</td>
+                        <td>CI/CD、定期実行</td>
+                    </tr>
+                    <tr>
+                        <td><strong>pytest</strong></td>
+                        <td>7.4+</td>
+                        <td>テストフレームワーク</td>
+                    </tr>
+                    <tr>
+                        <td><strong>pytest-cov</strong></td>
+                        <td>-</td>
+                        <td>カバレッジ測定</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Playwright</strong></td>
+                        <td>-</td>
+                        <td>E2Eテスト</td>
+                    </tr>
+                </table>
+
+                <h3>外部API</h3>
+                <table>
+                    <tr>
+                        <th>API</th>
+                        <th>用途</th>
+                        <th>認証</th>
+                    </tr>
+                    <tr>
+                        <td><strong>JVN iPedia API</strong></td>
+                        <td>日本語脆弱性情報取得</td>
+                        <td>不要</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NVD API 2.0</strong></td>
+                        <td>CVSS詳細・CPE情報補完</td>
+                        <td>APIキー推奨</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CISA KEV</strong></td>
+                        <td>悪用確認済み脆弱性情報（将来実装）</td>
+                        <td>不要</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 10. 開発体制・プロセス -->
+            <div class="section" id="development">
+                <h2>10. 開発体制・プロセス</h2>
+
+                <h3>開発手法</h3>
+                <div class="info-box">
+                    <h4>スクラム（2週間スプリント）</h4>
+                    <ul>
+                        <li><strong>スプリント期間:</strong> 2週間 × 5スプリント = 10週間</li>
+                        <li><strong>開発体制:</strong> 4.5名（担当A〜E）</li>
+                        <li><strong>タスク管理:</strong> GitHub Issues</li>
+                        <li><strong>ブランチ戦略:</strong> feature → develop → main</li>
+                    </ul>
+                </div>
+
+                <h3>週次情報共有</h3>
+                <div class="info-box success">
+                    <h4>✅ 週1回のミーティング（属人化防止）</h4>
+                    <ul>
+                        <li><strong>進捗報告:</strong> 各自5分（完了タスク、進捗率）</li>
+                        <li><strong>知見共有:</strong> 10分（技術的発見、Tips、設計判断）</li>
+                        <li><strong>課題相談:</strong> 10分（ハマりポイント、質問）</li>
+                        <li><strong>次週計画:</strong> 10分（タスク確認、依存関係調整）</li>
+                    </ul>
+                </div>
+
+                <h3>コードレビュー</h3>
+                <table>
+                    <tr>
+                        <th>PR作成者の領域</th>
+                        <th>レビュー担当候補</th>
+                        <th>目的</th>
+                    </tr>
+                    <tr>
+                        <td>外部API連携</td>
+                        <td>DB担当 or マッチング担当</td>
+                        <td>データフロー理解、エラーハンドリング確認</td>
+                    </tr>
+                    <tr>
+                        <td>DB・資産管理</td>
+                        <td>マッチング担当 or API担当</td>
+                        <td>スキーマ理解、パフォーマンス確認</td>
+                    </tr>
+                    <tr>
+                        <td>マッチング・優先度</td>
+                        <td>通知担当 or DB担当</td>
+                        <td>ロジック理解、テストカバレッジ確認</td>
+                    </tr>
+                    <tr>
+                        <td>通知・レポート</td>
+                        <td>UI担当 or マッチング担当</td>
+                        <td>出力形式確認、統合テスト</td>
+                    </tr>
+                    <tr>
+                        <td>UI</td>
+                        <td>通知担当 or API担当</td>
+                        <td>UI/UX確認、APIインテグレーション</td>
+                    </tr>
+                </table>
+
+                <h3>品質保証</h3>
+                <div class="info-box purple">
+                    <h4>テスト戦略</h4>
+                    <ul>
+                        <li><strong>テストピラミッド:</strong> 単体70% / 統合20% / E2E10%</li>
+                        <li><strong>カバレッジ目標:</strong> 80%以上（現在81%達成）</li>
+                        <li><strong>CI/CD統合:</strong> PR時に自動テスト実行</li>
+                        <li><strong>並列実行:</strong> pytest-xdistで時間短縮</li>
+                    </ul>
+                </div>
+
+                <h3>ドキュメント管理</h3>
+                <table>
+                    <tr>
+                        <th>ドキュメント種類</th>
+                        <th>担当ルール</th>
+                        <th>ツール</th>
+                    </tr>
+                    <tr>
+                        <td>設計ドキュメント</td>
+                        <td>各機能の担当者が作成</td>
+                        <td>Markdown</td>
+                    </tr>
+                    <tr>
+                        <td>API仕様書</td>
+                        <td>FastAPI OpenAPIで自動生成</td>
+                        <td>Swagger UI</td>
+                    </tr>
+                    <tr>
+                        <td>運用手順書</td>
+                        <td>全員で分担作成</td>
+                        <td>Markdown</td>
+                    </tr>
+                    <tr>
+                        <td>README</td>
+                        <td>リード担当が作成、全員がレビュー</td>
+                        <td>Markdown</td>
+                    </tr>
+                    <tr>
+                        <td>アーキテクチャ図</td>
+                        <td>全員で更新</td>
+                        <td>Mermaid</td>
+                    </tr>
+                </table>
+
+                <h3>リスク管理</h3>
+                <div class="info-box warning">
+                    <h4>⚠️ 主要リスクと対策</h4>
+                    <table style="margin-top: 10px;">
+                        <tr>
+                            <th>リスク</th>
+                            <th>影響度</th>
+                            <th>対策</th>
+                        </tr>
+                        <tr>
+                            <td>外部API障害</td>
+                            <td>高</td>
+                            <td>リトライロジック、複数API統合、エラーログ充実</td>
+                        </tr>
+                        <tr>
+                            <td>CPEマッチング精度不足</td>
+                            <td>中</td>
+                            <td>テストケース充実、バージョン比較ロジック強化</td>
+                        </tr>
+                        <tr>
+                            <td>パフォーマンス劣化</td>
+                            <td>中</td>
+                            <td>インデックス最適化、並列処理、キャッシング</td>
+                        </tr>
+                        <tr>
+                            <td>属人化</td>
+                            <td>低</td>
+                            <td>週次情報共有、PRレビュー、ドキュメント充実</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>脆弱性管理システム（zjs_project）機能分担要件定義書</strong></p>
+            <p style="margin-top: 10px;">
+                GitHub: <a href="https://github.com/horii-kentaro/zjs_project">https://github.com/horii-kentaro/zjs_project</a>
+            </p>
+            <p style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                © 2026 zjs_project | 最終更新: 2026-02-04
+            </p>
+        </div>
+    </div>
+</body>
+</html>
